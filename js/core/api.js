@@ -139,8 +139,9 @@ class APIManager {
                 status: 'Submitted'
             });
 
-            // Sync with Power Automate
-            const syncResult = await this.syncWithPowerAutomate('CREATE_PO', submittedPO);
+            // Shape payload to requested structure and sync
+            const shaped = this.shapePOForSend(submittedPO);
+            const syncResult = await this.syncWithPowerAutomate('CREATE_PO', shaped);
 
             return {
                 success: true,
@@ -170,8 +171,9 @@ class APIManager {
                 throw new Error('Purchase Order not found');
             }
 
-            // Sync with Power Automate
-            const syncResult = await this.syncWithPowerAutomate('UPDATE_PO', updatedPO);
+            // Shape payload and sync
+            const shaped = this.shapePOForSend(updatedPO);
+            const syncResult = await this.syncWithPowerAutomate('UPDATE_PO', shaped);
 
             return {
                 success: true,
@@ -187,6 +189,21 @@ class APIManager {
                 error: error.message
             };
         }
+    }
+
+    // Shape PO to the requested HTTP schema
+    shapePOForSend(po) {
+        if (!po) return po;
+        return {
+            meta: po.meta || {},
+            schedule: Array.isArray(po.schedule) ? po.schedule : [],
+            scope: Array.isArray(po.scope) ? po.scope : [],
+            createdAt: po.createdAt || new Date().toISOString(),
+            sent: !!po.sent,
+            timestamp: po.timestamp || Date.now(),
+            id: po.id,
+            sentAt: po.sentAt || ''
+        };
     }
 
     async deletePO(poId) {
@@ -541,4 +558,13 @@ class APIManager {
 
             return {
                 success: result.success,
-                online: navigator.on
+                online: navigator.onLine
+            };
+        } catch (error) {
+            return {
+                success: false,
+                online: false
+            };
+        }
+    }
+}

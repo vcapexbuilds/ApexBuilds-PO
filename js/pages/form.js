@@ -54,10 +54,10 @@ class POForm {
 
         // Note: Logout button now uses onclick="handleLogout()" in HTML
 
-        document.getElementById('poForm').addEventListener('submit', (e) => this.handleSubmit(e));
-        document.getElementById('saveButton').addEventListener('click', () => this.saveDraft());
-        document.getElementById('addScheduleItem').addEventListener('click', () => this.addScheduleItem());
-        document.getElementById('addScopeItem').addEventListener('click', () => this.addScopeItem());
+    document.getElementById('poForm').addEventListener('submit', (e) => this.handleSubmit(e));
+    const saveBtn = document.getElementById('saveButton');
+    if (saveBtn) saveBtn.addEventListener('click', () => this.saveDraft());
+    // Avoid double-binding add item buttons; dynamicForm handles these.
 
         // Auto-save draft every minute
         setInterval(() => this.saveDraft(true), 60000);
@@ -73,24 +73,43 @@ class POForm {
     }
 
     fillFormData(po) {
-        // Fill meta information
-        Object.entries(po.meta).forEach(([key, value]) => {
-            if (key === 'importantDates') {
-                Object.entries(value).forEach(([dateKey, dateValue]) => {
-                    const input = document.querySelector(`[name="meta.importantDates.${dateKey}"]`);
-                    if (input) input.value = dateValue;
-                });
-            } else {
-                const input = document.querySelector(`[name="meta.${key}"]`);
-                if (input) input.value = value;
-            }
-        });
+        // Fill meta (flat fields)
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+        const m = po.meta || {};
+        setVal('projectName', m.projectName);
+        setVal('generalContractor', m.generalContractor);
+        setVal('address', m.address);
+        setVal('owner', m.owner);
+        setVal('apexOwner', m.apexOwner);
+        setVal('typeStatus', m.typeStatus);
+        setVal('projectManager', m.projectManager);
+        setVal('contractAmount', m.contractAmount);
+        setVal('addAltAmount', m.addAltAmount);
+        setVal('retainagePct', m.retainagePct);
+        setVal('addAltDetails', m.addAltDetails);
+        setVal('requestedBy', m.requestedBy);
+        setVal('companyName', m.companyName);
+        setVal('contactName', m.contactName);
+        setVal('email', m.email);
+        setVal('cellNumber', m.cellNumber);
+        setVal('officeNumber', m.officeNumber);
+        setVal('vendorType', m.vendorType);
+        setVal('workType', m.workType);
 
-        // Fill schedule items
-        po.schedule.forEach(item => this.addScheduleItem(item));
+        const d = (m.importantDates) || {};
+        setVal('noticeToProceed', d.noticeToProceed);
+        setVal('anticipatedStart', d.anticipatedStart);
+        setVal('substantialCompletion', d.substantialCompletion);
+        setVal('hundredPercent', d.hundredPercent);
 
-        // Fill scope items
-        po.scope.forEach(item => this.addScopeItem(item));
+        // Populate tables via dynamicForm if available
+        if (Array.isArray(po.schedule) && window.dynamicForm) {
+            window.dynamicForm.clearAllItems();
+            window.dynamicForm.loadScheduleData(po.schedule);
+        }
+        if (Array.isArray(po.scope) && window.dynamicForm) {
+            window.dynamicForm.loadScopeData(po.scope);
+        }
     }
 
     createScheduleItemTemplate() {
@@ -216,46 +235,51 @@ class POForm {
     }
 
     collectFormData() {
-        const formData = {
-            meta: {
-                importantDates: {}
-            },
-            schedule: [],
-            scope: []
+        // Build meta object in the requested flat structure
+        const val = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : '';
+        };
+        const num = (id) => {
+            const n = Number(val(id));
+            return isNaN(n) ? 0 : n;
         };
 
-        // Collect meta information
-        const metaInputs = document.querySelectorAll('[name^="meta."]');
-        metaInputs.forEach(input => {
-            const path = input.name.split('.');
-            if (path.length === 3) {
-                // Handle nested importantDates
-                formData.meta.importantDates[path[2]] = input.value;
-            } else {
-                formData.meta[path[1]] = input.value;
-            }
-        });
-
-        // Collect schedule items
-        document.querySelectorAll('.schedule-item').forEach(item => {
-            const scheduleItem = {};
-            item.querySelectorAll('[name]').forEach(input => {
-                scheduleItem[input.name] = input.type === 'number' ? Number(input.value) : input.value;
-            });
-            formData.schedule.push(scheduleItem);
-        });
-
-        // Collect scope items
-        document.querySelectorAll('.scope-item').forEach(item => {
-            const scopeItem = {
-                included: item.querySelector('[name="status"][value="included"]').checked,
-                excluded: item.querySelector('[name="status"][value="excluded"]').checked
-            };
-            item.querySelectorAll('input[name]:not([name="status"]), textarea').forEach(input => {
-                scopeItem[input.name] = input.value;
-            });
-            formData.scope.push(scopeItem);
-        });
+        const formData = {
+            meta: {
+                projectName: val('projectName'),
+                generalContractor: val('generalContractor'),
+                address: val('address'),
+                owner: val('owner'),
+                apexOwner: val('apexOwner'),
+                typeStatus: val('typeStatus'),
+                projectManager: val('projectManager'),
+                contractAmount: num('contractAmount'),
+                addAltAmount: num('addAltAmount'),
+                addAltDetails: val('addAltDetails'),
+                retainagePct: num('retainagePct'),
+                requestedBy: val('requestedBy'),
+                companyName: val('companyName'),
+                contactName: val('contactName'),
+                cellNumber: val('cellNumber'),
+                email: val('email'),
+                officeNumber: val('officeNumber'),
+                vendorType: val('vendorType'),
+                workType: val('workType'),
+                importantDates: {
+                    noticeToProceed: val('noticeToProceed'),
+                    anticipatedStart: val('anticipatedStart'),
+                    substantialCompletion: val('substantialCompletion'),
+                    hundredPercent: val('hundredPercent')
+                }
+            },
+            schedule: (window.dynamicForm && typeof window.dynamicForm.getScheduleItems === 'function')
+                ? window.dynamicForm.getScheduleItems()
+                : [],
+            scope: (window.dynamicForm && typeof window.dynamicForm.getScopeItems === 'function')
+                ? window.dynamicForm.getScopeItems()
+                : []
+        };
 
         // Add metadata
         formData.createdAt = new Date().toISOString();
@@ -312,7 +336,7 @@ class POForm {
                             try {
                                 formData.sent = true;
                                 formData.sentAt = new Date().toISOString();
-                                await api.submitPO(formData);
+                                await api.createPO(formData);
                                 storage.clearDraft();
                                 
                                 modal.show({
