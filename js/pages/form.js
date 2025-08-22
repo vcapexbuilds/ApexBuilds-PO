@@ -349,10 +349,10 @@ class POForm {
         if (this.revisionId) return; // Don't load draft if we're revising an existing PO
 
         const draft = storage.getDraft();
-        if (draft) {
+        if (draft && draft.data) {
             modal.showConfirm(
                 'Would you like to load your saved draft?',
-                () => this.fillFormData(draft),
+                () => this.fillFormData(draft.data),
                 () => storage.clearDraft()
             );
         }

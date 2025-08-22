@@ -441,6 +441,24 @@ class StorageManager {
             hasPrev: page > 1
         };
     }
+
+    // Draft management methods
+    saveDraft(formData) {
+        const draft = {
+            data: formData,
+            timestamp: new Date().toISOString(),
+            userId: this.currentUser ? this.currentUser.id : null
+        };
+        return this.set('draft', draft);
+    }
+
+    getDraft() {
+        return this.get('draft');
+    }
+
+    clearDraft() {
+        return this.remove('draft');
+    }
 }
 
 // Initialize storage manager
