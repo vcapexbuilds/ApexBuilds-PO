@@ -3,9 +3,7 @@
 ## Power Automate Integration
 
 **⚠️ CRITICAL:** When working with Power Automate integration, always reference:
-- `POWER_AUTOMATE_JSON_SCHEMA.md` - Exact JSON structure requirements (HTTP 400 errors if not followed)
-- `POWER_AUTOMATE_INTEGRATION.md` - Integration overview and endpoint details  
-<!-- test-powerautomate.html removed (local test page) -->
+- `POWER_AUTOMATE_GUIDE.md` - Complete integration guide with exact JSON structure requirements
 
 The Power Automate schema validation is strict and requires exact data types and structure.
 
@@ -18,10 +16,7 @@ The Power Automate schema validation is strict and requires exact data types and
 
 ## Testing Power Automate
 
-1. Open `test-powerautomate.html` in browser
-2. Click "Test Connection" to verify endpoint
-3. Click "Send Sample PO" to test data transmission
-4. Check browser console for detailed logs
+Use the admin dashboard to manually sync POs to Power Automate for testing.
 
 ## Project Structure
 

@@ -1,7 +1,7 @@
 // API and Power Automate Integration
 class APIManager {
     constructor() {
-        // ⚠️ CRITICAL: JSON structure must match POWER_AUTOMATE_JSON_SCHEMA.md exactly
+        // ⚠️ CRITICAL: JSON structure must match POWER_AUTOMATE_GUIDE.md exactly
         // Any deviation will cause HTTP 400 schema validation errors
         
         // Load Power Automate HTTP trigger URL from environment variable or secure config
