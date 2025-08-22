@@ -377,8 +377,8 @@ class LoginPage {
                 Role: Admin
                 
                 User Access:
-                Username: demo
-                Password: demo123
+                Username: user
+                Password: user123
                 Role: User
                 
                 Or create a new account using the registration form.`,
@@ -395,8 +395,8 @@ class LoginPage {
                 text: 'Use User Demo',
                 class: 'btn-secondary',
                 action: () => {
-                    document.getElementById('username').value = 'demo';
-                    document.getElementById('password').value = 'demo123';
+                    document.getElementById('username').value = 'user';
+                    document.getElementById('password').value = 'user123';
                     document.getElementById('role').value = 'user';
                 }
             },
@@ -410,7 +410,7 @@ class LoginPage {
             alert(`Demo Credentials:
             
 Admin Access: admin/admin123 (Role: Admin)
-User Access: demo/demo123 (Role: User)`);
+User Access: user/user123 (Role: User)`);
         }
     }
 

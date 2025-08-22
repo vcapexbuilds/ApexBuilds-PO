@@ -6,6 +6,7 @@ class AuthManager {
         this.demoAccounts = {
             admin: {
                 email: 'admin@demo.com',
+                username: 'admin',
                 password: 'admin123',
                 role: 'admin',
                 name: 'Demo Admin',
@@ -13,6 +14,7 @@ class AuthManager {
             },
             user: {
                 email: 'user@demo.com',
+                username: 'user',
                 password: 'user123',
                 role: 'user',
                 name: 'Demo User',
@@ -34,7 +36,7 @@ class AuthManager {
     }
 
     // Login method
-    async login(email, password) {
+    async login(emailOrUsername, password) {
         try {
             // Demo account validation
             const demoAdmin = this.demoAccounts.admin;
@@ -42,12 +44,12 @@ class AuthManager {
 
             let user = null;
 
-            // Check for demo admin
-            if (email === demoAdmin.email && password === demoAdmin.password) {
+            // Check for demo admin (support both email and username)
+            if ((emailOrUsername === demoAdmin.email || emailOrUsername === demoAdmin.username) && password === demoAdmin.password) {
                 user = { ...demoAdmin };
             }
-            // Check for demo user
-            else if (email === demoUser.email && password === demoUser.password) {
+            // Check for demo user (support both email and username)
+            else if ((emailOrUsername === demoUser.email || emailOrUsername === demoUser.username) && password === demoUser.password) {
                 user = { ...demoUser };
             }
 
@@ -57,8 +59,8 @@ class AuthManager {
 
             // Create session
             const sessionData = {
-                id: user.id,
-                username: user.username,
+                id: user.id || user.username, // Use username as fallback ID
+                username: user.username || user.name,
                 email: user.email,
                 company: user.company,
                 role: user.role,
