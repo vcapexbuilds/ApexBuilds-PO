@@ -1,8 +1,10 @@
 // API and Power Automate Integration
 class APIManager {
     constructor() {
-        // Replace with your actual Power Automate HTTP trigger URL
-        this.POWER_AUTOMATE_URL = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA';
+        // Load Power Automate HTTP trigger URL from environment variable or secure config
+        this.POWER_AUTOMATE_URL = (typeof process !== 'undefined' && process.env && process.env.POWER_AUTOMATE_URL)
+            ? process.env.POWER_AUTOMATE_URL
+            : (window && window.POWER_AUTOMATE_URL ? window.POWER_AUTOMATE_URL : '');
         
         // Configuration
         this.config = {
@@ -139,9 +141,9 @@ class APIManager {
                 status: 'Submitted'
             });
 
-            // Shape payload to requested structure and sync
+            // Send shaped payload directly (not wrapped in action/data)
             const shaped = this.shapePOForSend(submittedPO);
-            const syncResult = await this.syncWithPowerAutomate('CREATE_PO', shaped);
+            const syncResult = await this.syncDirectly(shaped);
 
             return {
                 success: true,
@@ -171,9 +173,9 @@ class APIManager {
                 throw new Error('Purchase Order not found');
             }
 
-            // Shape payload and sync
+            // Send shaped payload directly
             const shaped = this.shapePOForSend(updatedPO);
-            const syncResult = await this.syncWithPowerAutomate('UPDATE_PO', shaped);
+            const syncResult = await this.syncDirectly(shaped);
 
             return {
                 success: true,
@@ -204,6 +206,47 @@ class APIManager {
             id: po.id,
             sentAt: po.sentAt || ''
         };
+    // Send payload directly to Power Automate without wrapper, with retry and queue handling
+    async syncDirectly(data, retryCount = 0) {
+        if (!this.config.enableSync) {
+            console.log('Power Automate sync is disabled');
+            return { success: true, message: 'Sync disabled' };
+        }
+
+        try {
+            const response = await this.makeRequest(this.POWER_AUTOMATE_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+
+            if (response.success) {
+                console.log('Power Automate sync successful');
+                return response;
+            } else {
+                throw new Error(response.error);
+            }
+
+        } catch (error) {
+            console.error('Power Automate sync failed', error);
+
+            // Retry logic
+            if (retryCount < this.config.retryAttempts) {
+                console.log(`Retrying direct sync in ${this.config.retryDelay}ms... (${retryCount + 1}/${this.config.retryAttempts})`);
+                await new Promise(resolve => setTimeout(resolve, this.config.retryDelay * (retryCount + 1)));
+                return this.syncDirectly(data, retryCount + 1);
+            }
+
+            // Add to failed requests queue
+            this.addToFailedQueue('DIRECT_SYNC', data);
+
+            return {
+                success: false,
+                error: error.message,
+                queued: true
+            };
+        }
+    }
+        }
     }
 
     async deletePO(poId) {
