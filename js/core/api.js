@@ -2,7 +2,7 @@
 class APIManager {
     constructor() {
         // Replace with your actual Power Automate HTTP trigger URL
-        this.POWER_AUTOMATE_URL = 'https://prod-xx.eastus.logic.azure.com:443/workflows/xxxxx/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=xxxxx';
+        this.POWER_AUTOMATE_URL = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA';
         
         // Configuration
         this.config = {
