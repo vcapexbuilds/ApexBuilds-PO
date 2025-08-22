@@ -1,5 +1,9 @@
 # Power Automate Integration Notes
 
+## ⚠️ CRITICAL SCHEMA REQUIREMENT
+**The JSON structure below MUST be followed exactly. Any deviation will cause HTTP 400 errors.**
+**See `POWER_AUTOMATE_JSON_SCHEMA.md` for detailed implementation guide.**
+
 ## PO Form Submission
 
 ### HTTP Endpoint
@@ -49,7 +53,8 @@ The JSON payload sent to the above endpoint must strictly follow this structure:
       "unit": 0,
       "totalCost": 0,
       "scheduled": 0,
-      "apexContractValue": 0
+      "apexContractValue": 0,
+      "profit": 0
     }
   ],
   "scope": [

@@ -724,17 +724,23 @@
 }
 
 /* Spreadsheet-style column widths - schedule table */
-#scheduleTable th:nth-child(1), #scheduleTable td:nth-child(1) { width: 10% !important; }  /* Prime Line */
-#scheduleTable th:nth-child(2), #scheduleTable td:nth-child(2) { width: 10% !important; }  /* Budget Code */  
-#scheduleTable th:nth-child(3), #scheduleTable td:nth-child(3) { width: 40% !important; }  /* Description - 40% */
-#scheduleTable th:nth-child(4), #scheduleTable td:nth-child(4) { width: 7.5% !important; }  /* Quantity */
-#scheduleTable th:nth-child(5), #scheduleTable td:nth-child(5) { width: 7.5% !important; }  /* Unit */
-#scheduleTable th:nth-child(6), #scheduleTable td:nth-child(6) { width: 7.5% !important; }  /* Total Cost */
-#scheduleTable th:nth-child(7), #scheduleTable td:nth-child(7) { width: 7.5% !important; }  /* Scheduled */
-#scheduleTable th:nth-child(8), #scheduleTable td:nth-child(8) { width: 7.5% !important; }  /* Apex Contract */
-#scheduleTable th:nth-child(9), #scheduleTable td:nth-child(9) { width: 7.5% !important; }  /* Actions - same as others */
+/* Schedule table column widths (sum to 100%) */
+#scheduleTable th:nth-child(1), #scheduleTable td:nth-child(1) { width: 8% !important; }   /* Prime Line */
+#scheduleTable th:nth-child(2), #scheduleTable td:nth-child(2) { width: 10% !important; }  /* Budget Code */
+#scheduleTable th:nth-child(3), #scheduleTable td:nth-child(3) { width: 30% !important; }  /* Description */
+#scheduleTable th:nth-child(4), #scheduleTable td:nth-child(4) { width: 8% !important; }   /* Quantity */
+#scheduleTable th:nth-child(5), #scheduleTable td:nth-child(5) { width: 8% !important; }   /* Unit */
+#scheduleTable th:nth-child(6), #scheduleTable td:nth-child(6) { width: 8% !important; }   /* Total Cost */
+#scheduleTable th:nth-child(7), #scheduleTable td:nth-child(7) { width: 8% !important; }   /* Scheduled */
+#scheduleTable th:nth-child(8), #scheduleTable td:nth-child(8) { width: 10% !important; }  /* Apex Contract Value */
+#scheduleTable th:nth-child(9), #scheduleTable td:nth-child(9) { width: 5% !important; }   /* Profit */
+#scheduleTable th:nth-child(10), #scheduleTable td:nth-child(10) { width: 5% !important; min-width: 28px; } /* Actions */
 
 /* Spreadsheet-style column widths - scope table */
+/* Column widths for schedule table with profit column */
+/* Remove incorrect descendant selector variant to avoid conflicts */
+/* (Replaced by the direct #scheduleTable th/td rules above) */
+
 #scopeTable th:nth-child(1), #scopeTable td:nth-child(1) { width: 18% !important; } /* Item */
 #scopeTable th:nth-child(2), #scopeTable td:nth-child(2) { width: 55% !important; } /* Description - 55% */
 #scopeTable th:nth-child(3), #scopeTable td:nth-child(3) { width: 18% !important; } /* Status */
@@ -810,8 +816,53 @@
     box-sizing: border-box;
 }
 
+/* Override general btn-danger for icon buttons */
+.form-table .btn-icon.btn-danger {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+}
+
 .form-table .btn-danger:hover {
     background: #cc3333;
+}
+
+/* Icon button styling for compact remove buttons */
+.form-table .btn-icon {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    padding: 0 !important;
+    margin: 1px !important;
+    border-radius: 3px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    border: 1px solid transparent !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+}
+
+.form-table .btn-icon.btn-danger {
+    background: #ff4444 !important;
+    color: white !important;
+    border-color: #ff4444 !important;
+}
+
+.form-table .btn-icon.btn-danger:hover {
+    background: #cc3333 !important;
+    border-color: #cc3333 !important;
+    transform: scale(1.1) !important;
+}
+
+.form-table .btn-icon:active {
+    transform: scale(0.95);
 }
 
 /* Status radio buttons for scope items */
@@ -923,4 +974,10 @@
         padding: 30px 15px;
         font-size: 13px;
     }
+}
+
+/* Scope table: allocate compact width for Actions column */
+#scopeTable th:nth-child(4), #scopeTable td:nth-child(4) {
+    width: 6% !important;
+    min-width: 28px;
 }

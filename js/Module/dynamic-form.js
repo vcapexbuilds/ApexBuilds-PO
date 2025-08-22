@@ -10,6 +10,8 @@ class DynamicForm {
         this.enableRowResizing();
         this.enableResponsiveFonts();
         this.enableCellResizing();
+        
+    // Test row injection removed for production
     }
 
     enableResponsiveFonts() {
@@ -309,10 +311,16 @@ class DynamicForm {
     }
 
     bindEvents() {
+        console.log('🔧 bindEvents called');
+        
         // Add schedule item button
         const addScheduleBtn = document.getElementById('addScheduleItem');
+        console.log('🔧 addScheduleBtn found:', addScheduleBtn);
         if (addScheduleBtn) {
-            addScheduleBtn.addEventListener('click', () => this.addScheduleItem());
+            addScheduleBtn.addEventListener('click', () => {
+                console.log('🔧 Add Schedule Item button clicked!');
+                this.addScheduleItem();
+            });
         }
 
         // Add scope item button
@@ -323,6 +331,7 @@ class DynamicForm {
     }
 
     addScheduleItem(data = null) {
+        console.log('🔧 addScheduleItem called with data:', data);
         const tbody = document.getElementById('scheduleItems');
         const itemId = `schedule-${Date.now()}`;
         
@@ -337,10 +346,23 @@ class DynamicForm {
             <td><input type="number" name="totalCost" required value="${data?.totalCost || ''}" placeholder="0.00" step="0.01"></td>
             <td><input type="number" name="scheduled" required value="${data?.scheduled || ''}" placeholder="0.00" step="0.01"></td>
             <td><input type="number" name="apexContractValue" required value="${data?.apexContractValue || ''}" placeholder="0.00" step="0.01"></td>
-            <td><button type="button" class="btn-danger" onclick="dynamicForm.removeItem('${itemId}')">Remove</button></td>
+            <td><input type="number" name="profit" required value="${data?.profit || ''}" placeholder="0.00" step="0.01"></td>
+                <td><button type="button" class="btn-icon btn-danger" data-item-id="${itemId}" title="Remove" style="width:18px;height:18px;padding:0;margin:1px;border-radius:3px;background:#ff4444;color:white;border:1px solid #ff4444;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">✕</button></td>
         `;
+        
+        console.log('🔧 Created row HTML:', scheduleRow.innerHTML);
 
         tbody.appendChild(scheduleRow);
+        
+        // Add event listener to the remove button
+        const removeBtn = scheduleRow.querySelector('.btn-icon');
+        console.log('🔧 Remove button found:', removeBtn);
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                console.log('🔧 Remove button clicked for item:', itemId);
+                this.removeItem(itemId);
+            });
+        }
         this.updateTableVisibility();
         this.updateFormValidation();
         
@@ -372,10 +394,18 @@ class DynamicForm {
                     </label>
                 </div>
             </td>
-            <td><button type="button" class="btn-danger" onclick="dynamicForm.removeItem('${itemId}')">Remove</button></td>
+                <td><button type="button" class="btn-icon btn-danger" data-item-id="${itemId}" title="Remove" style="width:18px;height:18px;padding:0;margin:1px;border-radius:3px;background:#ff4444;color:white;border:1px solid #ff4444;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">✕</button></td>
         `;
 
         tbody.appendChild(scopeRow);
+        
+        // Add event listener to the remove button
+        const removeBtn = scopeRow.querySelector('.btn-icon');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                this.removeItem(itemId);
+            });
+        }
         this.updateTableVisibility();
         this.updateFormValidation();
         

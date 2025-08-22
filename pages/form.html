@@ -11,7 +11,7 @@
     <nav class="navbar">
         <div class="nav-brand">Purchase Order Form</div>
         <div class="nav-menu">
-            <button id="backBtn" class="btn btn-secondary">Back to Dashboard</button>
+            <button id="backBtn" class="btn btn-secondary" onclick="testBackButton()">Back to Dashboard</button>
             <button id="logoutBtn" class="btn btn-secondary" onclick="handleLogout()">Logout</button>
         </div>
     </nav>
@@ -210,6 +210,7 @@
                             <th>Total Cost *</th>
                             <th>Scheduled *</th>
                             <th>Apex Contract Value *</th>
+                            <th>Profit *</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -304,6 +305,49 @@
     
     <!-- Global logout function -->
     <script>
+        function testBackButton() {
+            console.log('testBackButton called!');
+            
+            // Check if we can use the modal
+            if (typeof window.showConfirmModal === 'function') {
+                window.showConfirmModal(
+                    'Confirm Navigation',
+                    'Are you sure you want to leave? Any unsaved changes will be lost.',
+                    function() {
+                        // Navigate to appropriate dashboard based on user role
+                        if (window.auth && window.auth.isAuthenticated()) {
+                            const currentUser = window.auth.getCurrentUser();
+                            if (currentUser && currentUser.role === 'admin') {
+                                window.location.href = '../pages/admin.html';
+                            } else {
+                                window.location.href = '../pages/tracking.html';
+                            }
+                        } else {
+                            // If not authenticated, redirect to login
+                            window.location.href = '../index.html';
+                        }
+                    },
+                    null
+                );
+            } else {
+                console.log('Modal not available, using basic confirm');
+                if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
+                    // Navigate to appropriate dashboard based on user role
+                    if (window.auth && window.auth.isAuthenticated()) {
+                        const currentUser = window.auth.getCurrentUser();
+                        if (currentUser && currentUser.role === 'admin') {
+                            window.location.href = '../pages/admin.html';
+                        } else {
+                            window.location.href = '../pages/tracking.html';
+                        }
+                    } else {
+                        // If not authenticated, redirect to login
+                        window.location.href = '../index.html';
+                    }
+                }
+            }
+        }
+        
         function handleLogout() {
             console.log('handleLogout called');
             console.log('window.auth:', window.auth);

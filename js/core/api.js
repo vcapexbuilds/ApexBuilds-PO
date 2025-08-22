@@ -1,10 +1,14 @@
 // API and Power Automate Integration
 class APIManager {
     constructor() {
+        // ⚠️ CRITICAL: JSON structure must match POWER_AUTOMATE_JSON_SCHEMA.md exactly
+        // Any deviation will cause HTTP 400 schema validation errors
+        
         // Load Power Automate HTTP trigger URL from environment variable or secure config
         this.POWER_AUTOMATE_URL = (typeof process !== 'undefined' && process.env && process.env.POWER_AUTOMATE_URL)
             ? process.env.POWER_AUTOMATE_URL
-            : (window && window.POWER_AUTOMATE_URL ? window.POWER_AUTOMATE_URL : '');
+            : (window && window.POWER_AUTOMATE_URL ? window.POWER_AUTOMATE_URL : 
+                'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA');
         
         // Configuration
         this.config = {
@@ -45,9 +49,19 @@ class APIManager {
 
         const requestOptions = { ...defaultOptions, ...options };
 
+        console.log('🌐 Making HTTP request:', {
+            url: url,
+            method: requestOptions.method,
+            headers: requestOptions.headers,
+            bodyLength: requestOptions.body ? requestOptions.body.length : 0
+        });
+
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), requestOptions.timeout);
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ Request timeout after', requestOptions.timeout, 'ms');
+                controller.abort();
+            }, requestOptions.timeout);
 
             const response = await fetch(url, {
                 ...requestOptions,
@@ -56,15 +70,43 @@ class APIManager {
 
             clearTimeout(timeoutId);
 
+            console.log('📡 Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                headers: Object.fromEntries(response.headers.entries())
+            });
+
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text();
+                console.log('❌ Response error body:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
             }
 
-            const data = await response.json();
+            // Try to parse JSON response
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+                console.log('📄 Non-JSON response:', data);
+            }
+            
+            console.log('✅ Request successful, data:', data);
             return { success: true, data };
 
         } catch (error) {
-            console.error('Request failed:', error);
+            console.error('❌ Request failed:', {
+                url: url,
+                error: error.message,
+                name: error.name
+            });
+            
+            if (error.name === 'AbortError') {
+                return { success: false, error: 'Request timeout' };
+            }
+            
             return { success: false, error: error.message };
         }
     }
@@ -196,16 +238,66 @@ class APIManager {
     // Shape PO to the requested HTTP schema
     shapePOForSend(po) {
         if (!po) return po;
-        return {
-            meta: po.meta || {},
-            schedule: Array.isArray(po.schedule) ? po.schedule : [],
-            scope: Array.isArray(po.scope) ? po.scope : [],
-            createdAt: po.createdAt || new Date().toISOString(),
-            sent: !!po.sent,
-            timestamp: po.timestamp || Date.now(),
-            id: po.id,
-            sentAt: po.sentAt || ''
+        
+        const meta = po.meta || {};
+        
+        // Ensure proper data types - Power Automate expects specific types
+        const shaped = {
+            meta: {
+                projectName: String(meta.projectName || ""),
+                generalContractor: String(meta.generalContractor || ""),
+                address: String(meta.address || ""),
+                owner: String(meta.owner || ""),
+                apexOwner: String(meta.apexOwner || ""),
+                typeStatus: String(meta.typeStatus || ""),
+                projectManager: String(meta.projectManager || ""),
+                contractAmount: parseInt(meta.contractAmount) || 0,
+                addAltAmount: parseInt(meta.addAltAmount) || 0,
+                addAltDetails: String(meta.addAltDetails || ""),
+                retainagePct: parseInt(meta.retainagePct) || 0,
+                requestedBy: String(meta.requestedBy || ""),
+                companyName: String(meta.companyName || ""),
+                contactName: String(meta.contactName || ""),
+                cellNumber: String(meta.cellNumber || ""),
+                email: String(meta.email || ""),
+                officeNumber: String(meta.officeNumber || ""),
+                vendorType: String(meta.vendorType || ""),
+                workType: String(meta.workType || ""),
+                importantDates: {
+                    noticeToProceed: String((meta.importantDates?.noticeToProceed) || ""),
+                    anticipatedStart: String((meta.importantDates?.anticipatedStart) || ""),
+                    substantialCompletion: String((meta.importantDates?.substantialCompletion) || ""),
+                    hundredPercent: String((meta.importantDates?.hundredPercent) || "")
+                }
+            },
+            schedule: Array.isArray(po.schedule) ? po.schedule.map(item => ({
+                primeLine: String(item.primeLine || ""),
+                budgetCode: String(item.budgetCode || ""),
+                description: String(item.description || ""),
+                qty: parseInt(item.qty) || 0,
+                unit: parseInt(item.unit) || 0,
+                totalCost: parseInt(item.totalCost) || 0,
+                scheduled: parseInt(item.scheduled) || 0,
+                apexContractValue: parseInt(item.apexContractValue) || 0,
+                profit: parseInt(item.profit) || 0
+            })) : [],
+            scope: Array.isArray(po.scope) ? po.scope.map(item => ({
+                item: String(item.item || ""),
+                description: String(item.description || ""),
+                included: Boolean(item.included),
+                excluded: Boolean(item.excluded)
+            })) : [],
+            createdAt: String(po.createdAt || new Date().toISOString()),
+            sent: Boolean(po.sent),
+            timestamp: parseInt(po.timestamp) || Date.now(),
+            id: parseInt(po.id) || Math.floor(Date.now() / 1000), // Ensure integer ID
+            sentAt: String(po.sentAt || new Date().toISOString())
         };
+        
+        console.log('🔄 Shaped PO for Power Automate (with profit field):', JSON.stringify(shaped, null, 2));
+        return shaped;
+    }
+
     // Send payload directly to Power Automate without wrapper, with retry and queue handling
     async syncDirectly(data, retryCount = 0) {
         if (!this.config.enableSync) {
@@ -213,29 +305,46 @@ class APIManager {
             return { success: true, message: 'Sync disabled' };
         }
 
+        console.log('=== POWER AUTOMATE SYNC ATTEMPT ===');
+        console.log('URL:', this.POWER_AUTOMATE_URL);
+        console.log('Data being sent:', JSON.stringify(data, null, 2));
+        console.log('Retry count:', retryCount);
+
         try {
             const response = await this.makeRequest(this.POWER_AUTOMATE_URL, {
                 method: 'POST',
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
             });
 
             if (response.success) {
-                console.log('Power Automate sync successful');
+                console.log('✅ Power Automate sync successful');
+                console.log('Response:', response.data);
                 return response;
             } else {
+                console.error('❌ Power Automate sync failed:', response.error);
                 throw new Error(response.error);
             }
 
         } catch (error) {
-            console.error('Power Automate sync failed', error);
+            console.error('❌ Power Automate sync failed with error:', error);
+            console.log('Error details:', {
+                message: error.message,
+                name: error.name,
+                stack: error.stack
+            });
 
             // Retry logic
             if (retryCount < this.config.retryAttempts) {
-                console.log(`Retrying direct sync in ${this.config.retryDelay}ms... (${retryCount + 1}/${this.config.retryAttempts})`);
+                console.log(`🔄 Retrying direct sync in ${this.config.retryDelay}ms... (${retryCount + 1}/${this.config.retryAttempts})`);
                 await new Promise(resolve => setTimeout(resolve, this.config.retryDelay * (retryCount + 1)));
                 return this.syncDirectly(data, retryCount + 1);
             }
 
+            console.log('❌ All retry attempts exhausted, adding to failed queue');
             // Add to failed requests queue
             this.addToFailedQueue('DIRECT_SYNC', data);
 
@@ -244,8 +353,6 @@ class APIManager {
                 error: error.message,
                 queued: true
             };
-        }
-    }
         }
     }
 

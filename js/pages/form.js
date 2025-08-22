@@ -12,15 +12,21 @@ class POForm {
     }
 
     initialize() {
+        console.log('POForm initialize called');
+        console.log('window.auth available:', !!window.auth);
+        console.log('window.showConfirmModal available:', !!window.showConfirmModal);
+        
         // Wait for global objects to be available
         const checkGlobals = () => {
             if (window.auth && window.showConfirmModal) {
+                console.log('Both auth and showConfirmModal are available, initializing...');
                 this.initializeAuth();
                 this.bindEvents();
                 this.loadDraft();
                 this.scheduleItemTemplate = this.createScheduleItemTemplate();
                 this.scopeItemTemplate = this.createScopeItemTemplate();
             } else {
+                console.log('Waiting for globals...', {auth: !!window.auth, modal: !!window.showConfirmModal});
                 setTimeout(checkGlobals, 100);
             }
         };
@@ -43,13 +49,37 @@ class POForm {
     }
 
     bindEvents() {
-        document.getElementById('backBtn').addEventListener('click', () => {
-            window.showConfirmModal(
-                'Confirm Navigation',
-                'Are you sure you want to leave? Any unsaved changes will be lost.',
-                () => window.history.back(),
-                null
-            );
+        console.log('bindEvents called');
+        console.log('backBtn element:', document.getElementById('backBtn'));
+        console.log('window.showConfirmModal available:', typeof window.showConfirmModal);
+        
+        const backBtn = document.getElementById('backBtn');
+        if (!backBtn) {
+            console.error('Back button not found!');
+            return;
+        }
+        
+        backBtn.addEventListener('click', (e) => {
+            console.log('Back button clicked!', e);
+            
+            if (typeof window.showConfirmModal === 'function') {
+                window.showConfirmModal(
+                    'Confirm Navigation',
+                    'Are you sure you want to leave? Any unsaved changes will be lost.',
+                    () => {
+                        console.log('Confirmed, navigating to appropriate dashboard');
+                        this.navigateToDashboard();
+                    },
+                    () => {
+                        console.log('Cancelled navigation');
+                    }
+                );
+            } else {
+                console.log('showConfirmModal not available, using basic confirm');
+                if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
+                    this.navigateToDashboard();
+                }
+            }
         });
 
         // Note: Logout button now uses onclick="handleLogout()" in HTML
@@ -61,6 +91,23 @@ class POForm {
 
         // Auto-save draft every minute
         setInterval(() => this.saveDraft(true), 60000);
+    }
+
+    navigateToDashboard() {
+        // Navigate to appropriate dashboard based on user role
+        if (window.auth && window.auth.isAuthenticated()) {
+            const currentUser = window.auth.getCurrentUser();
+            if (currentUser && currentUser.role === 'admin') {
+                console.log('Navigating to admin dashboard');
+                window.location.href = '../pages/admin.html';
+            } else {
+                console.log('Navigating to user dashboard (tracking)');
+                window.location.href = '../pages/tracking.html';
+            }
+        } else {
+            console.log('User not authenticated, redirecting to login');
+            window.location.href = '../index.html';
+        }
     }
 
     async loadExistingPO(poId) {
@@ -334,23 +381,64 @@ class POForm {
                         class: 'btn-primary',
                         handler: async () => {
                             try {
+                                // Show loading modal
+                                modal.showLoadingModal('Submitting Purchase Order...');
+                                
                                 formData.sent = true;
                                 formData.sentAt = new Date().toISOString();
-                                await api.createPO(formData);
-                                storage.clearDraft();
                                 
-                                modal.show({
-                                    title: 'Success',
-                                    content: 'Purchase Order submitted successfully.',
-                                    actions: [{
-                                        id: 'ok',
-                                        label: 'View My POs',
-                                        class: 'btn-primary',
-                                        handler: () => window.location.href = '/pages/tracking.html'
-                                    }]
-                                });
+                                const result = await api.createPO(formData);
+                                
+                                // Hide loading modal
+                                modal.hideLoadingModal();
+                                
+                                if (result.success) {
+                                    storage.clearDraft();
+                                    
+                                    // Show detailed success message
+                                    const syncStatus = result.syncStatus || 'unknown';
+                                    const powerAutomateStatus = syncStatus === 'synced' ? 
+                                        '✅ Successfully sent to Power Automate' : 
+                                        '⚠️ Saved locally, will retry sending to Power Automate';
+                                    
+                                    modal.show({
+                                        title: 'Purchase Order Submitted Successfully!',
+                                        content: `
+                                            <div class="success-details">
+                                                <p><strong>PO ID:</strong> ${result.po.id}</p>
+                                                <p><strong>Status:</strong> ${result.po.status}</p>
+                                                <p><strong>Local Storage:</strong> ✅ Saved successfully</p>
+                                                <p><strong>Power Automate:</strong> ${powerAutomateStatus}</p>
+                                                <p><strong>Submitted At:</strong> ${new Date(result.po.sentAt).toLocaleString()}</p>
+                                            </div>
+                                        `,
+                                        actions: [{
+                                            id: 'ok',
+                                            label: 'View My POs',
+                                            class: 'btn-primary',
+                                            handler: () => {
+                                                const currentUser = window.auth?.getCurrentUser();
+                                                if (currentUser?.role === 'admin') {
+                                                    window.location.href = '/pages/admin.html';
+                                                } else {
+                                                    window.location.href = '/pages/tracking.html';
+                                                }
+                                            }
+                                        }]
+                                    });
+                                } else {
+                                    modal.showErrorModal(
+                                        'Submission Failed',
+                                        `Failed to submit Purchase Order: ${result.error || 'Unknown error'}`
+                                    );
+                                }
                             } catch (error) {
-                                modal.showError('Failed to submit Purchase Order. Please try again.');
+                                console.error('Submit error:', error);
+                                modal.hideLoadingModal();
+                                modal.showErrorModal(
+                                    'Submission Failed',
+                                    `Failed to submit Purchase Order: ${error.message || 'Network or server error'}`
+                                );
                             }
                         }
                     }
