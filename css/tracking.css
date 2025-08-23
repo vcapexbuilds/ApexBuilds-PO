@@ -7,16 +7,143 @@
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     margin-top: 20px;
-    padding: 30px;
+    padding: 20px;
 }
 
-/* Filters Section */
+/* Compact Dashboard Layout */
+.dashboard-layout {
+    display: flex;
+    gap: 20px;
+    min-height: calc(100vh - 200px);
+}
+
+/* Left Sidebar - Compact */
+.sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Filters in Sidebar */
+.filters-sidebar {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filters-sidebar h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.filter-group {
+    margin-bottom: 12px;
+}
+
+.filter-group label {
+    display: block;
+    font-weight: 500;
+    color: #555;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+    transition: border-color 0.2s ease;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(27, 54, 93, 0.1);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+
+/* Stats in Sidebar */
+.stats-sidebar {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.stats-sidebar h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.stats-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(27, 54, 93, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--apex-primary);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #666;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 600;
+}
+
+/* Main Content Area */
+.main-content {
+    flex: 1;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+/* Legacy Filters Section - Hidden by default in new layout */
 .filters {
     background: rgba(248, 249, 250, 0.8);
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 30px;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: none; /* Hidden in new layout */
 }
 
 .filter-row {
@@ -56,7 +183,7 @@
 .filter-group select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.1);
 }
 
 .filter-actions {
@@ -105,22 +232,44 @@
 .list-actions {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
-.list-actions button {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+.list-actions .btn {
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 
-.list-actions button:hover {
-    background: rgba(255, 255, 255, 0.3);
+.list-actions .btn-primary {
+    background: var(--apex-secondary);
+    color: white;
+    font-weight: 600;
+}
+
+.list-actions .btn-primary:hover {
+    background: #e55a2e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+}
+
+.list-actions .btn-secondary {
+    background: transparent;
+    color: var(--apex-primary);
+    border: 1px solid var(--apex-primary);
+}
+
+.list-actions .btn-secondary:hover {
+    background: var(--apex-primary);
+    color: white;
     transform: translateY(-1px);
 }
 
@@ -522,7 +671,7 @@ input[type="checkbox"] {
         gap: 10px;
     }
     
-    .filter-actions button {
+    .filter-actions .btn {
         width: 100%;
     }
     
@@ -534,6 +683,11 @@ input[type="checkbox"] {
     
     .list-actions {
         justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .list-actions .btn {
+        min-width: 120px;
     }
     
     .table-container {
@@ -597,6 +751,19 @@ input[type="checkbox"] {
         font-size: 1.5rem;
     }
     
+    .list-actions {
+        flex-direction: column;
+        width: 100%;
+        gap: 8px;
+    }
+    
+    .list-actions .btn {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 16px;
+        justify-content: center;
+    }
+    
     .pagination {
         flex-direction: column;
         gap: 15px;
@@ -614,5 +781,76 @@ input[type="checkbox"] {
     
     .modal-actions button {
         width: 100%;
+    }
+}
+
+/* Responsive Design for Compact Layout */
+@media (max-width: 1024px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+    
+    .sidebar {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        padding: 15px;
+    }
+    
+    .filters-sidebar {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+        border-right: 1px solid rgba(0, 0, 0, 0.1);
+        padding-right: 20px;
+    }
+    
+    .stats-sidebar {
+        padding-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .filters-sidebar {
+        border-right: none;
+        padding-right: 0;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-vertical {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .container {
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .dashboard-layout {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-vertical {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-small {
+        flex: none;
     }
 }

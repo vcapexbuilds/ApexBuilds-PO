@@ -1,4 +1,23 @@
-/* Global Styles */
+/* Global Styles - Apex Building Group Theme */
+:root {
+    /* Apex Brand Colors */
+    --apex-primary: #1B365D;        /* Deep Professional Blue */
+    --apex-secondary: #FF6B35;      /* Construction Orange/Red */
+    --apex-accent: #4A90B8;         /* Light Blue Accent */
+    --apex-dark: #0F2235;           /* Dark Blue */
+    --apex-light: #F8FAFB;          /* Off White */
+    --apex-gray: #6C7B7F;           /* Professional Gray */
+    --apex-light-gray: #E8EDEF;     /* Light Gray */
+    
+    /* Status Colors */
+    --apex-success: #28A745;        /* Green */
+    --apex-warning: #FFC107;        /* Amber */
+    --apex-error: #DC3545;          /* Red */
+    --apex-info: var(--apex-accent); /* Blue Accent */
+    
+    /* Gradient */
+    --apex-gradient: linear-gradient(135deg, var(--apex-primary), var(--apex-accent));
+}
 * {
     margin: 0;
     padding: 0;
@@ -7,7 +26,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--apex-gradient);
     min-height: 100vh;
     color: #333;
 }
@@ -23,7 +42,7 @@ body {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     padding: 15px 20px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--apex-light-gray);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -32,8 +51,20 @@ body {
     z-index: 100;
 }
 
+.header-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-logo {
+    height: 40px;
+    width: auto;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
 .header h1 {
-    color: #333;
+    color: var(--apex-primary);
     font-size: 1.8rem;
     font-weight: 600;
 }
@@ -51,7 +82,7 @@ body {
 
 .nav-link {
     text-decoration: none;
-    color: #667eea;
+    color: var(--apex-primary);
     font-weight: 500;
     padding: 8px 16px;
     border-radius: 6px;
@@ -59,8 +90,8 @@ body {
 }
 
 .nav-link:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: #5a6fd8;
+    background: rgba(27, 54, 93, 0.1);
+    color: var(--apex-secondary);
 }
 
 .logout-btn {
@@ -114,9 +145,17 @@ body {
     margin-bottom: 30px;
 }
 
+.company-logo {
+    height: 50px;
+    width: auto;
+    margin-bottom: 15px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
 .logo h1 {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--apex-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     font-size: 2rem;
     font-weight: 700;
@@ -150,8 +189,8 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: var(--apex-primary);
+    box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.1);
     transform: translateY(-1px);
 }
 
@@ -167,7 +206,7 @@ body {
 
 /* Button Styles */
 .btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--apex-gradient);
     color: white;
     border: none;
     padding: 12px 24px;
@@ -183,13 +222,13 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 25px rgba(27, 54, 93, 0.3);
 }
 
 .btn-secondary {
-    background: rgba(108, 117, 125, 0.1);
-    color: #6c757d;
-    border: 2px solid #6c757d;
+    background: rgba(27, 54, 93, 0.1);
+    color: var(--apex-primary);
+    border: 2px solid var(--apex-primary);
     padding: 10px 20px;
     border-radius: 8px;
     font-size: 16px;
@@ -199,13 +238,13 @@ body {
 }
 
 .btn-secondary:hover {
-    background: #6c757d;
+    background: var(--apex-primary);
     color: white;
     transform: translateY(-1px);
 }
 
 .btn-success {
-    background: #28a745;
+    background: var(--apex-success);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -222,7 +261,7 @@ body {
 }
 
 .btn-danger {
-    background: #dc3545;
+    background: var(--apex-danger);
     color: white;
     border: none;
     padding: 10px 20px;
@@ -240,7 +279,7 @@ body {
 
 .login-btn {
     width: 100%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: var(--apex-gradient);
     color: white;
     border: none;
     padding: 15px;
@@ -253,7 +292,7 @@ body {
 
 .login-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 25px rgba(27, 54, 93, 0.3);
 }
 
 /* Register Link */
@@ -263,7 +302,7 @@ body {
 }
 
 .register-link a {
-    color: #667eea;
+    color: var(--apex-primary);
     text-decoration: none;
     font-weight: 500;
 }
@@ -322,11 +361,11 @@ body {
 }
 
 .modal-content.success {
-    border-left: 5px solid #28a745;
+    border-left: 5px solid var(--apex-success);
 }
 
 .modal-content.error {
-    border-left: 5px solid #dc3545;
+    border-left: 5px solid var(--apex-danger);
 }
 
 .modal-header {
@@ -379,8 +418,8 @@ body {
 
 .loading-spinner,
 .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
+    border: 4px solid var(--apex-light-gray);
+    border-top: 4px solid var(--apex-primary);
     border-radius: 50%;
     width: 40px;
     height: 40px;
@@ -430,7 +469,7 @@ body {
 
 .stat-card h3 {
     font-size: 2rem;
-    color: #667eea;
+    color: var(--apex-primary);
     margin-bottom: 10px;
     font-weight: 700;
 }
@@ -452,6 +491,19 @@ body {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+    }
+    
+    .header-brand {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .header-logo {
+        height: 35px;
+    }
+    
+    .company-logo {
+        height: 40px;
     }
     
     .user-info {

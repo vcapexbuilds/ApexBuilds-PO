@@ -9,70 +9,93 @@
 </head>
 <body>
     <div class="header">
-        <h1>My Purchase Orders</h1>
+        <div class="header-brand">
+            <img src="../asset/images/apex-logo.svg" alt="Apex Building Group" class="header-logo">
+            <h1>My Purchase Orders</h1>
+        </div>
         <div class="user-info">
             <span id="welcomeUser">Welcome, User</span>
-            <a href="../pages/form.html" class="nav-link">New PO</a>
             <button id="logoutBtn" class="logout-btn" onclick="if(confirm('Are you sure you want to logout?')) { auth.logout(); }">Logout</button>
         </div>
     </div>
 
     <div class="container">
-        <!-- Filter Section -->
-        <div class="filters">
-            <div class="filter-group">
-                <label for="statusFilter">Status:</label>
-                <select id="statusFilter">
-                    <option value="">All</option>
-                    <option value="Draft">Draft</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="dateFilter">Date Range:</label>
-                <input type="date" id="dateFrom" placeholder="From">
-                <input type="date" id="dateTo" placeholder="To">
-            </div>
-            
-            <div class="filter-group">
-                <label for="projectFilter">Project:</label>
-                <input type="text" id="projectFilter" placeholder="Search by project name">
-            </div>
-            
-            <button id="applyFilters" class="btn-primary">Apply Filters</button>
-            <button id="clearFilters" class="btn-secondary">Clear</button>
-        </div>
+        <!-- Compact Layout: Side Panel for Filters and Stats -->
+        <div class="dashboard-layout">
+            <!-- Left Sidebar -->
+            <div class="sidebar">
+                <!-- Filter Section -->
+                <div class="filters-sidebar">
+                    <h3>Filters</h3>
+                    
+                    <div class="filter-group">
+                        <label for="statusFilter">Status:</label>
+                        <select id="statusFilter">
+                            <option value="">All</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Submitted">Submitted</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateFrom">Date From:</label>
+                        <input type="date" id="dateFrom">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="dateTo">Date To:</label>
+                        <input type="date" id="dateTo">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="projectFilter">Project:</label>
+                        <input type="text" id="projectFilter" placeholder="Search project">
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button id="applyFilters" class="btn-primary btn-small">Apply</button>
+                        <button id="clearFilters" class="btn-secondary btn-small">Clear</button>
+                    </div>
+                </div>
 
-        <!-- Stats Section -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3 id="totalPOs">0</h3>
-                <p>Total POs</p>
+                <!-- Stats Section -->
+                <div class="stats-sidebar">
+                    <h3>Statistics</h3>
+                    <div class="stats-vertical">
+                        <div class="stat-item">
+                            <span class="stat-label">Total POs:</span>
+                            <span class="stat-value" id="totalPOs">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Submitted:</span>
+                            <span class="stat-value" id="submittedPOs">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Approved:</span>
+                            <span class="stat-value" id="approvedPOs">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Value:</span>
+                            <span class="stat-value" id="totalValue">$0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3 id="submittedPOs">0</h3>
-                <p>Submitted</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="approvedPOs">0</h3>
-                <p>Approved</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="totalValue">$0</h3>
-                <p>Total Value</p>
-            </div>
-        </div>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
 
         <!-- PO List -->
         <div class="po-list">
             <div class="list-header">
                 <h2>Purchase Orders</h2>
                 <div class="list-actions">
-                    <button id="refreshList" class="btn-secondary">🔄 Refresh</button>
-                    <button id="exportList" class="btn-secondary">📥 Export</button>
+                    <button id="newPOBtn" class="btn btn-primary" onclick="testNewPOClick()" style="z-index: 9999; pointer-events: auto; position: relative;">➕ New PO</button>
+                    <button id="testBtn" class="btn btn-secondary" onclick="alert('Test button works!')">🔧 Test</button>
+                    <button id="refreshList" class="btn btn-secondary">🔄 Refresh</button>
+                    <button id="exportList" class="btn btn-secondary">📥 Export</button>
                 </div>
             </div>
 
@@ -110,7 +133,9 @@
                 <span id="pageInfo">Page 1 of 1</span>
                 <button id="nextPage" class="btn-secondary">Next</button>
             </div>
-        </div>
+            
+            </div> <!-- End main-content -->
+        </div> <!-- End dashboard-layout -->
     </div>
 
     <!-- PO Details Modal -->
@@ -158,6 +183,6 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/api.js"></script>
     <script src="../js/Module/modal.js"></script>
-    <script type="module" src="../js/pages/tracking.js"></script>
+    <script src="../js/pages/tracking.js"></script>
 </body>
 </html>

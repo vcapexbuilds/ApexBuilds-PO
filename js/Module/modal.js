@@ -469,6 +469,9 @@ function validateForm(formElement) {
     return modalManager.validateForm(formElement);
 }
 
+// Initialize modal manager
+const modal = new ModalManager();
+
 // Make functions available globally
 window.showModal = showModal;
 window.closeModal = closeModal;
@@ -483,3 +486,6 @@ window.validateForm = validateForm;
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ModalManager;
 }
+
+// ES6 module export
+export default modal;

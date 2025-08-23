@@ -99,8 +99,9 @@ class LoginPage {
                 throw new Error('Auth system not available');
             }
 
-            // Attempt login
-            const result = await window.auth.login(username.trim(), password, role);
+            // Attempt login - auth.login only takes 2 parameters (username, password)
+            // The role is automatically determined by which demo account is used
+            const result = await window.auth.login(username.trim(), password);
             console.log('Login result:', result);
 
             if (result.success) {
@@ -119,9 +120,9 @@ class LoginPage {
                         }]
                     );
                 } else {
-                    // Fallback: direct redirect
+                    // Fallback if modal not available
                     alert(`Welcome, ${result.user.username}!`);
-                    setTimeout(() => this.redirectAfterLogin(result.user.role), 500);
+                    this.redirectAfterLogin(result.user.role);
                 }
             } else {
                 console.log('Login failed:', result.message);

@@ -1,39 +1,89 @@
-import auth from '../core/auth.js';
-import api from '../core/api.js';
-import modal from '../Module/modal.js';
+// Tracking Dashboard - Using global variables since dependencies are loaded as regular scripts
 
 class TrackingDashboard {
     constructor() {
+        console.log('TrackingDashboard constructor called');
         this.allPOs = [];
         this.filteredPOs = [];
+        
+        // Wait for dependencies to load
+        if (typeof window.auth === 'undefined' || typeof window.api === 'undefined') {
+            console.error('Dependencies not loaded yet, retrying...');
+            setTimeout(() => new TrackingDashboard(), 100);
+            return;
+        }
+        
+        console.log('Dependencies loaded, initializing...');
         this.initializeAuth();
         this.bindEvents();
         this.loadPOs();
     }
 
     initializeAuth() {
-        if (!auth.isAuthenticated()) {
+        if (!window.auth.isAuthenticated()) {
             window.location.href = '/index.html';
             return;
         }
         
         // Update welcome message
-        const currentUser = auth.getCurrentUser();
+        const currentUser = window.auth.getCurrentUser();
         if (currentUser) {
             document.getElementById('welcomeUser').textContent = `Welcome, ${currentUser.username}`;
         }
     }
 
     bindEvents() {
-        // Filter elements that actually exist
-        document.getElementById('projectFilter').addEventListener('input', () => this.filterPOs());
-        document.getElementById('statusFilter').addEventListener('change', () => this.filterPOs());
-        document.getElementById('dateFrom').addEventListener('change', () => this.filterPOs());
-        document.getElementById('dateTo').addEventListener('change', () => this.filterPOs());
-        document.getElementById('applyFilters').addEventListener('click', () => this.filterPOs());
-        document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
-        document.getElementById('refreshList').addEventListener('click', () => this.loadPOs());
-        document.getElementById('exportList').addEventListener('click', () => this.exportPOs());
+        console.log('Binding events...');
+        
+        // Check if button exists
+        const newPOBtn = document.getElementById('newPOBtn');
+        console.log('New PO button found:', newPOBtn);
+        
+        if (!newPOBtn) {
+            console.error('New PO button not found!');
+            return;
+        }
+
+        // Try different event binding approaches
+        console.log('Attempting to bind New PO button event...');
+        
+        // Method 1: addEventListener
+        try {
+            newPOBtn.addEventListener('click', (event) => {
+                console.log('NEW PO BUTTON CLICKED - Method 1');
+                window.location.href = '../pages/form.html';
+            });
+            console.log('Method 1 binding successful');
+        } catch (error) {
+            console.error('Method 1 binding failed:', error);
+        }
+        
+        // Method 2: onclick property (backup)
+        try {
+            newPOBtn.onclick = function(event) {
+                console.log('NEW PO BUTTON CLICKED - Method 2');
+                window.location.href = '../pages/form.html';
+            };
+            console.log('Method 2 binding successful');
+        } catch (error) {
+            console.error('Method 2 binding failed:', error);
+        }
+
+        // Filter elements that actually exist - wrap in try-catch
+        try {
+            document.getElementById('projectFilter').addEventListener('input', () => this.filterPOs());
+            document.getElementById('statusFilter').addEventListener('change', () => this.filterPOs());
+            document.getElementById('dateFrom').addEventListener('change', () => this.filterPOs());
+            document.getElementById('dateTo').addEventListener('change', () => this.filterPOs());
+            document.getElementById('applyFilters').addEventListener('click', () => this.filterPOs());
+            document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
+            document.getElementById('refreshList').addEventListener('click', () => this.loadPOs());
+            document.getElementById('exportList').addEventListener('click', () => this.exportPOs());
+        } catch (error) {
+            console.error('Error binding other events:', error);
+        }
+        
+        console.log('Event binding completed');
     }
 
     async loadPOs() {
@@ -43,7 +93,7 @@ class TrackingDashboard {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('poTable').style.display = 'none';
 
-            const response = await api.getUserPOs();
+            const response = await window.api.getUserPOs();
             this.allPOs = response.data || response || [];
             this.filteredPOs = [...this.allPOs];
             this.displayPOs(this.filteredPOs);
@@ -192,7 +242,7 @@ class TrackingDashboard {
             `Are you sure you want to delete PO #${poId}? This action cannot be undone.`,
             async () => {
                 try {
-                    await api.deletePO(poId);
+                    await window.api.deletePO(poId);
                     modal.showSuccess('PO deleted successfully.');
                     this.loadPOs(); // Refresh the list
                 } catch (error) {
@@ -292,7 +342,25 @@ class TrackingDashboard {
     }
 }
 
+// Global function for HTML onclick
+function testNewPOClick() {
+    console.log('NEW PO BUTTON CLICKED - Method 3 (HTML onclick)');
+    window.location.href = '../pages/form.html';
+}
+
+// Make it available globally
+window.testNewPOClick = testNewPOClick;
+
 // Initialize the tracking dashboard
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded event fired, creating TrackingDashboard');
     new TrackingDashboard();
 });
+
+// Backup initialization in case DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+    console.log('Document still loading, waiting for DOMContentLoaded');
+} else {
+    console.log('Document already loaded, initializing immediately');
+    new TrackingDashboard();
+}
