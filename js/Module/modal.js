@@ -486,6 +486,3 @@ window.validateForm = validateForm;
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ModalManager;
 }
-
-// ES6 module export
-export default modal;
