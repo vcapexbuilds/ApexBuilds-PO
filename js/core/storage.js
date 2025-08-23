@@ -6,8 +6,27 @@ class StorageManager {
         this.pos = this.getPOs();
         this.currentUser = this.getCurrentUser();
     }
+        // Validate email format only if email is provided
+        if (poData.meta && poData.meta.email && poData.meta.email.trim() !== '') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(poData.meta.email)) {
+                errors.push('Invalid email format');
+            }
+        }
 
-    // Generic storage methods
+        // Skip numeric validations for now to allow empty values
+        /*
+        // Validate amounts are numbers
+        if (poData.meta) {
+            if (isNaN(poData.meta.contractAmount) || poData.meta.contractAmount < 0) {
+                errors.push('Contract amount must be a valid positive number');
+            }
+            
+            if (poData.meta.addAltAmount && (isNaN(poData.meta.addAltAmount) || poData.meta.addAltAmount < 0)) {
+                errors.push('Add/Alt amount must be a valid positive number');
+            }
+        }
+        */orage methods
     set(key, value) {
         try {
             const data = JSON.stringify(value);
@@ -202,8 +221,10 @@ class StorageManager {
         return parseInt(`${timestamp}${random}`.slice(-10));
     }
 
-    // Schema validation
+    // Schema validation - Temporarily allow empty values
     validatePOSchema(poData) {
+        // Commented out required fields validation to allow empty values
+        /*
         const requiredFields = [
             'meta.projectName',
             'meta.generalContractor',
@@ -221,15 +242,23 @@ class StorageManager {
             'meta.vendorType',
             'meta.workType'
         ];
+        */
 
         const errors = [];
         
+        // Only require project name for now
+        if (!poData.meta || !poData.meta.projectName || poData.meta.projectName === '') {
+            errors.push('meta.projectName is required');
+        }
+        
+        /*
         requiredFields.forEach(field => {
             const value = this.getNestedProperty(poData, field);
             if (!value || value === '') {
                 errors.push(`${field} is required`);
             }
         });
+        */
 
         // Validate email format
         if (poData.meta && poData.meta.email) {

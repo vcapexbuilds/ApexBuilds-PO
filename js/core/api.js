@@ -167,11 +167,8 @@ class APIManager {
     async createPO(poData) {
         try {
             console.log('=== CREATE PO STARTED ===');
-            console.log('⏰ Entry timestamp:', new Date().toISOString());
-            console.log('📍 Method called from:', new Error().stack.split('\n')[2]);
             console.log('Input PO data:', JSON.stringify(poData, null, 2));
             
-            console.log('🚀 STEP 1: Validating PO data...');
             // Validate PO data
             const validation = window.storage.validatePOSchema(poData);
             if (!validation.isValid) {
@@ -181,41 +178,32 @@ class APIManager {
                     errors: validation.errors
                 };
             }
-            console.log('✅ STEP 1 COMPLETE: PO validation passed');
+            console.log('✅ PO validation passed');
 
-            console.log('🚀 STEP 2: Saving PO locally...');
             // Save locally first
             const savedPO = window.storage.addPO(poData);
-            console.log('✅ STEP 2 COMPLETE: PO saved locally with ID:', savedPO.id);
+            console.log('✅ PO saved locally with ID:', savedPO.id);
             
-            console.log('🚀 STEP 3: Updating PO status to submitted...');
             // Update status to submitted
             const submittedPO = window.storage.updatePO(savedPO.id, {
                 sent: true,
                 sentAt: new Date().toISOString(),
                 status: 'Submitted'
             });
-            console.log('✅ STEP 3 COMPLETE: PO status updated to Submitted');
+            console.log('✅ PO status updated to Submitted');
 
-            console.log('🚀 STEP 4: Preparing data for Power Automate...');
             // Send shaped payload directly (not wrapped in action/data)
+            console.log('🚀 Starting Power Automate sync...');
             const shaped = this.shapePOForSend(submittedPO);
-            console.log('✅ STEP 4 COMPLETE: Data shaped for PA:', JSON.stringify(shaped, null, 2));
-            
-            console.log('🚀 STEP 5: Starting Power Automate sync...');
-            console.log('⏰ Sync start timestamp:', new Date().toISOString());
             const syncResult = await this.syncDirectly(shaped);
-            console.log('⏰ Sync end timestamp:', new Date().toISOString());
-            console.log('✅ STEP 5 COMPLETE: Sync result:', syncResult);
+            console.log('💬 Sync result:', syncResult);
 
-            console.log('🚀 STEP 6: Preparing final result...');
             const finalResult = {
                 success: true,
                 po: submittedPO,
                 syncStatus: syncResult.success ? 'synced' : 'queued',
                 message: 'Purchase Order created successfully'
             };
-            console.log('✅ STEP 6 COMPLETE: Final result prepared:', finalResult);
             console.log('=== CREATE PO COMPLETED SUCCESSFULLY ===');
             
             return finalResult;
