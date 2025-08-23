@@ -6,27 +6,8 @@ class StorageManager {
         this.pos = this.getPOs();
         this.currentUser = this.getCurrentUser();
     }
-        // Validate email format only if email is provided
-        if (poData.meta && poData.meta.email && poData.meta.email.trim() !== '') {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(poData.meta.email)) {
-                errors.push('Invalid email format');
-            }
-        }
 
-        // Skip numeric validations for now to allow empty values
-        /*
-        // Validate amounts are numbers
-        if (poData.meta) {
-            if (isNaN(poData.meta.contractAmount) || poData.meta.contractAmount < 0) {
-                errors.push('Contract amount must be a valid positive number');
-            }
-            
-            if (poData.meta.addAltAmount && (isNaN(poData.meta.addAltAmount) || poData.meta.addAltAmount < 0)) {
-                errors.push('Add/Alt amount must be a valid positive number');
-            }
-        }
-        */orage methods
+    // Basic storage methods
     set(key, value) {
         try {
             const data = JSON.stringify(value);
@@ -88,7 +69,19 @@ class StorageManager {
                 status: 'active',
                 createdAt: new Date().toISOString()
             };
-            users.push(defaultAdmin);
+            
+            const defaultUser = {
+                id: 2,
+                username: 'user',
+                email: 'user@apex.com',
+                password: 'user123', // In production, this should be hashed
+                company: 'Apex Construction',
+                role: 'user',
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            
+            users.push(defaultAdmin, defaultUser);
             this.saveUsers(users);
         }
         return users;
@@ -221,95 +214,16 @@ class StorageManager {
         return parseInt(`${timestamp}${random}`.slice(-10));
     }
 
-    // Schema validation - Temporarily allow empty values
+    // Schema validation - Allow completely empty data
     validatePOSchema(poData) {
-        // Commented out required fields validation to allow empty values
-        /*
-        const requiredFields = [
-            'meta.projectName',
-            'meta.generalContractor',
-            'meta.address',
-            'meta.owner',
-            'meta.apexOwner',
-            'meta.typeStatus',
-            'meta.projectManager',
-            'meta.contractAmount',
-            'meta.requestedBy',
-            'meta.companyName',
-            'meta.contactName',
-            'meta.email',
-            'meta.cellNumber',
-            'meta.vendorType',
-            'meta.workType'
-        ];
-        */
-
         const errors = [];
         
-        // Only require project name for now
-        if (!poData.meta || !poData.meta.projectName || poData.meta.projectName === '') {
-            errors.push('meta.projectName is required');
-        }
+        // Allow completely empty submissions - no validation required
+        // User can submit with any data including empty fields
         
-        /*
-        requiredFields.forEach(field => {
-            const value = this.getNestedProperty(poData, field);
-            if (!value || value === '') {
-                errors.push(`${field} is required`);
-            }
-        });
-        */
-
-        // Validate email format
-        if (poData.meta && poData.meta.email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(poData.meta.email)) {
-                errors.push('Invalid email format');
-            }
-        }
-
-        // Validate amounts are numbers
-        if (poData.meta) {
-            if (isNaN(poData.meta.contractAmount) || poData.meta.contractAmount < 0) {
-                errors.push('Contract amount must be a valid positive number');
-            }
-            
-            if (poData.meta.addAltAmount && (isNaN(poData.meta.addAltAmount) || poData.meta.addAltAmount < 0)) {
-                errors.push('Add/Alt amount must be a valid positive number');
-            }
-            
-            if (poData.meta.retainagePct && (isNaN(poData.meta.retainagePct) || poData.meta.retainagePct < 0 || poData.meta.retainagePct > 100)) {
-                errors.push('Retainage percentage must be between 0 and 100');
-            }
-        }
-
-        // Validate schedule items
-        if (poData.schedule && Array.isArray(poData.schedule)) {
-            poData.schedule.forEach((item, index) => {
-                if (!item.primeLine || !item.budgetCode || !item.description) {
-                    errors.push(`Schedule item ${index + 1}: Prime Line, Budget Code, and Description are required`);
-                }
-                if (isNaN(item.qty) || item.qty < 0) {
-                    errors.push(`Schedule item ${index + 1}: Quantity must be a valid positive number`);
-                }
-                if (isNaN(item.unit) || item.unit < 0) {
-                    errors.push(`Schedule item ${index + 1}: Unit cost must be a valid positive number`);
-                }
-            });
-        }
-
-        // Validate scope items
-        if (poData.scope && Array.isArray(poData.scope)) {
-            poData.scope.forEach((item, index) => {
-                if (!item.item || !item.description) {
-                    errors.push(`Scope item ${index + 1}: Item number and Description are required`);
-                }
-            });
-        }
-
         return {
-            isValid: errors.length === 0,
-            errors: errors
+            isValid: true,
+            errors: []
         };
     }
 

@@ -14,8 +14,6 @@
             Purchase Order Form
         </div>
         <div class="nav-menu">
-            <button id="testDataBtn" class="btn btn-info" onclick="testFormDataCollection()" style="background-color: #17a2b8; margin-right: 10px;">🧪 Test Data</button>
-            <button id="resetFormBtn" class="btn btn-warning" onclick="resetForm()" style="background-color: #ffc107; margin-right: 10px;">🔄 Reset</button>
             <button id="backBtn" class="btn btn-secondary" onclick="testBackButton()">Back to Dashboard</button>
             <button id="logoutBtn" class="btn btn-secondary" onclick="handleLogout()">Logout</button>
         </div>
@@ -29,38 +27,38 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="projectName">Project Name *</label>
-                        <input type="text" id="projectName" name="projectName" required>
+                        <label for="projectName">Project Name</label>
+                        <input type="text" id="projectName" name="projectName">
                     </div>
                     <div class="form-group">
-                        <label for="generalContractor">General Contractor *</label>
-                        <input type="text" id="generalContractor" name="generalContractor" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="address">Address *</label>
-                        <input type="text" id="address" name="address" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="owner">Owner *</label>
-                        <input type="text" id="owner" name="owner" required>
+                        <label for="generalContractor">General Contractor</label>
+                        <input type="text" id="generalContractor" name="generalContractor">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="apexOwner">Apex Owner *</label>
-                        <select id="apexOwner" name="apexOwner" required>
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address">
+                    </div>
+                    <div class="form-group">
+                        <label for="owner">Owner</label>
+                        <input type="text" id="owner" name="owner">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="apexOwner">Apex Owner</label>
+                        <select id="apexOwner" name="apexOwner">
                             <option value="">Select</option>
                             <option value="Yes">Yes</option>
                             <option value="No">No</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="typeStatus">Type Status *</label>
-                        <select id="typeStatus" name="typeStatus" required>
+                        <label for="typeStatus">Type Status</label>
+                        <select id="typeStatus" name="typeStatus">
                             <option value="">Select Status</option>
                             <option value="PreConstruction">Pre-Construction</option>
                             <option value="Construction">Construction</option>
@@ -71,12 +69,12 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="projectManager">Project Manager *</label>
-                        <input type="text" id="projectManager" name="projectManager" required>
+                        <label for="projectManager">Project Manager</label>
+                        <input type="text" id="projectManager" name="projectManager">
                     </div>
                     <div class="form-group">
-                        <label for="contractAmount">Contract Amount *</label>
-                        <input type="number" id="contractAmount" name="contractAmount" step="0.01" required>
+                        <label for="contractAmount">Contract Amount</label>
+                        <input type="number" id="contractAmount" name="contractAmount" step="0.01">
                     </div>
                 </div>
 
@@ -101,30 +99,30 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="requestedBy">Requested By *</label>
-                        <input type="text" id="requestedBy" name="requestedBy" required>
+                        <label for="requestedBy">Requested By</label>
+                        <input type="text" id="requestedBy" name="requestedBy">
                     </div>
                     <div class="form-group">
-                        <label for="companyName">Company Name *</label>
-                        <input type="text" id="companyName" name="companyName" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="contactName">Contact Name *</label>
-                        <input type="text" id="contactName" name="contactName" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
+                        <label for="companyName">Company Name</label>
+                        <input type="text" id="companyName" name="companyName">
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="cellNumber">Cell Number *</label>
-                        <input type="tel" id="cellNumber" name="cellNumber" required>
+                        <label for="contactName">Contact Name</label>
+                        <input type="text" id="contactName" name="contactName">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cellNumber">Cell Number</label>
+                        <input type="tel" id="cellNumber" name="cellNumber">
                     </div>
                     <div class="form-group">
                         <label for="officeNumber">Office Number</label>
@@ -134,8 +132,8 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="vendorType">Vendor Type *</label>
-                        <select id="vendorType" name="vendorType" required>
+                        <label for="vendorType">Vendor Type</label>
+                        <select id="vendorType" name="vendorType">
                             <option value="">Select Type</option>
                             <option value="Sub Contractor">Sub Contractor</option>
                             <option value="Supplier">Supplier</option>
@@ -143,8 +141,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="workType">Work Type *</label>
-                        <select id="workType" name="workType" required>
+                        <label for="workType">Work Type</label>
+                        <select id="workType" name="workType">
                             <option value="">Select Work Type</option>
                             <option value="General Requirements">General Requirements</option>
                             <option value="Existing Conditions">Existing Conditions</option>
@@ -390,112 +388,49 @@
             }
         }
         
-        function testFormDataCollection() {
-            console.log('\n=== 🧪 TESTING FORM DATA COLLECTION ===');
+        function clearForm() {
+            console.log('� Clearing entire form...');
             
-            // Test POForm instance
-            if (window.poForm) {
-                console.log('✅ POForm instance available');
-                
-                // Add a test schedule item first
-                if (window.dynamicForm && window.dynamicForm.addScheduleItem) {
-                    console.log('Adding test schedule item...');
-                    window.dynamicForm.addScheduleItem({
-                        primeLine: 'TEST001',
-                        budgetCode: 'BC001', 
-                        description: 'Test Item for PA',
-                        qty: 10,
-                        unit: 100,
-                        totalCost: 1000,
-                        scheduled: 500,
-                        apexContractValue: 900,
-                        profit: 100
-                    });
-                    console.log('✅ Test schedule item added');
-                }
-                
-                // Collect form data
-                try {
-                    const data = window.poForm.collectFormData();
-                    console.log('✅ Form data collected successfully');
-                    console.log('Data structure:', {
-                        metaFields: Object.keys(data.meta).length,
-                        scheduleItems: data.schedule.length,
-                        scopeItems: data.scope.length
-                    });
-                    
-                    if (data.schedule.length > 0) {
-                        console.log('Schedule item 1 fields:', Object.keys(data.schedule[0]));
-                        console.log('Schedule item 1 data:', data.schedule[0]);
-                        
-                        // Validate required fields
-                        const required = ['primeLine', 'budgetCode', 'description', 'qty', 'unit', 'totalCost', 'scheduled', 'apexContractValue', 'profit'];
-                        const missing = required.filter(field => data.schedule[0][field] === undefined || data.schedule[0][field] === '');
-                        
-                        if (missing.length === 0) {
-                            console.log('✅ All required fields present');
-                            
-                            // Test Power Automate shaping
-                            if (window.api && window.api.shapePOForSend) {
-                                console.log('Testing Power Automate data shaping...');
-                                const shaped = window.api.shapePOForSend(data);
-                                console.log('✅ Data shaped for Power Automate');
-                                console.log('Shaped schedule item:', shaped.schedule[0]);
-                            }
-                        } else {
-                            console.log('❌ Missing required fields:', missing);
-                        }
-                    } else {
-                        console.log('⚠️ No schedule items found');
-                    }
-                    
-                } catch (error) {
-                    console.log('❌ Error collecting form data:', error);
-                }
-            } else {
-                console.log('❌ POForm instance not available');
-            }
-            
-            // Test DynamicForm instance
-            if (window.dynamicForm) {
-                console.log('✅ DynamicForm instance available');
-                const items = window.dynamicForm.getScheduleItems();
-                console.log('Schedule items from DynamicForm:', items.length);
-            } else {
-                console.log('❌ DynamicForm instance not available');
-            }
-            
-            alert('🧪 Test completed! Check browser console for detailed results.');
-        }
-        
-        function resetForm() {
-            console.log('🔄 Resetting form...');
-            
-            // Hide any modals
-            if (window.modal) {
-                window.modal.hideLoadingModal();
-                window.modal.hide();
-            }
-            
-            // Reset submit button
-            const submitBtn = document.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.style.background = '';
-                submitBtn.style.transform = '';
-                submitBtn.textContent = 'Submit Purchase Order';
-                submitBtn.disabled = false;
-            }
-            
-            // Clear form if needed
+            // Get the form element
             const form = document.getElementById('poForm');
-            if (form && confirm('Clear all form data?')) {
+            if (form) {
+                // Reset all form fields
                 form.reset();
-                if (window.dynamicForm) {
+                console.log('✅ Form fields reset');
+                
+                // Clear dynamic schedule items
+                if (window.dynamicForm && window.dynamicForm.clearAllItems) {
                     window.dynamicForm.clearAllItems();
+                    console.log('✅ Schedule items cleared');
                 }
+                
+                // Clear any saved draft
+                if (window.storage && window.storage.clearDraft) {
+                    window.storage.clearDraft();
+                    console.log('✅ Draft cleared from storage');
+                }
+                
+                // Reset any form state
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.textContent = 'Submit Purchase Order';
+                    submitBtn.disabled = false;
+                    submitBtn.style.background = '';
+                    submitBtn.style.transform = '';
+                }
+                
+                // Hide any visible modals
+                if (window.modal) {
+                    window.modal.hideLoadingModal();
+                    window.modal.hide();
+                }
+                
+                console.log('✅ Form completely cleared');
+                alert('Form cleared successfully!');
+            } else {
+                console.error('❌ Form element not found');
+                alert('Error: Could not clear form');
             }
-            
-            console.log('✅ Form reset completed');
         }
     </script>
     
@@ -528,14 +463,12 @@
                         // Collect form data
                         const formData = window.poForm.collectFormData();
 
-                        // Validate required fields - Allow empty values for now
-                        if (!formData.meta.projectName) {
-                            alert('Please fill out at least the project name');
-                            return;
-                        }
+                        // Validate required fields - Allow completely empty submissions
+                        // No validation required - user can submit any data
 
                         // Show confirmation
-                        if (!confirm(`Submit PO for "${formData.meta.projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nClick OK to submit.`)) {
+                        const projectName = formData.meta.projectName || 'Untitled Project';
+                        if (!confirm(`Submit PO for "${projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nClick OK to submit.`)) {
                             return;
                         }
 
@@ -570,6 +503,13 @@
                         submitBtn.disabled = false;
                     }
                 });
+            }
+            
+            // Add event listener for clear form button
+            const clearBtn = document.getElementById('clearForm');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearForm);
+                console.log('✅ Clear form button event listener added');
             }
         });
     </script>
