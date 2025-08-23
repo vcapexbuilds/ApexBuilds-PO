@@ -1,8 +1,22 @@
 // Authentication System
 class AuthManager {
     constructor() {
+        console.log('=== AUTH MANAGER CONSTRUCTOR ===');
         this.currentUser = null;
         this.sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
+        // Ensure storage is available
+        console.log('Checking storage availability...');
+        console.log('window.storage exists:', !!window.storage);
+        console.log('global storage exists:', typeof storage !== 'undefined');
+        
+        this.storage = window.storage || (typeof storage !== 'undefined' ? storage : null);
+        console.log('this.storage assigned:', !!this.storage);
+        
+        if (!this.storage) {
+            console.error('CRITICAL: Storage not available!');
+            throw new Error('Storage manager not available');
+        }
+        
         this.demoAccounts = {
             admin: {
                 email: 'admin@demo.com',
@@ -37,25 +51,47 @@ class AuthManager {
 
     // Login method
     async login(emailOrUsername, password) {
+        console.log('=== AUTH LOGIN METHOD CALLED ===');
+        console.log('Parameters received:', { 
+            emailOrUsername: emailOrUsername, 
+            password: password ? '***masked***' : 'empty' 
+        });
+        
         try {
+            console.log('Starting login validation...');
+            console.log('Demo accounts available:', Object.keys(this.demoAccounts));
             // Demo account validation
             const demoAdmin = this.demoAccounts.admin;
             const demoUser = this.demoAccounts.user;
+
+            console.log('Checking against demo admin:', { 
+                email: demoAdmin.email, 
+                username: demoAdmin.username 
+            });
+            console.log('Checking against demo user:', { 
+                email: demoUser.email, 
+                username: demoUser.username 
+            });
 
             let user = null;
 
             // Check for demo admin (support both email and username)
             if ((emailOrUsername === demoAdmin.email || emailOrUsername === demoAdmin.username) && password === demoAdmin.password) {
+                console.log('Demo admin authentication successful');
                 user = { ...demoAdmin };
             }
             // Check for demo user (support both email and username)
             else if ((emailOrUsername === demoUser.email || emailOrUsername === demoUser.username) && password === demoUser.password) {
+                console.log('Demo user authentication successful');
                 user = { ...demoUser };
             }
 
             if (!user) {
+                console.log('Authentication failed - no matching credentials');
                 throw new Error('Invalid credentials');
             }
+
+            console.log('User authenticated, creating session...');
 
             // Create session
             const sessionData = {
@@ -69,14 +105,18 @@ class AuthManager {
             };
 
             // Store session
-            storage.setCurrentUser(sessionData);
+            console.log('Storing session data...');
+            console.log('Storage object available:', !!this.storage);
+            this.storage.setCurrentUser(sessionData);
             this.currentUser = sessionData;
+            console.log('Session stored successfully');
 
             // Update user's last login
-            storage.updateUser(user.id, {
+            this.storage.updateUser(user.id, {
                 lastLogin: new Date().toISOString()
             });
 
+            console.log('Login process completed successfully');
             return {
                 success: true,
                 user: sessionData,
@@ -84,6 +124,10 @@ class AuthManager {
             };
 
         } catch (error) {
+            console.error('=== LOGIN ERROR ===');
+            console.error('Error details:', error);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
             return {
                 success: false,
                 message: error.message
@@ -103,7 +147,7 @@ class AuthManager {
             }
 
             // Check if username already exists
-            const existingUser = storage.users.find(user => 
+            const existingUser = this.storage.users.find(user => 
                 user.username.toLowerCase() === userData.username.toLowerCase()
             );
             
@@ -112,7 +156,7 @@ class AuthManager {
             }
 
             // Check if email already exists
-            const existingEmail = storage.users.find(user => 
+            const existingEmail = this.storage.users.find(user => 
                 user.email.toLowerCase() === userData.email.toLowerCase()
             );
             
@@ -132,7 +176,7 @@ class AuthManager {
             }
 
             // Create new user
-            const newUser = storage.addUser({
+            const newUser = this.storage.addUser({
                 username: userData.username,
                 email: userData.email,
                 password: userData.password, // In production, hash this
@@ -158,7 +202,7 @@ class AuthManager {
     logout() {
         try {
             // Clear session data
-            storage.clearCurrentUser();
+            this.storage.clearCurrentUser();
             this.currentUser = null;
 
             // Redirect to login
@@ -214,7 +258,7 @@ class AuthManager {
 
     // Check and restore session from storage
     checkSession() {
-        const sessionData = storage.getCurrentUser();
+        const sessionData = this.storage.getCurrentUser();
         
         if (sessionData) {
             // Check if session is still valid
@@ -223,7 +267,7 @@ class AuthManager {
                 return true;
             } else {
                 // Session expired, clear it
-                storage.clearCurrentUser();
+                this.storage.clearCurrentUser();
                 return false;
             }
         }
@@ -235,7 +279,7 @@ class AuthManager {
     extendSession() {
         if (this.currentUser) {
             this.currentUser.expiresAt = new Date(Date.now() + this.sessionTimeout).toISOString();
-            storage.setCurrentUser(this.currentUser);
+            this.storage.setCurrentUser(this.currentUser);
         }
     }
 
@@ -379,7 +423,7 @@ class AuthManager {
             delete updateData.id;
 
             // Update user in storage
-            const updatedUser = storage.updateUser(this.currentUser.id, updateData);
+            const updatedUser = this.storage.updateUser(this.currentUser.id, updateData);
             
             if (!updatedUser) {
                 throw new Error('Failed to update profile');
@@ -390,7 +434,7 @@ class AuthManager {
             if (updateData.username) this.currentUser.username = updateData.username;
             if (updateData.company) this.currentUser.company = updateData.company;
 
-            storage.setCurrentUser(this.currentUser);
+            this.storage.setCurrentUser(this.currentUser);
 
             return {
                 success: true,
@@ -413,7 +457,7 @@ class AuthManager {
             }
 
             // Get current user data
-            const user = storage.getUserById(this.currentUser.id);
+            const user = this.storage.getUserById(this.currentUser.id);
             
             if (!user || user.password !== currentPassword) {
                 throw new Error('Current password is incorrect');
@@ -424,7 +468,7 @@ class AuthManager {
             }
 
             // Update password
-            storage.updateUser(this.currentUser.id, {
+            this.storage.updateUser(this.currentUser.id, {
                 password: newPassword // In production, hash this
             });
 
@@ -476,10 +520,14 @@ class AuthManager {
 }
 
 // Initialize auth manager
+console.log('=== INITIALIZING AUTH MANAGER ===');
+console.log('Storage available:', !!window.storage);
 const auth = new AuthManager();
+console.log('Auth manager created:', !!auth);
 
 // Make auth available globally
 window.auth = auth;
+console.log('Auth assigned to window.auth:', !!window.auth);
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

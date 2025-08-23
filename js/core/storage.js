@@ -462,7 +462,13 @@ class StorageManager {
 }
 
 // Initialize storage manager
+console.log('=== INITIALIZING STORAGE MANAGER ===');
 const storage = new StorageManager();
+console.log('Storage manager created:', !!storage);
+
+// Make storage available globally
+window.storage = storage;
+console.log('Storage assigned to window.storage:', !!window.storage);
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

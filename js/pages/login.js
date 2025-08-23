@@ -14,15 +14,18 @@ class LoginPage {
     }
 
     initializeWhenReady() {
+        console.log('=== LOGIN PAGE INITIALIZATION ===');
         // Wait for global objects to be available
         const checkGlobals = () => {
             console.log('Checking global objects:', {
                 auth: !!window.auth,
                 showErrorModal: !!window.showErrorModal,
-                showSuccessModal: !!window.showSuccessModal
+                showSuccessModal: !!window.showSuccessModal,
+                storage: !!window.storage
             });
             
             if (window.auth) {
+                console.log('Auth object found, setting up event listeners...');
                 this.setupEventListeners();
                 this.checkExistingSession();
             } else {
@@ -34,10 +37,20 @@ class LoginPage {
     }
 
     setupEventListeners() {
+        console.log('=== SETTING UP EVENT LISTENERS ===');
+        
         // Login form submission
         const loginForm = document.getElementById('loginForm');
+        console.log('Login form found:', !!loginForm);
+        
         if (loginForm) {
-            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+            loginForm.addEventListener('submit', (e) => {
+                console.log('LOGIN FORM SUBMITTED');
+                this.handleLogin(e);
+            });
+            console.log('Login form event listener attached');
+        } else {
+            console.error('Login form not found!');
         }
 
         // Register modal handlers
@@ -64,9 +77,10 @@ class LoginPage {
 
     // Handle login form submission
     async handleLogin(event) {
+        console.log('=== HANDLE LOGIN CALLED ===');
         event.preventDefault();
         
-        console.log('Login form submitted');
+        console.log('Login form submitted - event prevented');
 
         const form = event.target;
         const formData = new FormData(form);
@@ -75,10 +89,15 @@ class LoginPage {
         const password = formData.get('password');
         const role = formData.get('role');
 
-        console.log('Login attempt:', { username, role });
+        console.log('Form data extracted:', { 
+            username: username, 
+            password: password ? '***masked***' : 'empty',
+            role: role 
+        });
 
         // Basic client-side validation
         if (!username || !password || !role) {
+            console.error('Validation failed - missing fields');
             if (typeof showErrorModal === 'function') {
                 showErrorModal('Validation Error', 'Please fill in all fields.');
             } else {
@@ -89,23 +108,28 @@ class LoginPage {
 
         // Show loading state
         const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Logging in...';
-        submitButton.disabled = true;
+        const originalText = submitButton ? submitButton.textContent : '';
+        if (submitButton) {
+            submitButton.textContent = 'Logging in...';
+            submitButton.disabled = true;
+        }
+        console.log('Button state updated to loading');
 
         try {
             // Check if auth object is available
+            console.log('Checking auth object availability:', !!window.auth);
             if (!window.auth) {
                 throw new Error('Auth system not available');
             }
 
+            console.log('Calling window.auth.login...');
             // Attempt login - auth.login only takes 2 parameters (username, password)
             // The role is automatically determined by which demo account is used
             const result = await window.auth.login(username.trim(), password);
-            console.log('Login result:', result);
+            console.log('Login result received:', result);
 
             if (result.success) {
-                console.log('Login successful, redirecting...');
+                console.log('Login successful, processing success...');
                 
                 if (typeof showSuccessModal === 'function') {
                     showSuccessModal(
@@ -134,7 +158,7 @@ class LoginPage {
             }
 
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('Login error occurred:', error);
             if (typeof showErrorModal === 'function') {
                 showErrorModal('Login Error', 'An unexpected error occurred. Please try again.');
             } else {
@@ -142,8 +166,11 @@ class LoginPage {
             }
         } finally {
             // Reset button state
-            submitButton.textContent = originalText;
-            submitButton.disabled = false;
+            console.log('Resetting button state');
+            if (submitButton) {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }
         }
     }
 

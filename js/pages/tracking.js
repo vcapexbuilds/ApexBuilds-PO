@@ -35,41 +35,19 @@ class TrackingDashboard {
     bindEvents() {
         console.log('Binding events...');
         
-        // Check if button exists
+        // New PO button
         const newPOBtn = document.getElementById('newPOBtn');
-        console.log('New PO button found:', newPOBtn);
-        
-        if (!newPOBtn) {
-            console.error('New PO button not found!');
-            return;
-        }
-
-        // Try different event binding approaches
-        console.log('Attempting to bind New PO button event...');
-        
-        // Method 1: addEventListener
-        try {
-            newPOBtn.addEventListener('click', (event) => {
-                console.log('NEW PO BUTTON CLICKED - Method 1');
+        if (newPOBtn) {
+            newPOBtn.addEventListener('click', () => {
+                console.log('New PO button clicked, navigating to form...');
                 window.location.href = '../pages/form.html';
             });
-            console.log('Method 1 binding successful');
-        } catch (error) {
-            console.error('Method 1 binding failed:', error);
-        }
-        
-        // Method 2: onclick property (backup)
-        try {
-            newPOBtn.onclick = function(event) {
-                console.log('NEW PO BUTTON CLICKED - Method 2');
-                window.location.href = '../pages/form.html';
-            };
-            console.log('Method 2 binding successful');
-        } catch (error) {
-            console.error('Method 2 binding failed:', error);
+            console.log('New PO button event bound successfully');
+        } else {
+            console.error('New PO button not found!');
         }
 
-        // Filter elements that actually exist - wrap in try-catch
+        // Filter and action buttons - wrap in try-catch for safety
         try {
             document.getElementById('projectFilter').addEventListener('input', () => this.filterPOs());
             document.getElementById('statusFilter').addEventListener('change', () => this.filterPOs());
@@ -79,11 +57,10 @@ class TrackingDashboard {
             document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
             document.getElementById('refreshList').addEventListener('click', () => this.loadPOs());
             document.getElementById('exportList').addEventListener('click', () => this.exportPOs());
+            console.log('All event binding completed successfully');
         } catch (error) {
-            console.error('Error binding other events:', error);
+            console.error('Error binding events:', error);
         }
-        
-        console.log('Event binding completed');
     }
 
     async loadPOs() {
@@ -341,15 +318,6 @@ class TrackingDashboard {
             .join('\n');
     }
 }
-
-// Global function for HTML onclick
-function testNewPOClick() {
-    console.log('NEW PO BUTTON CLICKED - Method 3 (HTML onclick)');
-    window.location.href = '../pages/form.html';
-}
-
-// Make it available globally
-window.testNewPOClick = testNewPOClick;
 
 // Initialize the tracking dashboard
 document.addEventListener('DOMContentLoaded', () => {
