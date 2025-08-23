@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Automate Field Test</title>
+</head>
+<body>
+    <h2>Power Automate Field-by-Field Test</h2>
+    <button onclick="testMinimal()">Test Minimal Data</button>
+    <button onclick="testOnlyNumbers()">Test Only Numbers</button>
+    <button onclick="testOnlyStrings()">Test Only Strings</button>
+    <button onclick="testEachField()">Test Each Field Individually</button>
+    <button onclick="testWrappedData()">Test Wrapped Data</button>
+    <button onclick="testPASchema()">Test Expected PA Schema</button>
+    <button onclick="testNestedStructure()">Test Nested Structure</button>
+    <button onclick="testFullPOStructure()">Test Full PO Structure</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></div>
+
+    <script>
+        const PA_URL = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA';
+        
+        function log(message) {
+            const results = document.getElementById('results');
+            results.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+
+        async function testCall(data, testName) {
+            log('\n=== ' + testName + ' ===');
+            log('Sending: ' + JSON.stringify(data));
+            
+            try {
+                const response = await fetch(PA_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                log('Response status: ' + response.status + ' (' + response.statusText + ')');
+                
+                if (response.ok) {
+                    log('✅ SUCCESS!');
+                } else {
+                    const responseText = await response.text();
+                    log('❌ FAILED: ' + responseText);
+                }
+                
+            } catch (error) {
+                log('❌ ERROR: ' + error.message);
+            }
+        }
+
+        async function testMinimal() {
+            await testCall({}, "Empty Object");
+        }
+
+        async function testOnlyNumbers() {
+            await testCall({
+                id: 123,
+                timestamp: Date.now(),
+                contractAmount: 50000,
+                qty: 10,
+                totalCost: 1000
+            }, "Only Numbers");
+        }
+
+        async function testOnlyStrings() {
+            await testCall({
+                projectName: "Test Project",
+                description: "Test Description",
+                createdAt: new Date().toISOString()
+            }, "Only Strings");
+        }
+
+        async function testEachField() {
+            // Test individual numeric fields that might be problematic
+            const numericFields = [
+                { id: 123 },
+                { timestamp: Date.now() },
+                { contractAmount: 50000 },
+                { addAltAmount: 5000 },
+                { retainagePct: 10 },
+                { qty: 10 },
+                { unit: 100 },
+                { totalCost: 1000 },
+                { scheduled: 500 },
+                { apexContractValue: 900 },
+                { profit: 100 }
+            ];
+
+            for (let field of numericFields) {
+                await testCall(field, "Field: " + Object.keys(field)[0]);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Small delay
+            }
+        }
+
+        async function testWrappedData() {
+            // Test if PA expects data wrapped in specific structure
+            const wrappedTests = [
+                { data: { id: 123 } },
+                { body: { id: 123 } },
+                { input: { id: 123 } },
+                { po: { id: 123 } },
+                { payload: { id: 123 } }
+            ];
+
+            for (let wrapped of wrappedTests) {
+                await testCall(wrapped, "Wrapped: " + Object.keys(wrapped)[0]);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testPASchema() {
+            // Test common Power Automate trigger schemas
+            const schemaTests = [
+                {
+                    // Simple trigger data
+                    triggerBody: { message: "test" }
+                },
+                {
+                    // HTTP Request body format
+                    text: "test message",
+                    subject: "Test Subject"
+                },
+                {
+                    // Form data format
+                    formData: {
+                        field1: "value1",
+                        field2: 123
+                    }
+                }
+            ];
+
+            for (let schema of schemaTests) {
+                await testCall(schema, "Schema: " + Object.keys(schema)[0]);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testNestedStructure() {
+            // Test increasingly complex nested structures
+            const nestedTests = [
+                {
+                    // Simple nested object
+                    meta: { projectName: "Test" }
+                },
+                {
+                    // Nested object with numbers
+                    meta: { 
+                        projectName: "Test",
+                        contractAmount: 50000
+                    }
+                },
+                {
+                    // Simple array
+                    schedule: [{ description: "Test item" }]
+                },
+                {
+                    // Array with numbers
+                    schedule: [{ 
+                        description: "Test item",
+                        qty: 10,
+                        totalCost: 1000
+                    }]
+                },
+                {
+                    // Combined nested structure
+                    meta: { projectName: "Test", contractAmount: 50000 },
+                    schedule: [{ description: "Test", qty: 10 }]
+                }
+            ];
+
+            for (let nested of nestedTests) {
+                await testCall(nested, "Nested: " + Object.keys(nested).join(', '));
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        async function testFullPOStructure() {
+            // Test the exact structure our form sends
+            const fullPO = {
+                meta: {
+                    projectName: "Test Project",
+                    generalContractor: "Test Contractor", 
+                    address: "Test Address",
+                    owner: "Test Owner",
+                    apexOwner: "Test Apex Owner",
+                    typeStatus: "Active",
+                    projectManager: "Test PM",
+                    contractAmount: 100000,
+                    addAltAmount: 5000,
+                    addAltDetails: "Test details",
+                    retainagePct: 10,
+                    requestedBy: "Test User",
+                    companyName: "Test Company",
+                    contactName: "Test Contact",
+                    cellNumber: "123-456-7890",
+                    email: "test@example.com",
+                    officeNumber: "987-654-3210",
+                    vendorType: "Subcontractor",
+                    workType: "Construction",
+                    importantDates: {
+                        noticeToProceed: "2024-01-01",
+                        anticipatedStart: "2024-01-15", 
+                        substantialCompletion: "2024-06-01",
+                        hundredPercent: "2024-06-15"
+                    }
+                },
+                schedule: [
+                    {
+                        primeLine: "001",
+                        budgetCode: "BC001", 
+                        description: "Test work",
+                        qty: 10,
+                        unit: 100,
+                        totalCost: 1000,
+                        scheduled: 500,
+                        apexContractValue: 900,
+                        profit: 100
+                    }
+                ],
+                scope: [
+                    {
+                        item: "Item 1",
+                        description: "Test scope item",
+                        included: true,
+                        excluded: false
+                    }
+                ],
+                createdAt: new Date().toISOString(),
+                sent: true,
+                timestamp: Date.now(),
+                id: Date.now(),
+                sentAt: new Date().toISOString()
+            };
+
+            await testCall(fullPO, "Full PO Structure");
+        }
+    </script>
+</body>
+</html>

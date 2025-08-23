@@ -1,32 +1,73 @@
-import api from '../core/api.js';
-import storage from '../core/storage.js';
-
 class POForm {
     constructor() {
+        console.log('=== POForm CONSTRUCTOR CALLED ===');
+        console.log('Document ready state:', document.readyState);
+        console.log('Location:', window.location.href);
+        
+        // Ensure dependencies are available globally
+        this.api = window.api;
+        this.storage = window.storage;
+        
+        console.log('Dependencies check:', {
+            api: !!this.api,
+            storage: !!this.storage,
+            auth: !!window.auth,
+            modal: !!window.modal
+        });
+        
+        // Add immediate form check
+        this.checkFormExists();
+        
         // Wait for DOM and scripts to be ready
         if (document.readyState === 'loading') {
+            console.log('DOM still loading, waiting for DOMContentLoaded...');
             document.addEventListener('DOMContentLoaded', () => this.initialize());
         } else {
+            console.log('DOM already loaded, initializing immediately');
             this.initialize();
         }
     }
+    
+    checkFormExists() {
+        const form = document.getElementById('poForm');
+        console.log('Form exists check:', {
+            form: !!form,
+            formId: form ? form.id : 'not found',
+            formTag: form ? form.tagName : 'not found'
+        });
+        
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        console.log('Submit button exists:', {
+            button: !!submitBtn,
+            buttonText: submitBtn ? submitBtn.textContent : 'not found',
+            buttonType: submitBtn ? submitBtn.type : 'not found'
+        });
+    }
 
     initialize() {
-        console.log('POForm initialize called');
+        console.log('=== POForm initialize called ===');
         console.log('window.auth available:', !!window.auth);
-        console.log('window.showConfirmModal available:', !!window.showConfirmModal);
+        console.log('window.modal available:', !!window.modal);
+        console.log('window.api available:', !!window.api);
+        console.log('window.storage available:', !!window.storage);
         
         // Wait for global objects to be available
         const checkGlobals = () => {
-            if (window.auth && window.showConfirmModal) {
-                console.log('Both auth and showConfirmModal are available, initializing...');
+            if (window.auth && window.modal && window.api && window.storage) {
+                console.log('✅ All globals are available, initializing...');
                 this.initializeAuth();
                 this.bindEvents();
                 this.loadDraft();
                 this.scheduleItemTemplate = this.createScheduleItemTemplate();
                 this.scopeItemTemplate = this.createScopeItemTemplate();
             } else {
-                console.log('Waiting for globals...', {auth: !!window.auth, modal: !!window.showConfirmModal});
+                console.log('⏳ Waiting for globals...', {
+                    auth: !!window.auth, 
+                    modal: !!window.modal,
+                    showConfirmModal: !!window.showConfirmModal,
+                    api: !!window.api,
+                    storage: !!window.storage
+                });
                 setTimeout(checkGlobals, 100);
             }
         };
@@ -49,48 +90,128 @@ class POForm {
     }
 
     bindEvents() {
-        console.log('bindEvents called');
-        console.log('backBtn element:', document.getElementById('backBtn'));
-        console.log('window.showConfirmModal available:', typeof window.showConfirmModal);
+        console.log('=== BIND EVENTS CALLED ===');
+        console.log('DOM ready state:', document.readyState);
+        console.log('Total forms on page:', document.forms.length);
+        console.log('All forms:', Array.from(document.forms).map(f => f.id || f.name || 'unnamed'));
         
         const backBtn = document.getElementById('backBtn');
-        if (!backBtn) {
-            console.error('Back button not found!');
+        console.log('Back button found:', !!backBtn);
+        
+        if (backBtn) {
+            backBtn.addEventListener('click', (e) => {
+                console.log('Back button clicked!', e);
+                
+                if (typeof window.showConfirmModal === 'function') {
+                    window.showConfirmModal(
+                        'Confirm Navigation',
+                        'Are you sure you want to leave? Any unsaved changes will be lost.',
+                        () => {
+                            console.log('Confirmed, navigating to appropriate dashboard');
+                            this.navigateToDashboard();
+                        },
+                        () => {
+                            console.log('Cancelled navigation');
+                        }
+                    );
+                } else {
+                    console.log('showConfirmModal not available, using basic confirm');
+                    if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
+                        this.navigateToDashboard();
+                    }
+                }
+            });
+            console.log('✅ Back button event bound');
+        } else {
+            console.error('❌ Back button not found!');
+        }
+
+        // DETAILED FORM SUBMIT BINDING
+        console.log('=== ATTEMPTING TO BIND FORM SUBMIT ===');
+        const poForm = document.getElementById('poForm');
+        
+        if (!poForm) {
+            console.error('❌ CRITICAL: poForm element not found!');
+            console.log('Available elements with IDs:', Array.from(document.querySelectorAll('[id]')).map(el => el.id));
             return;
         }
         
-        backBtn.addEventListener('click', (e) => {
-            console.log('Back button clicked!', e);
+        console.log('✅ poForm found:', {
+            id: poForm.id,
+            tagName: poForm.tagName,
+            className: poForm.className,
+            childElementCount: poForm.childElementCount
+        });
+        
+        // Multiple binding approaches for maximum compatibility
+        console.log('Binding submit event with multiple approaches...');
+        
+        // Approach 1: addEventListener on form
+        try {
+            poForm.addEventListener('submit', (e) => {
+                console.log('🎯 FORM SUBMIT EVENT TRIGGERED (addEventListener)!', e);
+                console.log('Event target:', e.target);
+                console.log('Event type:', e.type);
+                console.log('preventDefault available:', typeof e.preventDefault);
+                this.handleSubmit(e);
+            });
+            console.log('✅ Approach 1: addEventListener bound');
+        } catch (error) {
+            console.error('❌ Approach 1 failed:', error);
+        }
+        
+        // Approach 2: onsubmit property
+        try {
+            poForm.onsubmit = (e) => {
+                console.log('🎯 FORM SUBMIT EVENT TRIGGERED (onsubmit)!', e);
+                this.handleSubmit(e);
+                return false; // Prevent default
+            };
+            console.log('✅ Approach 2: onsubmit property set');
+        } catch (error) {
+            console.error('❌ Approach 2 failed:', error);
+        }
+        
+        // Approach 3: Direct button click binding
+        const submitBtns = poForm.querySelectorAll('button[type="submit"]');
+        console.log('Submit buttons found:', submitBtns.length);
+        
+        submitBtns.forEach((btn, index) => {
+            console.log(`Submit button ${index}:`, {
+                text: btn.textContent.trim(),
+                type: btn.type,
+                className: btn.className
+            });
             
-            if (typeof window.showConfirmModal === 'function') {
-                window.showConfirmModal(
-                    'Confirm Navigation',
-                    'Are you sure you want to leave? Any unsaved changes will be lost.',
-                    () => {
-                        console.log('Confirmed, navigating to appropriate dashboard');
-                        this.navigateToDashboard();
-                    },
-                    () => {
-                        console.log('Cancelled navigation');
-                    }
-                );
-            } else {
-                console.log('showConfirmModal not available, using basic confirm');
-                if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
-                    this.navigateToDashboard();
-                }
+            try {
+                btn.addEventListener('click', (e) => {
+                    console.log(`🎯 SUBMIT BUTTON ${index} CLICKED!`, e);
+                    console.log('Button element:', btn);
+                    console.log('Will trigger form submit...');
+                    // Let the normal form submit happen
+                });
+                console.log(`✅ Button ${index} click event bound`);
+            } catch (error) {
+                console.error(`❌ Button ${index} binding failed:`, error);
             }
         });
 
-        // Note: Logout button now uses onclick="handleLogout()" in HTML
-
-    document.getElementById('poForm').addEventListener('submit', (e) => this.handleSubmit(e));
-    const saveBtn = document.getElementById('saveButton');
-    if (saveBtn) saveBtn.addEventListener('click', () => this.saveDraft());
-    // Avoid double-binding add item buttons; dynamicForm handles these.
+        // Save button
+        const saveBtn = document.getElementById('saveButton');
+        if (saveBtn) {
+            console.log('Save button found, binding...');
+            saveBtn.addEventListener('click', () => this.saveDraft());
+            console.log('✅ Save button event bound');
+        } else {
+            console.log('ℹ️ Save button not found (may be optional)');
+        }
 
         // Auto-save draft every minute
+        console.log('Setting up auto-save interval...');
         setInterval(() => this.saveDraft(true), 60000);
+        console.log('✅ Auto-save interval set');
+        
+        console.log('=== BIND EVENTS COMPLETED ===');
     }
 
     navigateToDashboard() {
@@ -112,10 +233,10 @@ class POForm {
 
     async loadExistingPO(poId) {
         try {
-            const po = await api.getPOById(poId);
+            const po = await this.api.getPOById(poId);
             this.fillFormData(po);
         } catch (error) {
-            modal.showError('Failed to load PO data for revision.');
+            window.modal.showError('Failed to load PO data for revision.');
         }
     }
 
@@ -195,6 +316,10 @@ class POForm {
                         <label>Apex Contract Value *</label>
                         <input type="number" name="apexContractValue" required>
                     </div>
+                    <div class="form-group">
+                        <label>Profit *</label>
+                        <input type="number" name="profit" required>
+                    </div>
                 </div>
                 <button type="button" class="btn btn-danger remove-item">Remove</button>
             </div>
@@ -245,7 +370,7 @@ class POForm {
         }
 
         item.querySelector('.remove-item').addEventListener('click', () => {
-            modal.showConfirm(
+            window.modal.showConfirm(
                 'Are you sure you want to remove this schedule item?',
                 () => item.remove(),
                 null
@@ -273,7 +398,7 @@ class POForm {
         }
 
         item.querySelector('.remove-item').addEventListener('click', () => {
-            modal.showConfirm(
+            window.modal.showConfirm(
                 'Are you sure you want to remove this scope item?',
                 () => item.remove(),
                 null
@@ -334,38 +459,125 @@ class POForm {
         formData.timestamp = Date.now();
         formData.id = this.revisionId || Date.now();
 
+        console.log('=== COLLECTED FORM DATA ===');
+        console.log('Form data:', JSON.stringify(formData, null, 2));
+        console.log('Schedule items count:', formData.schedule.length);
+        console.log('First schedule item fields:', formData.schedule.length > 0 ? Object.keys(formData.schedule[0]) : 'No schedule items');
+        console.log('Schedule data validation:', {
+            hasSchedule: Array.isArray(formData.schedule),
+            scheduleLength: formData.schedule.length,
+            allRequiredFieldsPresent: formData.schedule.every(item => {
+                const required = ['primeLine', 'budgetCode', 'description', 'qty', 'unit', 'totalCost', 'scheduled', 'apexContractValue', 'profit'];
+                const present = required.filter(field => item[field] !== undefined && item[field] !== '');
+                console.log(`Schedule item fields: ${Object.keys(item).join(', ')}`);
+                console.log(`Required fields present: ${present.join(', ')}`);
+                console.log(`Missing fields: ${required.filter(f => !present.includes(f)).join(', ')}`);
+                return required.every(field => item[field] !== undefined && item[field] !== '');
+            })
+        });
+
         return formData;
     }
 
     saveDraft(silent = false) {
         const formData = this.collectFormData();
-        storage.saveDraft(formData);
+        this.storage.saveDraft(formData);
         if (!silent) {
-            modal.showSuccess('Draft saved successfully.');
+            window.modal.showSuccess('Draft saved successfully.');
         }
     }
 
     loadDraft() {
         if (this.revisionId) return; // Don't load draft if we're revising an existing PO
 
-        const draft = storage.getDraft();
+        const draft = this.storage.getDraft();
         if (draft && draft.data) {
-            modal.showConfirm(
-                'Would you like to load your saved draft?',
-                () => this.fillFormData(draft.data),
-                () => storage.clearDraft()
-            );
+            console.log('Draft found, checking modal availability...');
+            
+            // Try different modal methods in order of preference
+            if (window.modal && typeof window.modal.show === 'function') {
+                console.log('Using window.modal.show');
+                window.modal.show({
+                    title: 'Load Draft',
+                    content: 'Would you like to load your saved draft?',
+                    actions: [
+                        {
+                            id: 'load',
+                            label: 'Load Draft',
+                            class: 'btn-primary',
+                            handler: () => this.fillFormData(draft.data)
+                        },
+                        {
+                            id: 'discard',
+                            label: 'Discard Draft', 
+                            class: 'btn-secondary',
+                            handler: () => this.storage.clearDraft()
+                        }
+                    ]
+                });
+            } else if (confirm('Would you like to load your saved draft? (Click OK to load, Cancel to discard)')) {
+                console.log('Using basic confirm dialog');
+                this.fillFormData(draft.data);
+            } else {
+                this.storage.clearDraft();
+            }
         }
     }
 
     async handleSubmit(event) {
-        event.preventDefault();
+        console.log('🚀🚀🚀 === FORM SUBMIT HANDLER CALLED === 🚀🚀🚀');
+        console.log('Event received:', event);
+        console.log('Event type:', event ? event.type : 'no event');
+        console.log('Event target:', event ? event.target : 'no target');
+        console.log('Timestamp:', new Date().toISOString());
+        
+        if (event) {
+            console.log('Preventing default form submission...');
+            event.preventDefault();
+            console.log('Default prevented');
+        } else {
+            console.warn('No event object received!');
+        }
+        
+        // Add a visible indicator that submit was triggered
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔄 Processing...';
+            submitBtn.disabled = true;
+            
+            // Reset after 10 seconds as failsafe
+            setTimeout(() => {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 10000);
+        }
         
         try {
-            const formData = this.collectFormData();
+            console.log('Checking dependencies...');
+            console.log('this.api available:', !!this.api);
+            console.log('this.storage available:', !!this.storage);
+            console.log('window.modal available:', !!window.modal);
             
+            if (!this.api) {
+                console.error('❌ CRITICAL: this.api not available!');
+                alert('System Error: API not available. Please refresh the page.');
+                return;
+            }
+            
+            if (!window.modal) {
+                console.error('❌ CRITICAL: window.modal not available!');
+                alert('System Error: Modal system not available. Please refresh the page.');
+                return;
+            }
+            
+            console.log('Collecting form data...');
+            const formData = this.collectFormData();
+            console.log('✅ Form data collected:', formData);
+            
+            console.log('Showing confirmation modal...');
             // Show confirmation modal with summary
-            modal.show({
+            window.modal.show({
                 title: 'Confirm Submission',
                 content: this.createSubmissionSummary(formData),
                 size: 'large',
@@ -381,19 +593,31 @@ class POForm {
                         class: 'btn-primary',
                         handler: async () => {
                             try {
+                                console.log('User confirmed submission, proceeding...');
                                 // Show loading modal
-                                modal.showLoadingModal('Submitting Purchase Order...');
+                                window.modal.showLoadingModal('Submitting Purchase Order...');
                                 
                                 formData.sent = true;
                                 formData.sentAt = new Date().toISOString();
                                 
-                                const result = await api.createPO(formData);
+                                console.log('Calling this.api.createPO...');
+                                
+                                // Add timeout to prevent hanging
+                                const submitTimeout = new Promise((_, reject) => {
+                                    setTimeout(() => reject(new Error('Submission timeout after 30 seconds')), 30000);
+                                });
+                                
+                                const submitPromise = this.api.createPO(formData);
+                                
+                                const result = await Promise.race([submitPromise, submitTimeout]);
+                                console.log('API result received:', result);
                                 
                                 // Hide loading modal
-                                modal.hideLoadingModal();
+                                window.modal.hideLoadingModal();
                                 
                                 if (result.success) {
-                                    storage.clearDraft();
+                                    console.log('Submission successful!');
+                                    this.storage.clearDraft();
                                     
                                     // Show detailed success message
                                     const syncStatus = result.syncStatus || 'unknown';
@@ -401,7 +625,7 @@ class POForm {
                                         '✅ Successfully sent to Power Automate' : 
                                         '⚠️ Saved locally, will retry sending to Power Automate';
                                     
-                                    modal.show({
+                                    window.modal.show({
                                         title: 'Purchase Order Submitted Successfully!',
                                         content: `
                                             <div class="success-details">
@@ -427,17 +651,27 @@ class POForm {
                                         }]
                                     });
                                 } else {
-                                    modal.showErrorModal(
+                                    console.log('Submission failed:', result);
+                                    window.modal.showErrorModal(
                                         'Submission Failed',
                                         `Failed to submit Purchase Order: ${result.error || 'Unknown error'}`
                                     );
                                 }
                             } catch (error) {
                                 console.error('Submit error:', error);
-                                modal.hideLoadingModal();
-                                modal.showErrorModal(
-                                    'Submission Failed',
-                                    `Failed to submit Purchase Order: ${error.message || 'Network or server error'}`
+                                window.modal.hideLoadingModal();
+                                
+                                // Reset submit button
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    submitBtn.style.background = '';
+                                    submitBtn.style.transform = '';
+                                    submitBtn.textContent = 'Submit Purchase Order';
+                                    submitBtn.disabled = false;
+                                }
+                                
+                                window.modal.showError(
+                                    `Submission Failed: ${error.message || 'Network or server error'}`
                                 );
                             }
                         }
@@ -445,7 +679,8 @@ class POForm {
                 ]
             });
         } catch (error) {
-            modal.showError('Failed to prepare submission. Please check your inputs and try again.');
+            console.error('Error preparing submission:', error);
+            window.modal.showError('Failed to prepare submission. Please check your inputs and try again.');
         }
     }
 
@@ -475,4 +710,7 @@ class POForm {
 }
 
 // Initialize the form
-new POForm();
+console.log('📝 Creating POForm instance...');
+const poFormInstance = new POForm();
+window.poForm = poFormInstance; // Make available globally for debugging
+console.log('📝 POForm instance created and assigned to window.poForm');

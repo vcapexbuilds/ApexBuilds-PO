@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Button Test</title>
+    <style>
+        .container { padding: 20px; }
+        .btn-primary { 
+            background: #1B365D; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        .btn-primary:hover { background: #0f2a4c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Submit Button Test</h1>
+        
+        <form id="testForm">
+            <input type="text" placeholder="Test input" name="testField">
+            <br><br>
+            <button type="submit" class="btn-primary" id="submitBtn">Test Submit Button</button>
+        </form>
+        
+        <div id="output"></div>
+    </div>
+
+    <script>
+        console.log('=== Submit Button Test Script Loaded ===');
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, binding events...');
+            
+            const form = document.getElementById('testForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const output = document.getElementById('output');
+            
+            console.log('Form element:', form);
+            console.log('Submit button:', submitBtn);
+            
+            if (form && submitBtn) {
+                console.log('Elements found, binding submit event...');
+                
+                form.addEventListener('submit', (event) => {
+                    console.log('=== FORM SUBMIT EVENT TRIGGERED ===');
+                    event.preventDefault();
+                    
+                    output.innerHTML += '<p>✅ Submit event worked! Form submission prevented.</p>';
+                    console.log('Submit event handled successfully');
+                });
+                
+                // Also test direct button click
+                submitBtn.addEventListener('click', (event) => {
+                    console.log('=== BUTTON CLICK EVENT TRIGGERED ===');
+                    output.innerHTML += '<p>🔘 Button click detected</p>';
+                });
+                
+                console.log('Events bound successfully');
+            } else {
+                console.error('Form or button elements not found!');
+                output.innerHTML = '<p>❌ Error: Form elements not found</p>';
+            }
+        });
+    </script>
+</body>
+</html>

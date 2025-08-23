@@ -511,18 +511,32 @@ class DynamicForm {
     }
 
     getScheduleItems() {
+        console.log('=== GETTING SCHEDULE ITEMS ===');
         const items = [];
-        document.querySelectorAll('#scheduleItems tr').forEach(row => {
+        const rows = document.querySelectorAll('#scheduleItems tr');
+        console.log('Found schedule rows:', rows.length);
+        
+        rows.forEach((row, index) => {
+            console.log(`Processing row ${index}:`);
             const scheduleItem = {};
-            row.querySelectorAll('[name]').forEach(input => {
+            const inputs = row.querySelectorAll('[name]');
+            console.log(`Found inputs in row ${index}:`, inputs.length);
+            
+            inputs.forEach(input => {
+                console.log(`Input: name="${input.name}", type="${input.type}", value="${input.value}"`);
                 if (input.type === 'number') {
                     scheduleItem[input.name] = Number(input.value) || 0;
                 } else {
                     scheduleItem[input.name] = input.value;
                 }
             });
+            
+            console.log(`Schedule item ${index}:`, scheduleItem);
+            console.log(`Schedule item ${index} keys:`, Object.keys(scheduleItem));
             items.push(scheduleItem);
         });
+        
+        console.log('Final schedule items:', items);
         return items;
     }
 

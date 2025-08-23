@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Data Test</title>
+</head>
+<body>
+    <h2>Form Data Collection Test</h2>
+    <button onclick="testFormData()">Test Current Form Data</button>
+    <button onclick="testScheduleData()">Test Schedule Data Collection</button>
+    <button onclick="testAddScheduleItem()">Add Test Schedule Item</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto;"></div>
+
+    <script>
+        function log(message) {
+            const results = document.getElementById('results');
+            results.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+
+        function testFormData() {
+            log('\n=== Testing Form Data Collection ===');
+            
+            // Wait for POForm instance to be available
+            if (window.poForm) {
+                log('✅ POForm instance found globally');
+                try {
+                    const data = window.poForm.collectFormData();
+                    log('✅ Form data collected successfully');
+                    log('Schedule items: ' + data.schedule.length);
+                    log('Meta fields: ' + Object.keys(data.meta).length);
+                    if (data.schedule.length > 0) {
+                        log('First schedule item keys: ' + Object.keys(data.schedule[0]).join(', '));
+                        log('First schedule item: ' + JSON.stringify(data.schedule[0]));
+                    } else {
+                        log('No schedule items found - try adding some first');
+                    }
+                } catch (error) {
+                    log('❌ Error collecting form data: ' + error.message);
+                }
+            } else {
+                log('❌ POForm instance not found globally');
+                log('Available window properties: ' + Object.keys(window).filter(k => k.includes('poForm') || k.includes('dynamicForm')).join(', '));
+                log('Try opening the actual form.html page first, then come back to this test page');
+            }
+        }
+
+        function testScheduleData() {
+            log('\n=== Testing Schedule Data Collection ===');
+            
+            if (window.dynamicForm) {
+                log('✅ DynamicForm instance found globally');
+                try {
+                    const items = window.dynamicForm.getScheduleItems();
+                    log('✅ Schedule items collected: ' + items.length);
+                    if (items.length === 0) {
+                        log('No schedule items found - the form might be empty or on a different page');
+                        log('Try opening form.html, adding schedule items, then running this test');
+                    } else {
+                        items.forEach((item, index) => {
+                            log(`Item ${index + 1} keys: ${Object.keys(item).join(', ')}`);
+                            log(`Item ${index + 1}: ${JSON.stringify(item)}`);
+                        });
+                    }
+                } catch (error) {
+                    log('❌ Error collecting schedule items: ' + error.message);
+                }
+            } else {
+                log('❌ DynamicForm instance not found globally');
+                log('Available window properties: ' + Object.keys(window).filter(k => k.includes('dynamic') || k.includes('Form')).join(', '));
+                log('Try opening the actual form.html page first, then come back to this test page');
+            }
+        }
+
+        function testAddScheduleItem() {
+            log('\n=== Testing Add Schedule Item ===');
+            
+            if (window.poForm && window.poForm.addScheduleItem) {
+                log('Adding test schedule item...');
+                try {
+                    window.poForm.addScheduleItem({
+                        primeLine: 'TEST001',
+                        budgetCode: 'BC001',
+                        description: 'Test Item',
+                        qty: 10,
+                        unit: 100,
+                        totalCost: 1000,
+                        scheduled: 500,
+                        apexContractValue: 900,
+                        profit: 100
+                    });
+                    log('Test schedule item added successfully');
+                } catch (error) {
+                    log('Error adding schedule item: ' + error.message);
+                }
+            } else {
+                log('POForm addScheduleItem method not available');
+            }
+        }
+    </script>
+</body>
+</html>

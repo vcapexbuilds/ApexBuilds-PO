@@ -472,6 +472,9 @@ function validateForm(formElement) {
 // Initialize modal manager
 const modal = new ModalManager();
 
+// Make modal available globally
+window.modal = modal;
+
 // Make functions available globally
 window.showModal = showModal;
 window.closeModal = closeModal;

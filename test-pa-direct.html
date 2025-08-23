@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Automate Test</title>
+</head>
+<body>
+    <h2>Power Automate Direct Test</h2>
+    <button onclick="testDirectPOST()">Test Direct POST to Power Automate</button>
+    <button onclick="testSimpleData()">Test Simple Data</button>
+    <button onclick="testPOData()">Test Full PO Data</button>
+    
+    <div id="results" style="margin-top: 20px; padding: 10px; background: #f5f5f5; font-family: monospace; white-space: pre-wrap;"></div>
+
+    <script>
+        const PA_URL = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA';
+        
+        function log(message) {
+            const results = document.getElementById('results');
+            results.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+
+        async function testDirectPOST() {
+            log('=== Testing Direct POST to Power Automate ===');
+            
+            try {
+                const response = await fetch(PA_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        test: 'direct test',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                log('Response status: ' + response.status);
+                log('Response statusText: ' + response.statusText);
+                log('Response ok: ' + response.ok);
+                
+                const responseText = await response.text();
+                log('Response body: ' + responseText);
+                
+            } catch (error) {
+                log('ERROR: ' + error.message);
+                log('Error details: ' + JSON.stringify(error));
+            }
+        }
+
+        async function testSimpleData() {
+            log('\n=== Testing Simple Data Structure ===');
+            
+            const simpleData = {
+                message: "Test from HTML",
+                timestamp: new Date().toISOString(),
+                id: 12345,
+                testNumber: 100
+            };
+            
+            try {
+                const response = await fetch(PA_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(simpleData)
+                });
+
+                log('Simple data sent: ' + JSON.stringify(simpleData));
+                log('Response status: ' + response.status);
+                
+                const responseText = await response.text();
+                log('Response: ' + responseText);
+                
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        }
+
+        async function testPOData() {
+            log('\n=== Testing Full PO Data Structure ===');
+            
+            const poData = {
+                meta: {
+                    projectName: "Test Project",
+                    generalContractor: "Test Contractor",
+                    address: "Test Address",
+                    owner: "Test Owner",
+                    apexOwner: "Test Apex Owner",
+                    typeStatus: "Active",
+                    projectManager: "Test PM",
+                    contractAmount: 100000,
+                    addAltAmount: 5000,
+                    addAltDetails: "Test details",
+                    retainagePct: 10,
+                    requestedBy: "Test User",
+                    companyName: "Test Company",
+                    contactName: "Test Contact",
+                    cellNumber: "123-456-7890",
+                    email: "test@example.com",
+                    officeNumber: "987-654-3210",
+                    vendorType: "Subcontractor",
+                    workType: "Construction",
+                    importantDates: {
+                        noticeToProceed: "2024-01-01",
+                        anticipatedStart: "2024-01-15",
+                        substantialCompletion: "2024-06-01",
+                        hundredPercent: "2024-06-15"
+                    }
+                },
+                schedule: [
+                    {
+                        primeLine: "001",
+                        budgetCode: "BC001",
+                        description: "Test work",
+                        qty: 10,
+                        unit: 100,
+                        totalCost: 1000,
+                        scheduled: 500,
+                        apexContractValue: 900,
+                        profit: 100
+                    }
+                ],
+                scope: [
+                    {
+                        item: "Item 1",
+                        description: "Test scope item",
+                        included: true,
+                        excluded: false
+                    }
+                ],
+                createdAt: new Date().toISOString(),
+                sent: true,
+                timestamp: Date.now(),
+                id: 67890,
+                sentAt: new Date().toISOString()
+            };
+            
+            try {
+                log('Sending PO data...');
+                
+                const response = await fetch(PA_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(poData)
+                });
+
+                log('Response status: ' + response.status);
+                log('Response ok: ' + response.ok);
+                
+                const responseText = await response.text();
+                log('Response: ' + responseText);
+                
+            } catch (error) {
+                log('ERROR: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

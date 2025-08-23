@@ -70,14 +70,14 @@ class TrackingDashboard {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('poTable').style.display = 'none';
 
-            const response = await window.api.getUserPOs();
+            const response = await window.api.getPOs({}, window.auth.getCurrentUser()?.id);
             this.allPOs = response.data || response || [];
             this.filteredPOs = [...this.allPOs];
             this.displayPOs(this.filteredPOs);
         } catch (error) {
             console.error('Failed to load POs:', error);
             document.getElementById('loadingSpinner').style.display = 'none';
-            modal.showError('Failed to load POs. Please try again later.');
+            window.modal.showError('Failed to load POs. Please try again later.');
         }
     }
 
@@ -167,7 +167,7 @@ class TrackingDashboard {
         try {
             const po = this.allPOs.find(p => p.id === poId);
             if (!po) {
-                modal.showError('PO not found.');
+                window.modal.showError('PO not found.');
                 return;
             }
 
@@ -197,34 +197,34 @@ class TrackingDashboard {
                 </div>
             `;
 
-            modal.show({
+            window.modal.show({
                 title: 'Purchase Order Details',
                 content: detailsHtml,
                 actions: [
                     {
                         text: 'Close',
                         class: 'btn-secondary',
-                        action: () => modal.hide()
+                        action: () => window.modal.hide()
                     }
                 ]
             });
         } catch (error) {
             console.error('Error viewing PO details:', error);
-            modal.showError('Failed to load PO details.');
+            window.modal.showError('Failed to load PO details.');
         }
     }
 
     async deletePO(poId) {
-        modal.showConfirm(
+        window.modal.showConfirm(
             `Are you sure you want to delete PO #${poId}? This action cannot be undone.`,
             async () => {
                 try {
                     await window.api.deletePO(poId);
-                    modal.showSuccess('PO deleted successfully.');
+                    window.modal.showSuccess('PO deleted successfully.');
                     this.loadPOs(); // Refresh the list
                 } catch (error) {
                     console.error('Error deleting PO:', error);
-                    modal.showError('Failed to delete PO. Please try again.');
+                    window.modal.showError('Failed to delete PO. Please try again.');
                 }
             }
         );
@@ -276,7 +276,7 @@ class TrackingDashboard {
 
     exportPOs() {
         if (!this.filteredPOs.length) {
-            modal.showError('No POs to export.');
+            window.modal.showError('No POs to export.');
             return;
         }
 
@@ -293,10 +293,10 @@ class TrackingDashboard {
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            modal.showSuccess('POs exported successfully.');
+            window.modal.showSuccess('POs exported successfully.');
         } catch (error) {
             console.error('Export error:', error);
-            modal.showError('Failed to export POs.');
+            window.modal.showError('Failed to export POs.');
         }
     }
 

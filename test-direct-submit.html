@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Submit Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { margin: 5px; padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .results { margin-top: 10px; padding: 10px; background: #f5f5f5; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 3px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Direct Power Automate Submit Test</h1>
+    
+    <div class="test-section">
+        <h3>Simple Direct Test</h3>
+        <p>This will bypass all form processing and send data directly to Power Automate</p>
+        <button onclick="testDirectSubmit()">Test Direct Submit</button>
+        <button onclick="testWithTimeout()">Test with 10s Timeout</button>
+        <button onclick="clearResults()">Clear Results</button>
+        <div id="status"></div>
+        <div id="results" class="results"></div>
+    </div>
+
+    <script>
+        const POWER_AUTOMATE_URL = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA';
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const results = document.getElementById('results');
+            results.textContent += `[${timestamp}] ${message}\n`;
+            
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            
+            console.log(message);
+        }
+
+        function clearResults() {
+            document.getElementById('results').textContent = '';
+            document.getElementById('status').textContent = '';
+        }
+
+        async function testDirectSubmit() {
+            log('Starting direct submit test...', 'info');
+            
+            const testData = {
+                meta: {
+                    projectName: "Test Project",
+                    generalContractor: "Test GC",
+                    address: "123 Test St",
+                    owner: "Test Owner",
+                    apexOwner: "Test Apex Owner",
+                    typeStatus: "Active",
+                    projectManager: "Test PM",
+                    contractAmount: 100000,
+                    addAltAmount: 5000,
+                    addAltDetails: "Test alt details",
+                    retainagePct: 10,
+                    requestedBy: "Test User",
+                    companyName: "Test Company",
+                    contactName: "Test Contact",
+                    cellNumber: "555-1234",
+                    email: "test@test.com",
+                    officeNumber: "555-5678",
+                    vendorType: "Subcontractor",
+                    workType: "Construction",
+                    importantDates: {
+                        noticeToProceed: "2025-08-01",
+                        anticipatedStart: "2025-08-15", 
+                        substantialCompletion: "2025-12-01",
+                        hundredPercent: "2025-12-15"
+                    }
+                },
+                schedule: [
+                    {
+                        primeLine: "12345",
+                        budgetCode: "BC001", 
+                        description: "Test Item",
+                        qty: 1,
+                        unit: 1, // Changed to integer as per schema
+                        totalCost: 10000,
+                        scheduled: 20250901, // Changed to integer (YYYYMMDD format)
+                        apexContractValue: 15000,
+                        profit: 5000
+                    }
+                ],
+                scope: [
+                    {
+                        item: "Test Scope Item",
+                        description: "Test scope description",
+                        included: true,
+                        excluded: false
+                    }
+                ],
+                createdAt: new Date().toISOString(),
+                sent: true,
+                timestamp: Date.now(),
+                id: Date.now(),
+                sentAt: new Date().toISOString()
+            };
+
+            log('Test data prepared:', 'info');
+            log(JSON.stringify(testData, null, 2));
+
+            try {
+                log('Making fetch request...', 'info');
+                
+                const response = await fetch(POWER_AUTOMATE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData)
+                });
+
+                log(`Response received: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`Error response: ${errorText}`, 'error');
+                    return;
+                }
+
+                const responseData = await response.text();
+                log(`Success! Response data: ${responseData}`, 'success');
+
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                log(`Error stack: ${error.stack}`, 'error');
+            }
+        }
+
+        async function testWithTimeout() {
+            log('Starting direct submit test with 10 second timeout...', 'info');
+            
+            const testData = {
+                meta: {
+                    projectName: "Test Project with Timeout",
+                    generalContractor: "Test GC Timeout",
+                    address: "123 Timeout St",
+                    owner: "Test Owner Timeout", 
+                    apexOwner: "Test Apex Owner Timeout",
+                    typeStatus: "Active",
+                    projectManager: "Test PM Timeout",
+                    contractAmount: 200000,
+                    addAltAmount: 10000,
+                    addAltDetails: "Test alt details timeout",
+                    retainagePct: 15,
+                    requestedBy: "Test User Timeout",
+                    companyName: "Test Company Timeout",
+                    contactName: "Test Contact Timeout", 
+                    cellNumber: "555-9999",
+                    email: "timeout@test.com",
+                    officeNumber: "555-8888",
+                    vendorType: "Subcontractor",
+                    workType: "Construction",
+                    importantDates: {
+                        noticeToProceed: "2025-08-01",
+                        anticipatedStart: "2025-08-15",
+                        substantialCompletion: "2025-12-01", 
+                        hundredPercent: "2025-12-15"
+                    }
+                },
+                schedule: [
+                    {
+                        primeLine: "67890",
+                        budgetCode: "BC002",
+                        description: "Test Item with Timeout",
+                        qty: 2,
+                        unit: 2, // SF
+                        totalCost: 20000,
+                        scheduled: 20250902, // YYYYMMDD format
+                        apexContractValue: 30000,
+                        profit: 10000
+                    }
+                ],
+                scope: [
+                    {
+                        item: "Test Scope Item Timeout",
+                        description: "Test scope description timeout",
+                        included: false,
+                        excluded: true
+                    }
+                ],
+                createdAt: new Date().toISOString(),
+                sent: true,
+                timestamp: Date.now(),
+                id: Date.now(),
+                sentAt: new Date().toISOString()
+            };
+
+            try {
+                log('Making fetch request with 10 second timeout...', 'info');
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    log('⏰ Request timed out after 10 seconds', 'error');
+                    controller.abort();
+                }, 10000);
+
+                const response = await fetch(POWER_AUTOMATE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                log(`Response received: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`Error response: ${errorText}`, 'error');
+                    return;
+                }
+
+                const responseData = await response.text();
+                log(`Success! Response data: ${responseData}`, 'success');
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    log('Request was aborted due to timeout', 'error');
+                } else {
+                    log(`Error: ${error.message}`, 'error');
+                    log(`Error stack: ${error.stack}`, 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

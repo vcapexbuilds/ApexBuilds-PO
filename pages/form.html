@@ -14,6 +14,8 @@
             Purchase Order Form
         </div>
         <div class="nav-menu">
+            <button id="testDataBtn" class="btn btn-info" onclick="testFormDataCollection()" style="background-color: #17a2b8; margin-right: 10px;">🧪 Test Data</button>
+            <button id="resetFormBtn" class="btn btn-warning" onclick="resetForm()" style="background-color: #ffc107; margin-right: 10px;">🔄 Reset</button>
             <button id="backBtn" class="btn btn-secondary" onclick="testBackButton()">Back to Dashboard</button>
             <button id="logoutBtn" class="btn btn-secondary" onclick="handleLogout()">Logout</button>
         </div>
@@ -387,9 +389,189 @@
                 }
             }
         }
+        
+        function testFormDataCollection() {
+            console.log('\n=== 🧪 TESTING FORM DATA COLLECTION ===');
+            
+            // Test POForm instance
+            if (window.poForm) {
+                console.log('✅ POForm instance available');
+                
+                // Add a test schedule item first
+                if (window.dynamicForm && window.dynamicForm.addScheduleItem) {
+                    console.log('Adding test schedule item...');
+                    window.dynamicForm.addScheduleItem({
+                        primeLine: 'TEST001',
+                        budgetCode: 'BC001', 
+                        description: 'Test Item for PA',
+                        qty: 10,
+                        unit: 100,
+                        totalCost: 1000,
+                        scheduled: 500,
+                        apexContractValue: 900,
+                        profit: 100
+                    });
+                    console.log('✅ Test schedule item added');
+                }
+                
+                // Collect form data
+                try {
+                    const data = window.poForm.collectFormData();
+                    console.log('✅ Form data collected successfully');
+                    console.log('Data structure:', {
+                        metaFields: Object.keys(data.meta).length,
+                        scheduleItems: data.schedule.length,
+                        scopeItems: data.scope.length
+                    });
+                    
+                    if (data.schedule.length > 0) {
+                        console.log('Schedule item 1 fields:', Object.keys(data.schedule[0]));
+                        console.log('Schedule item 1 data:', data.schedule[0]);
+                        
+                        // Validate required fields
+                        const required = ['primeLine', 'budgetCode', 'description', 'qty', 'unit', 'totalCost', 'scheduled', 'apexContractValue', 'profit'];
+                        const missing = required.filter(field => data.schedule[0][field] === undefined || data.schedule[0][field] === '');
+                        
+                        if (missing.length === 0) {
+                            console.log('✅ All required fields present');
+                            
+                            // Test Power Automate shaping
+                            if (window.api && window.api.shapePOForSend) {
+                                console.log('Testing Power Automate data shaping...');
+                                const shaped = window.api.shapePOForSend(data);
+                                console.log('✅ Data shaped for Power Automate');
+                                console.log('Shaped schedule item:', shaped.schedule[0]);
+                            }
+                        } else {
+                            console.log('❌ Missing required fields:', missing);
+                        }
+                    } else {
+                        console.log('⚠️ No schedule items found');
+                    }
+                    
+                } catch (error) {
+                    console.log('❌ Error collecting form data:', error);
+                }
+            } else {
+                console.log('❌ POForm instance not available');
+            }
+            
+            // Test DynamicForm instance
+            if (window.dynamicForm) {
+                console.log('✅ DynamicForm instance available');
+                const items = window.dynamicForm.getScheduleItems();
+                console.log('Schedule items from DynamicForm:', items.length);
+            } else {
+                console.log('❌ DynamicForm instance not available');
+            }
+            
+            alert('🧪 Test completed! Check browser console for detailed results.');
+        }
+        
+        function resetForm() {
+            console.log('🔄 Resetting form...');
+            
+            // Hide any modals
+            if (window.modal) {
+                window.modal.hideLoadingModal();
+                window.modal.hide();
+            }
+            
+            // Reset submit button
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.style.background = '';
+                submitBtn.style.transform = '';
+                submitBtn.textContent = 'Submit Purchase Order';
+                submitBtn.disabled = false;
+            }
+            
+            // Clear form if needed
+            const form = document.getElementById('poForm');
+            if (form && confirm('Clear all form data?')) {
+                form.reset();
+                if (window.dynamicForm) {
+                    window.dynamicForm.clearAllItems();
+                }
+            }
+            
+            console.log('✅ Form reset completed');
+        }
     </script>
     
-    <script type="module" src="../js/Module/dynamic-form.js"></script>
-    <script type="module" src="../js/pages/form.js"></script>
+    <!-- Load core modules first -->
+    <script src="../js/core/storage.js"></script>
+    <script src="../js/core/auth.js"></script>
+    <script src="../js/core/api.js"></script>
+    <script src="../js/Module/modal.js"></script>
+    <script src="../js/Module/dynamic-form.js"></script>
+    <script src="../js/pages/form.js"></script>
+    
+    <!-- FIXED FORM SUBMISSION -->
+    <script>
+        // Override the form submit to use the working direct submission logic
+        window.addEventListener('load', () => {
+            const form = document.getElementById('poForm');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            if (form && submitBtn) {
+                // Override form submission
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    try {
+                        if (!window.poForm || !window.api) {
+                            alert('System not ready. Please refresh the page.');
+                            return;
+                        }
+
+                        // Collect form data
+                        const formData = window.poForm.collectFormData();
+
+                        // Validate required fields
+                        if (!formData.meta.projectName || !formData.schedule.length) {
+                            alert('Please fill out project name and add at least one schedule item');
+                            return;
+                        }
+
+                        // Show confirmation
+                        if (!confirm(`Submit PO for "${formData.meta.projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nClick OK to submit.`)) {
+                            return;
+                        }
+
+                        // Update button state
+                        submitBtn.textContent = '🔄 Processing...';
+                        submitBtn.disabled = true;
+
+                        // Submit to API
+                        const result = await window.api.createPO(formData);
+
+                        if (result && result.success) {
+                            alert(`SUCCESS! Purchase Order submitted successfully!\n\nPO ID: ${result.po.id}\nStatus: ${result.po.status}\nPower Automate: ${result.syncStatus === 'synced' ? 'Sent successfully' : 'Queued for retry'}`);
+                            
+                            // Reset form and redirect
+                            form.reset();
+                            const currentUser = window.auth?.getCurrentUser();
+                            if (currentUser?.role === 'admin') {
+                                window.location.href = 'admin.html';
+                            } else {
+                                window.location.href = 'tracking.html';
+                            }
+                        } else {
+                            alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
+                        }
+
+                    } catch (error) {
+                        console.error('Form submission error:', error);
+                        alert(`Error submitting form: ${error.message}`);
+                    } finally {
+                        // Reset button state
+                        submitBtn.textContent = 'Submit Purchase Order';
+                        submitBtn.disabled = false;
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

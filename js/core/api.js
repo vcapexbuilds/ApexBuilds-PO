@@ -10,6 +10,8 @@ class APIManager {
             : (window && window.POWER_AUTOMATE_URL ? window.POWER_AUTOMATE_URL : 
                 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA');
         
+        console.log('🔗 Power Automate URL configured:', this.POWER_AUTOMATE_URL);
+        
         // Configuration
         this.config = {
             timeout: 30000, // 30 seconds
@@ -123,8 +125,8 @@ class APIManager {
                 action: action,
                 data: data,
                 timestamp: new Date().toISOString(),
-                userId: auth.getCurrentUser()?.id || null,
-                userInfo: auth.getCurrentUser() || null
+                userId: window.auth.getCurrentUser()?.id || null,
+                userInfo: window.auth.getCurrentUser() || null
             };
 
             const response = await this.makeRequest(this.POWER_AUTOMATE_URL, {
@@ -164,35 +166,59 @@ class APIManager {
     // Purchase Order API methods
     async createPO(poData) {
         try {
+            console.log('=== CREATE PO STARTED ===');
+            console.log('⏰ Entry timestamp:', new Date().toISOString());
+            console.log('📍 Method called from:', new Error().stack.split('\n')[2]);
+            console.log('Input PO data:', JSON.stringify(poData, null, 2));
+            
+            console.log('🚀 STEP 1: Validating PO data...');
             // Validate PO data
-            const validation = storage.validatePOSchema(poData);
+            const validation = window.storage.validatePOSchema(poData);
             if (!validation.isValid) {
+                console.log('❌ PO validation failed:', validation.errors);
                 return {
                     success: false,
                     errors: validation.errors
                 };
             }
+            console.log('✅ STEP 1 COMPLETE: PO validation passed');
 
+            console.log('🚀 STEP 2: Saving PO locally...');
             // Save locally first
-            const savedPO = storage.addPO(poData);
+            const savedPO = window.storage.addPO(poData);
+            console.log('✅ STEP 2 COMPLETE: PO saved locally with ID:', savedPO.id);
             
+            console.log('🚀 STEP 3: Updating PO status to submitted...');
             // Update status to submitted
-            const submittedPO = storage.updatePO(savedPO.id, {
+            const submittedPO = window.storage.updatePO(savedPO.id, {
                 sent: true,
                 sentAt: new Date().toISOString(),
                 status: 'Submitted'
             });
+            console.log('✅ STEP 3 COMPLETE: PO status updated to Submitted');
 
+            console.log('🚀 STEP 4: Preparing data for Power Automate...');
             // Send shaped payload directly (not wrapped in action/data)
             const shaped = this.shapePOForSend(submittedPO);
+            console.log('✅ STEP 4 COMPLETE: Data shaped for PA:', JSON.stringify(shaped, null, 2));
+            
+            console.log('🚀 STEP 5: Starting Power Automate sync...');
+            console.log('⏰ Sync start timestamp:', new Date().toISOString());
             const syncResult = await this.syncDirectly(shaped);
+            console.log('⏰ Sync end timestamp:', new Date().toISOString());
+            console.log('✅ STEP 5 COMPLETE: Sync result:', syncResult);
 
-            return {
+            console.log('🚀 STEP 6: Preparing final result...');
+            const finalResult = {
                 success: true,
                 po: submittedPO,
                 syncStatus: syncResult.success ? 'synced' : 'queued',
                 message: 'Purchase Order created successfully'
             };
+            console.log('✅ STEP 6 COMPLETE: Final result prepared:', finalResult);
+            console.log('=== CREATE PO COMPLETED SUCCESSFULLY ===');
+            
+            return finalResult;
 
         } catch (error) {
             console.error('Create PO error:', error);
@@ -206,7 +232,7 @@ class APIManager {
     async updatePO(poId, updateData) {
         try {
             // Update locally
-            const updatedPO = storage.updatePO(poId, {
+            const updatedPO = window.storage.updatePO(poId, {
                 ...updateData,
                 updatedAt: new Date().toISOString()
             });
@@ -242,6 +268,43 @@ class APIManager {
         const meta = po.meta || {};
         
         // Ensure proper data types - Power Automate expects specific types
+        // Convert numeric strings to actual numbers and handle empty values
+        const parseNumber = (value) => {
+            if (value === null || value === undefined || value === '') return 0;
+            const num = Number(value);
+            return isNaN(num) ? 0 : num;
+        };
+        
+        // Convert unit string to integer (mapping common units)
+        const parseUnit = (unit) => {
+            const unitMap = {
+                'EA': 1, 'EACH': 1,
+                'SF': 2, 'SQ FT': 2, 
+                'LF': 3, 'LIN FT': 3,
+                'CY': 4, 'CU YD': 4,
+                'SY': 5, 'SQ YD': 5,
+                'TON': 6, 'TONS': 6,
+                'LS': 7, 'LUMP SUM': 7,
+                'HR': 8, 'HOUR': 8, 'HOURS': 8,
+                'DAY': 9, 'DAYS': 9,
+                'WEEK': 10, 'WEEKS': 10
+            };
+            const unitStr = String(unit || '').toUpperCase().trim();
+            return unitMap[unitStr] || 1; // Default to 1 (EACH) if unknown
+        };
+        
+        // Convert date to integer YYYYMMDD format  
+        const parseScheduled = (dateValue) => {
+            if (!dateValue) return 0;
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return 0;
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return parseInt(`${year}${month}${day}`);
+        };
+        
         const shaped = {
             meta: {
                 projectName: String(meta.projectName || ""),
@@ -251,10 +314,10 @@ class APIManager {
                 apexOwner: String(meta.apexOwner || ""),
                 typeStatus: String(meta.typeStatus || ""),
                 projectManager: String(meta.projectManager || ""),
-                contractAmount: parseInt(meta.contractAmount) || 0,
-                addAltAmount: parseInt(meta.addAltAmount) || 0,
+                contractAmount: parseNumber(meta.contractAmount),
+                addAltAmount: parseNumber(meta.addAltAmount),
                 addAltDetails: String(meta.addAltDetails || ""),
-                retainagePct: parseInt(meta.retainagePct) || 0,
+                retainagePct: parseNumber(meta.retainagePct),
                 requestedBy: String(meta.requestedBy || ""),
                 companyName: String(meta.companyName || ""),
                 contactName: String(meta.contactName || ""),
@@ -274,12 +337,12 @@ class APIManager {
                 primeLine: String(item.primeLine || ""),
                 budgetCode: String(item.budgetCode || ""),
                 description: String(item.description || ""),
-                qty: parseInt(item.qty) || 0,
-                unit: parseInt(item.unit) || 0,
-                totalCost: parseInt(item.totalCost) || 0,
-                scheduled: parseInt(item.scheduled) || 0,
-                apexContractValue: parseInt(item.apexContractValue) || 0,
-                profit: parseInt(item.profit) || 0
+                qty: parseNumber(item.qty),
+                unit: parseUnit(item.unit), // Convert to integer per schema
+                totalCost: parseNumber(item.totalCost),
+                scheduled: parseScheduled(item.scheduled), // Convert to integer YYYYMMDD
+                apexContractValue: parseNumber(item.apexContractValue),
+                profit: parseNumber(item.profit)
             })) : [],
             scope: Array.isArray(po.scope) ? po.scope.map(item => ({
                 item: String(item.item || ""),
@@ -289,8 +352,8 @@ class APIManager {
             })) : [],
             createdAt: String(po.createdAt || new Date().toISOString()),
             sent: Boolean(po.sent),
-            timestamp: parseInt(po.timestamp) || Date.now(),
-            id: parseInt(po.id) || Math.floor(Date.now() / 1000), // Ensure integer ID
+            timestamp: parseNumber(po.timestamp) || Date.now(),
+            id: parseNumber(po.id) || Date.now(),
             sentAt: String(po.sentAt || new Date().toISOString())
         };
         
@@ -307,6 +370,14 @@ class APIManager {
 
         console.log('=== POWER AUTOMATE SYNC ATTEMPT ===');
         console.log('URL:', this.POWER_AUTOMATE_URL);
+        console.log('Raw data received:', JSON.stringify(data, null, 2));
+        console.log('Data structure analysis:', {
+            hasSchedule: Array.isArray(data.schedule),
+            scheduleLength: data.schedule ? data.schedule.length : 0,
+            scheduleFields: data.schedule && data.schedule.length > 0 ? Object.keys(data.schedule[0]) : [],
+            hasScope: Array.isArray(data.scope),
+            scopeLength: data.scope ? data.scope.length : 0
+        });
         console.log('Data being sent:', JSON.stringify(data, null, 2));
         console.log('Retry count:', retryCount);
 
@@ -316,7 +387,10 @@ class APIManager {
                 body: JSON.stringify(data),
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type'
                 }
             });
 
@@ -359,13 +433,13 @@ class APIManager {
     async deletePO(poId) {
         try {
             // Get PO data before deletion
-            const po = storage.getPOById(poId);
+            const po = window.storage.getPOById(poId);
             if (!po) {
                 throw new Error('Purchase Order not found');
             }
 
             // Delete locally
-            const deleted = storage.deletePO(poId);
+            const deleted = window.storage.deletePO(poId);
             if (!deleted) {
                 throw new Error('Failed to delete Purchase Order');
             }
@@ -391,12 +465,12 @@ class APIManager {
     async getPOs(filters = {}, userId = null) {
         try {
             // Get from local storage
-            const pos = storage.searchPOs(filters.query || '', filters, userId);
+            const pos = window.storage.searchPOs(filters.query || '', filters, userId);
             
             // Apply pagination if specified
             let result = pos;
             if (filters.page && filters.limit) {
-                result = storage.paginateResults(pos, filters.page, filters.limit);
+                result = window.storage.paginateResults(pos, filters.page, filters.limit);
             }
 
             return {
@@ -416,7 +490,7 @@ class APIManager {
 
     async getPOById(poId) {
         try {
-            const po = storage.getPOById(poId);
+            const po = window.storage.getPOById(poId);
             
             if (!po) {
                 throw new Error('Purchase Order not found');
@@ -476,7 +550,7 @@ class APIManager {
                 throw new Error('Insufficient permissions');
             }
 
-            const updatedUser = storage.updateUser(userId, userData);
+            const updatedUser = window.storage.updateUser(userId, userData);
             
             if (!updatedUser) {
                 throw new Error('User not found');
@@ -508,13 +582,13 @@ class APIManager {
             }
 
             // Get user data before deletion
-            const user = storage.getUserById(userId);
+            const user = window.storage.getUserById(userId);
             if (!user) {
                 throw new Error('User not found');
             }
 
             // Delete user
-            const deleted = storage.deleteUser(userId);
+            const deleted = window.storage.deleteUser(userId);
             if (!deleted) {
                 throw new Error('Failed to delete user');
             }
@@ -543,7 +617,7 @@ class APIManager {
                 throw new Error('Insufficient permissions');
             }
 
-            const users = storage.getUsers();
+            const users = window.storage.getUsers();
             
             return {
                 success: true,
@@ -563,8 +637,8 @@ class APIManager {
     // Statistics API methods
     async getStats(userId = null) {
         try {
-            const poStats = storage.getPOStats(userId);
-            const userStats = auth.hasPermission('manage_users') ? storage.getUserStats() : null;
+            const poStats = window.storage.getPOStats(userId);
+            const userStats = window.auth.hasPermission('manage_users') ? window.storage.getUserStats() : null;
 
             return {
                 success: true,
@@ -587,7 +661,7 @@ class APIManager {
     // Export data
     async exportData(type = 'all', format = 'json') {
         try {
-            const data = storage.exportData(type);
+            const data = window.storage.exportData(type);
             
             if (format === 'json') {
                 return {
@@ -623,12 +697,12 @@ class APIManager {
         this.failedRequests.push(failedRequest);
         
         // Save to local storage for persistence
-        storage.set('failedRequests', this.failedRequests);
+        window.storage.set('failedRequests', this.failedRequests);
     }
 
     async processPendingRequests() {
         // Load failed requests from storage
-        const savedFailedRequests = storage.get('failedRequests', []);
+        const savedFailedRequests = window.storage.get('failedRequests', []);
         this.failedRequests = savedFailedRequests;
 
         if (this.failedRequests.length === 0) return;
@@ -662,7 +736,7 @@ class APIManager {
         );
 
         // Update storage
-        storage.set('failedRequests', this.failedRequests);
+        window.storage.set('failedRequests', this.failedRequests);
     }
 
     // Network status handlers
@@ -688,7 +762,7 @@ class APIManager {
     // Configuration methods
     updateConfig(newConfig) {
         this.config = { ...this.config, ...newConfig };
-        storage.set('apiConfig', this.config);
+        window.storage.set('apiConfig', this.config);
     }
 
     getConfig() {
