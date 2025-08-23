@@ -724,6 +724,3 @@ const api = new APIManager();
 
 // Make api available globally
 window.api = api;
-
-// ES6 module export
-export default api;
