@@ -1,7 +1,9 @@
 // API and Power Automate Integration
+// 🚨 MANDATORY: Read CRITICAL_INTEGRATION_REQUIREMENTS.md before making ANY changes!
 class APIManager {
     constructor() {
-        // ⚠️ CRITICAL: JSON structure must match POWER_AUTOMATE_GUIDE.md exactly
+        // ⚠️ CRITICAL: JSON structure must match CRITICAL_INTEGRATION_REQUIREMENTS.md exactly
+        // READ CRITICAL_INTEGRATION_REQUIREMENTS.md BEFORE MAKING ANY CHANGES!
         // Any deviation will cause HTTP 400 schema validation errors
         
         // Load Power Automate HTTP trigger URL from environment variable or secure config
@@ -12,12 +14,18 @@ class APIManager {
         
         console.log('🔗 Power Automate URL configured:', this.POWER_AUTOMATE_URL);
         
+        // OneDrive retrieval endpoints - REPLACE WITH YOUR ACTUAL POWER AUTOMATE URLs
+        // PO Data Retrieval Flow: Create flow named "Apex-PO-Data-Retrieval"
+        this.ONEDRIVE_GET_POS_URL = 'YOUR_PO_RETRIEVAL_POWER_AUTOMATE_URL_HERE';
+        // User Data Retrieval Flow: For getting user data (same as auth.js endpoint)
+        this.ONEDRIVE_GET_USERS_URL = 'YOUR_USER_RETRIEVAL_POWER_AUTOMATE_URL_HERE';
+        
         // Configuration
         this.config = {
             timeout: 30000, // 30 seconds
             retryAttempts: 3,
             retryDelay: 1000, // 1 second
-            enableSync: true // Enable/disable Power Automate sync
+            enableSync: false // Disable Power Automate sync by default; OneDrive is primary DB
         };
         
         // Queue for failed requests
@@ -25,6 +33,15 @@ class APIManager {
         
         // Initialize
         this.init();
+    }
+
+    // Simple PO number generator: PO-YYMM-XXXXXX
+    generatePONumber() {
+        const now = new Date();
+        const yy = String(now.getFullYear()).slice(-2);
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const seq = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
+        return `PO-${yy}${mm}-${seq}`;
     }
 
     init() {
@@ -192,6 +209,13 @@ class APIManager {
             });
             console.log('✅ PO status updated to Submitted');
 
+            // Ensure a PO number exists for downstream systems
+            if (!poData.poDetails) poData.poDetails = {};
+            if (!poData.poDetails.poNumber) {
+                poData.poDetails.poNumber = this.generatePONumber();
+                console.log('🆔 Generated PO Number:', poData.poDetails.poNumber);
+            }
+
             // Send shaped payload directly (not wrapped in action/data)
             console.log('🚀 Starting Power Automate sync...');
             const shaped = this.shapePOForSend(submittedPO);
@@ -250,10 +274,14 @@ class APIManager {
     }
 
     // Shape PO to the requested HTTP schema
+    // 🚨 CRITICAL: DO NOT MODIFY THIS STRUCTURE WITHOUT READING CRITICAL_INTEGRATION_REQUIREMENTS.md
+    // This function MUST produce EXACTLY the JSON structure expected by Power Automate
     shapePOForSend(po) {
         if (!po) return po;
         
         const meta = po.meta || {};
+    // Derive PO number if available; fallback to a stable reference using local id
+    const poNumber = (po.poDetails && po.poDetails.poNumber) || po.poNumber || `PO-${po.id || Date.now()}`;
         
         // Ensure proper data types - Power Automate expects specific types
         // Convert numeric strings to actual numbers and handle empty values
@@ -294,6 +322,7 @@ class APIManager {
         };
         
         const shaped = {
+            poNumber: String(poNumber),
             meta: {
                 projectName: String(meta.projectName || ""),
                 generalContractor: String(meta.generalContractor || ""),
@@ -342,10 +371,18 @@ class APIManager {
             sent: Boolean(po.sent),
             timestamp: parseNumber(po.timestamp) || Date.now(),
             id: parseNumber(po.id) || Date.now(),
-            sentAt: String(po.sentAt || new Date().toISOString())
+            sentAt: String(po.sentAt || new Date().toISOString()),
+            submittedBy: {
+                userId: String((po.submittedBy?.userId) || ""),
+                username: String((po.submittedBy?.username) || "unknown"),
+                email: String((po.submittedBy?.email) || ""),
+                company: String((po.submittedBy?.company) || ""),
+                role: String((po.submittedBy?.role) || "user"),
+                submittedAt: String((po.submittedBy?.submittedAt) || new Date().toISOString())
+            }
         };
         
-        console.log('🔄 Shaped PO for Power Automate (with profit field):', JSON.stringify(shaped, null, 2));
+    console.log('🔄 Shaped PO for Power Automate (with poNumber):', JSON.stringify(shaped, null, 2));
         return shaped;
     }
 
@@ -779,10 +816,271 @@ class APIManager {
             };
         }
     }
+    
+    // OneDrive Integration Methods
+    async retrievePOsFromOneDrive(filters = {}) {
+        // Prefer direct Microsoft Graph integration (shared centralized folder) over placeholder endpoints
+        try {
+            console.log('📥 Retrieving POs from OneDrive via Graph...', filters);
+
+            // Ensure Graph integration is available on this page
+            if (typeof window.RealM365Integration === 'undefined') {
+                console.warn('RealM365Integration not loaded on this page');
+                return { success: false, error: 'M365 integration not available' };
+            }
+
+            const integ = new window.RealM365Integration();
+            await integ.initialize();
+            const auth = await integ.checkAuthenticationStatus();
+            if (!auth?.authenticated) {
+                console.warn('Not authenticated with Microsoft 365; skipping OneDrive retrieval');
+                return { success: false, error: 'Not authenticated', requiresAuth: true };
+            }
+
+            // Determine scope for listing
+            const contractor = filters.contractor || 'General Contractor';
+            const year = (filters.year || new Date().getFullYear()).toString();
+            const list = await integ.listPOs(contractor, year);
+
+            // Current session for filtering to "My" POs if a userId filter is provided
+            const currentSession = (window.auth && typeof window.auth.getCurrentUser === 'function')
+                ? window.auth.getCurrentUser()
+                : null;
+
+            // Map Graph results to app PO shape
+            const mapToPO = (item) => {
+                // If coming from Microsoft Lists, the item is already in the app shape
+                if (item && item.source === 'mslists') {
+                    const poNumber = item.poNumber || item.data?.poNumber || `PO-${item.id || Date.now()}`;
+                    const createdAt = item.createdAt || new Date().toISOString();
+                    return {
+                        id: item.id || (() => {
+                            const str = String(poNumber);
+                            let hash = 0; for (let i=0;i<str.length;i++){ hash=((hash<<5)-hash)+str.charCodeAt(i); hash|=0; }
+                            const n = Math.abs(hash); return Number(String(n).padEnd(10,'0').slice(0,10));
+                        })(),
+                        createdAt,
+                        status: item.status || 'Submitted',
+                        meta: { ...(item.meta || {}) },
+                        submittedBy: { ...(item.submittedBy || {}) },
+                        source: 'mslists',
+                        poNumber
+                    };
+                }
+
+                const data = item?.data || {};
+                const poNumber = data.poDetails?.poNumber || data.poNumber || item?.poNumber || 'UNKNOWN';
+
+                // Deterministic id from poNumber if missing
+                const deterministicId = (() => {
+                    const str = String(poNumber);
+                    let hash = 0;
+                    for (let i = 0; i < str.length; i++) {
+                        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                        hash |= 0; // Convert to 32-bit int
+                    }
+                    // Keep it positive and 10 digits-ish
+                    const n = Math.abs(hash);
+                    return Number(String(n).padEnd(10, '0').slice(0, 10));
+                })();
+
+                const createdAt = data.createdAt || data.submittedBy?.submittedAt || item?.createdAt || item?.lastModified || new Date().toISOString();
+                const status = data.status || data.poDetails?.status || data.workflow?.status || 'Submitted';
+
+                const meta = {
+                    projectName: data.meta?.projectName || data.poDetails?.projectName || data.project?.name || 'N/A',
+                    generalContractor: data.meta?.generalContractor || data.contractor || 'General Contractor',
+                    contractAmount: Number(data.meta?.contractAmount || data.poDetails?.totalAmount || data.totalAmount || 0)
+                };
+
+                const submittedBy = data.submittedBy || {
+                    username: currentSession?.username || currentSession?.name || auth?.user || 'Unknown',
+                    email: currentSession?.email || auth?.email || '',
+                    company: data.meta?.company || currentSession?.company || '',
+                    role: currentSession?.role || 'user',
+                    submittedAt: data.submittedBy?.submittedAt || createdAt
+                };
+
+                return {
+                    id: data.id || deterministicId,
+                    createdAt,
+                    status,
+                    meta,
+                    submittedBy,
+                    source: 'onedrive',
+                    // Keep references for future drill-in if needed
+                    poNumber,
+                    oneDrive: {
+                        folderName: item.folderName,
+                        lastModified: item.lastModified
+                    }
+                };
+            };
+
+            let pos = Array.isArray(list) ? list.map(mapToPO) : [];
+
+            // Optional filter for "My POs"
+            if (filters.userId && currentSession) {
+                const uid = filters.userId;
+                const email = currentSession.email;
+                pos = pos.filter(p => (
+                    p.submittedBy?.userId === uid ||
+                    p.submittedBy?.username === uid ||
+                    (email && p.submittedBy?.email === email)
+                ));
+            }
+
+            console.log('✅ POs retrieved from OneDrive via Graph:', pos.length);
+            return {
+                success: true,
+                pos,
+                count: pos.length,
+                source: 'onedrive'
+            };
+        } catch (error) {
+            console.error('❌ OneDrive PO retrieval error (Graph):', error);
+            // Fallback to legacy HTTP endpoint if configured
+            try {
+                if (this.ONEDRIVE_GET_POS_URL && !this.ONEDRIVE_GET_POS_URL.includes('YOUR_PO_RETRIEVAL_POWER_AUTOMATE_URL_HERE')) {
+                    const payload = {
+                        action: 'get_pos',
+                        filters: {
+                            userId: filters.userId || null,
+                            status: filters.status || null,
+                            dateFrom: filters.dateFrom || null,
+                            dateTo: filters.dateTo || null
+                        },
+                        timestamp: new Date().toISOString()
+                    };
+                    const response = await fetch(this.ONEDRIVE_GET_POS_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        return { success: true, pos: data.pos || [], count: data.count || 0, source: 'onedrive' };
+                    }
+                }
+            } catch (e) {
+                console.warn('Legacy OneDrive endpoint retrieval also failed:', e?.message || e);
+            }
+            return { success: false, error: error.message };
+        }
+    }
+
+    async retrieveUsersFromOneDrive(filters = {}) {
+        try {
+            console.log('📥 Retrieving users from OneDrive...', filters);
+            
+            const payload = {
+                action: 'get_users',
+                filters: {
+                    role: filters.role || null,
+                    status: filters.status || 'active'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch(this.ONEDRIVE_GET_USERS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Users retrieved from OneDrive:', data.users?.length || 0);
+                return { 
+                    success: true, 
+                    users: data.users || [],
+                    count: data.count || 0,
+                    source: 'onedrive'
+                };
+            } else {
+                console.error('❌ Failed to retrieve users from OneDrive:', response.status);
+                return { success: false, error: `HTTP ${response.status}` };
+            }
+        } catch (error) {
+            console.error('❌ OneDrive user retrieval error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    // Combined method to get POs from both local storage and OneDrive
+    async getAllPOs(userId = null, includeOneDrive = true) {
+        try {
+            console.log('📊 Getting all POs from all sources...');
+            
+            // Get local POs
+            const localPOs = window.storage ? window.storage.getUserPOs(userId) : [];
+            console.log(`📱 Local POs: ${localPOs.length}`);
+            
+            let oneDrivePOs = [];
+            if (includeOneDrive) {
+                // Get OneDrive POs
+                const oneDriveResult = await this.retrievePOsFromOneDrive({ userId });
+                if (oneDriveResult.success) {
+                    oneDrivePOs = oneDriveResult.pos;
+                    console.log(`☁️ OneDrive POs: ${oneDrivePOs.length}`);
+                }
+            }
+            
+            // Merge and deduplicate (prefer OneDrive version if duplicate IDs)
+            const mergedPOs = this.mergePOData(localPOs, oneDrivePOs);
+            console.log(`🔗 Total merged POs: ${mergedPOs.length}`);
+            
+            return {
+                success: true,
+                pos: mergedPOs,
+                local: localPOs.length,
+                onedrive: oneDrivePOs.length,
+                total: mergedPOs.length
+            };
+        } catch (error) {
+            console.error('❌ Error getting all POs:', error);
+            return { success: false, error: error.message, pos: [] };
+        }
+    }
+
+    // Helper method to merge and deduplicate PO data
+    mergePOData(localPOs, oneDrivePOs) {
+        const merged = [...localPOs];
+        const localIds = new Set(localPOs.map(po => po.id));
+        
+        // Add OneDrive POs that aren't already in local storage
+        oneDrivePOs.forEach(oneDrivePO => {
+            if (!localIds.has(oneDrivePO.id)) {
+                merged.push({
+                    ...oneDrivePO,
+                    source: 'onedrive'
+                });
+            } else {
+                // Replace local version with OneDrive version (more recent)
+                const localIndex = merged.findIndex(po => po.id === oneDrivePO.id);
+                if (localIndex !== -1) {
+                    merged[localIndex] = {
+                        ...oneDrivePO,
+                        source: 'synced'
+                    };
+                }
+            }
+        });
+        
+        // Sort by creation date (newest first)
+        return merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
 }
 
 // Initialize API manager
-const api = new APIManager();
+const apiManager = new APIManager();
 
-// Make api available globally
-window.api = api;
+// Register with the component registry
+if (window.ComponentRegistry) {
+    window.ComponentRegistry.register('poManager', apiManager);
+} else {
+    // Fallback for when registry isn't available yet
+    window.poManager = apiManager;
+}

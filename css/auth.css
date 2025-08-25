@@ -63,3 +63,32 @@
 .btn-primary:hover {
     background-color: #357abd;
 }
+
+/* Loading Animation */
+.btn-loading {
+    background-color: #6c757d !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-loading-text {
+    vertical-align: middle;
+}

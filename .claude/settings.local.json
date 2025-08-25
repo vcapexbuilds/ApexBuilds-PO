@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(timeout:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(node server.js)",
+      "Bash(start http://localhost:8080)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

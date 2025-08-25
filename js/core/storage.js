@@ -409,8 +409,14 @@ console.log('=== INITIALIZING STORAGE MANAGER ===');
 const storage = new StorageManager();
 console.log('Storage manager created:', !!storage);
 
-// Make storage available globally
-window.storage = storage;
+// Register with the component registry
+if (window.ComponentRegistry) {
+    window.ComponentRegistry.register('storage', storage);
+} else {
+    // Fallback for when registry isn't available yet
+    window.storage = storage;
+}
+
 console.log('Storage assigned to window.storage:', !!window.storage);
 
 // Export for use in other modules

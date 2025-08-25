@@ -3,8 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex PO System - Login</title>
+    <title>Apex PO System - Microsoft Login</title>
     <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/oauth-login.css">
+    <style>
+        .integration-status {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #17a2b8;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #495057;
+        }
+        .status-icon {
+            margin-right: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
@@ -12,90 +31,370 @@
             <div class="logo">
                 <img src="asset/images/apex-logo.svg" alt="Apex Building Group" class="company-logo">
                 <h1>PO SYSTEM</h1>
+                <p class="subtitle">Secure Microsoft Authentication</p>
             </div>
             
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="role">Login As</label>
-                    <select id="role" name="role" required>
-                        <option value="user" selected>User</option>
+            <!-- Microsoft OAuth Login -->
+            <div class="oauth-login-section">
+                <div class="role-choice" style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
+                    <label for="oauthRoleChoice" style="font-size:13px; color:#555;">Continue as:</label>
+                    <select id="oauthRoleChoice" style="padding:6px 8px; font-size:13px;">
+                        <option value="auto" selected>Auto (based on account)</option>
+                        <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+                <button type="button" class="microsoft-login-btn" id="microsoftLoginBtn">
+                    <svg class="microsoft-icon" viewBox="0 0 23 23" width="20" height="20">
+                        <path fill="#f35325" d="M1 1h10v10H1z"/>
+                        <path fill="#81bc06" d="M12 1h10v10H12z"/>
+                        <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+                        <path fill="#ffba08" d="M12 12h10v10H12z"/>
+                    </svg>
+                    Sign in with Microsoft
+                </button>
                 
-                <button type="submit" class="login-btn">Login</button>
-            </form>
-            
-            <div class="register-link">
-                <p>Don't have an account? <a href="#" id="registerLink">Register here</a></p>
+                <div class="oauth-benefits">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🔒</span>
+                        <span>Secure organizational login</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">👥</span>
+                        <span>No additional passwords</span>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">⚡</span>
+                        <span>Single sign-on experience</span>
+                    </div>
+                </div>
+                
+                <!-- Integration Status -->
+                <div class="integration-status" id="integrationStatus">
+                    <div class="status-item">
+                        <span class="status-icon">🔄</span>
+                        <span id="statusText">Loading integration...</span>
+                    </div>
+                </div>
             </div>
-            
-            <div class="demo-info" style="margin-top: 20px; padding: 15px; background-color: #e8f4fd; border: 1px solid #b3d9ff; border-radius: 5px; text-align: center;">
-                <p style="margin: 0; color: #2c5aa0; font-size: 14px;"><strong>Demo Credentials Available</strong></p>
-                <p style="margin: 5px 0 0 0; color: #2c5aa0; font-size: 12px;">Click "Show Demo Credentials" button below to test the system</p>
+
+            <!-- Divider -->
+            <div class="login-divider">
+                <span>or continue with demo</span>
+            </div>
+
+            <!-- Demo Login (Initially Hidden) -->
+            <div class="demo-login-section" id="demoLoginSection" style="display: none;">
+                <form id="demoLoginForm" class="demo-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Enter username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Enter password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Role (optional for demo)</label>
+                        <select id="role" name="role">
+                            <option value="">Auto from account</option>
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                            <option value="manager">Manager</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="demo-login-btn">
+                        <span class="loading-spinner" style="display: none;"></span>
+                        Demo Login
+                    </button>
+                </form>
+            </div>
+
+            <!-- Toggle Demo Mode -->
+            <div class="demo-toggle">
+                <button type="button" class="toggle-demo-btn" id="toggleDemoBtn">
+                    🔧 Show Demo Login
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="loading-content">
+                <div class="loading-spinner-large"></div>
+                <h3>Authenticating with Microsoft</h3>
+                <p>Please wait while we verify your credentials...</p>
             </div>
         </div>
     </div>
 
-    <!-- Registration Modal -->
-    <div id="registerModal" class="modal">
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Register New User</h2>
-            <form id="registerForm">
-                <div class="form-group">
-                    <label for="regUsername">Username</label>
-                    <input type="text" id="regUsername" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="regEmail">Email</label>
-                    <input type="email" id="regEmail" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="regPassword">Password</label>
-                    <input type="password" id="regPassword" name="password" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="regCompany">Company Name</label>
-                    <input type="text" id="regCompany" name="company" required>
-                </div>
-                
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="cancelRegister">Cancel</button>
-                    <button type="submit" class="btn-primary">Register</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Success/Error Modal -->
-    <div id="messageModal" class="modal">
-        <div class="modal-content">
-            <h3 id="messageTitle">Message</h3>
-            <p id="messageText">Message content</p>
+            <h3 id="errorTitle">Authentication Error</h3>
+            <p id="errorMessage">An error occurred during authentication.</p>
             <div class="modal-actions">
-                <button type="button" class="btn-primary" id="messageOk">OK</button>
+                <button type="button" class="btn-primary" id="errorOkBtn">OK</button>
             </div>
         </div>
     </div>
 
+    <!-- Load Power Automate Integration Modules -->
+    <script src="js/core/power-automate-config.js"></script>
+    <script src="js/core/power-automate-api.js"></script>
+    
+    <!-- Core modules -->
     <script src="js/core/storage.js"></script>
     <script src="js/core/auth.js"></script>
-    <script src="js/core/api.js"></script>
-    <script src="js/Module/modal.js"></script>
-    <script src="js/pages/login.js"></script>
+    <script src="js/core/config.js"></script>
+    
+    <!-- Main application -->
+    <script src="js/app.js"></script>
+
+    <!-- Login page specific script -->
+    <script>
+        console.log('=== APEX PO SYSTEM v2.2.0 LOGIN PAGE ===');
+        
+        // DOM Elements
+        let microsoftLoginBtn, loadingModal, errorModal, toggleDemoBtn, demoLoginSection, demoLoginForm;
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Login page DOM loaded - initializing...');
+            
+            // Get DOM elements
+            microsoftLoginBtn = document.getElementById('microsoftLoginBtn');
+            loadingModal = document.getElementById('loadingModal');
+            errorModal = document.getElementById('errorModal');
+            toggleDemoBtn = document.getElementById('toggleDemoBtn');
+            demoLoginSection = document.getElementById('demoLoginSection');
+            demoLoginForm = document.getElementById('demoLoginForm');
+
+            
+            // Check integration status
+            checkIntegrationStatus();
+            
+            // Set up event listeners
+            if (microsoftLoginBtn) {
+                microsoftLoginBtn.addEventListener('click', handleMicrosoftLogin);
+                console.log('Microsoft login button listener attached');
+            }
+            
+            if (toggleDemoBtn) {
+                toggleDemoBtn.addEventListener('click', toggleDemoMode);
+            }
+            
+            if (demoLoginForm) {
+                demoLoginForm.addEventListener('submit', handleDemoLogin);
+            }
+
+            
+            // Close error modal
+            const errorOkBtn = document.getElementById('errorOkBtn');
+            if (errorOkBtn) {
+                errorOkBtn.addEventListener('click', () => {
+                    errorModal.style.display = 'none';
+                });
+            }
+            
+            console.log('Login page initialized successfully');
+        });
+
+        // Check integration status
+        function checkIntegrationStatus() {
+            const statusElement = document.getElementById('statusText');
+            const statusIcon = document.querySelector('.status-icon');
+            
+            if (!statusElement) return;
+            
+            setTimeout(() => {
+                console.log('=== CHECKING POWER AUTOMATE INTEGRATION STATUS ===');
+                console.log('PowerAutomateConfig available:', typeof PowerAutomateConfig !== 'undefined');
+                console.log('PowerAutomateAPI available:', typeof PowerAutomateAPI !== 'undefined');
+                
+                if (window.powerAutomateConfig) {
+                    const config = window.powerAutomateConfig.getFlowConfig();
+                    console.log('PA config:', config);
+                }
+                
+                if (typeof PowerAutomateConfig !== 'undefined' && 
+                    typeof PowerAutomateAPI !== 'undefined') {
+                    
+                    // Check if configuration has real values or just placeholders
+                    const config = window.powerAutomateConfig?.getFlowConfig();
+                    const isConfigured = config && 
+                                        config.getAllPOs && 
+                                        !config.getAllPOs.includes('YOUR_FLOW_URL');
+                    
+                    console.log('Configuration check result:', isConfigured);
+                    
+                    if (isConfigured) {
+                        statusElement.textContent = '✅ Power Automate Integration Ready';
+                        statusIcon.textContent = '✅';
+                        microsoftLoginBtn.disabled = false;
+                    } else {
+                        statusElement.textContent = '⚠️ PA Integration Available (Not Configured)';
+                        statusIcon.textContent = '⚠️';
+                        microsoftLoginBtn.disabled = false; // Still allow demo login
+                    }
+                } else {
+                    statusElement.textContent = '❌ Integration Not Available';
+                    statusIcon.textContent = '❌';
+                    if (microsoftLoginBtn) {
+                        microsoftLoginBtn.disabled = true;
+                        microsoftLoginBtn.innerHTML = '⚠️ Integration Loading...';
+                    }
+                }
+            }, 1000);
+        }
+
+        // Microsoft OAuth Login Handler - Simplified for PA integration
+        async function handleMicrosoftLogin() {
+            console.log('Microsoft login button clicked');
+            
+            try {
+                showLoadingModal();
+                // Persist requested role for callback handling
+                try {
+                    const choiceEl = document.getElementById('oauthRoleChoice');
+                    const requestedRole = (choiceEl && choiceEl.value) ? choiceEl.value : 'auto';
+                    sessionStorage.setItem('requestedRole', requestedRole);
+                } catch(_) {}
+                
+                // Check if Power Automate configuration is available
+                if (typeof PowerAutomateConfig === 'undefined' || !window.powerAutomateConfig) {
+                    throw new Error('Power Automate configuration not loaded. Please ensure all modules are loaded properly.');
+                }
+                
+                // Validate configuration before attempting authentication
+                const config = window.powerAutomateConfig.getFlowConfig();
+                console.log('Current configuration:', config);
+                
+                if (!config || !config.validateUser || config.validateUser.includes('YOUR_FLOW_URL')) {
+                    hideLoadingModal();
+                    showErrorModal(
+                        'Power Automate Not Configured',
+                        'Power Automate authentication is not configured yet. To enable real PA integration, please: 1. Set up Power Automate flows 2. Update the configuration in js/core/power-automate-config.js 3. Add your flow URLs For now, you can use the Demo Login below to test the system.'
+                    );
+                    return;
+                }
+                
+                console.log('✅ Configuration validated - proceeding with real authentication');
+                
+                // Initialize PA integration if not already done
+                if (window.powerAutomateAPI) {
+                    console.log('Using existing Power Automate API instance');
+                } else {
+                    console.log('Creating new Power Automate API instance');
+                    window.powerAutomateAPI = new PowerAutomateAPI();
+                }
+                
+                // For now, redirect to demo login since OAuth is not implemented yet
+                hideLoadingModal();
+                showErrorModal(
+                    'OAuth Implementation Pending',
+                    'Microsoft OAuth integration will be implemented in the next phase. For now, please use the Demo Login below to test the system.'
+                );
+                
+            } catch (error) {
+                console.error('Microsoft login error:', error);
+                hideLoadingModal();
+                showErrorModal('Authentication Error', error.message || 'An error occurred during login.');
+            }
+        }
+
+        // Demo Mode Toggle
+        function toggleDemoMode() {
+            const isVisible = demoLoginSection.style.display !== 'none';
+            
+            if (isVisible) {
+                demoLoginSection.style.display = 'none';
+                toggleDemoBtn.innerHTML = '🔧 Show Demo Login';
+            } else {
+                demoLoginSection.style.display = 'block';
+                toggleDemoBtn.innerHTML = '🔒 Hide Demo Login';
+            }
+        }
+
+        // Demo Login Handler - Enhanced for testing
+        async function handleDemoLogin(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            const username = formData.get('username');
+            const password = formData.get('password');
+            const role = formData.get('role');
+            
+            if (!username || !password) {
+                showErrorModal('Validation Error', 'Please enter username and password');
+                return;
+            }
+            
+            console.log('Processing demo login for:', username);
+            showLoadingModal();
+            try {
+                // Prefer centralized AuthManager so protected pages recognize the session
+                if (window.auth && typeof window.auth.login === 'function') {
+                    const result = await window.auth.login(username, password);
+                    if (result && result.success) {
+                        hideLoadingModal();
+                        // Optional override: if user picked a role different from account, keep account role
+                        window.auth.redirectToDashboard();
+                        return;
+                    }
+                    throw new Error(result?.message || 'Invalid credentials');
+                }
+
+                // Fallback: create a lightweight demo session if AuthManager not ready
+                const demoUser = {
+                    id: 'demo-' + Date.now(),
+                    username,
+                    email: `${username}@demo.apexbuilding.local`,
+                    role: role || 'user',
+                    company: 'Apex Construction',
+                    expiresAt: new Date(Date.now() + 24*60*60*1000).toISOString()
+                };
+                if (window.storage && typeof window.storage.setCurrentUser === 'function') {
+                    window.storage.setCurrentUser(demoUser);
+                } else {
+                    localStorage.setItem('currentUser', JSON.stringify(demoUser));
+                }
+                hideLoadingModal();
+                window.location.href = role === 'admin' ? 'pages/admin.html' : 'pages/form.html';
+            } catch (e) {
+                console.error('Demo login failed:', e);
+                hideLoadingModal();
+                showErrorModal('Demo Login Failed', e?.message || String(e));
+            }
+        }
+        
+        function showLoadingModal() {
+            if (loadingModal) {
+                loadingModal.style.display = 'flex';
+            }
+        }
+        
+        function hideLoadingModal() {
+            if (loadingModal) {
+                loadingModal.style.display = 'none';
+            }
+        }
+        
+        function showErrorModal(title, message) {
+            if (errorModal) {
+                document.getElementById('errorTitle').textContent = title;
+                document.getElementById('errorMessage').textContent = message;
+                errorModal.style.display = 'flex';
+            }
+        }
+        
+        console.log('Enhanced login page script loaded with real M365 integration support');
+    </script>
 </body>
 </html>

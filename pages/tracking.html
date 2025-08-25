@@ -15,6 +15,10 @@
         </div>
         <div class="user-info">
             <span id="welcomeUser">Welcome, User</span>
+                <select id="roleSwitcher" class="role-switcher" title="Switch Role" style="margin-right:8px; display:none;">
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
             <button id="logoutBtn" class="logout-btn" onclick="if(confirm('Are you sure you want to logout?')) { auth.logout(); }">Logout</button>
         </div>
     </div>
@@ -27,6 +31,12 @@
                 <!-- Filter Section -->
                 <div class="filters-sidebar">
                     <h3>Filters</h3>
+                    <div class="filter-group">
+                        <label for="myPOsOnly" style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="myPOsOnly" checked>
+                            <span>My POs only</span>
+                        </label>
+                    </div>
                     
                     <div class="filter-group">
                         <label for="statusFilter">Status:</label>
@@ -115,9 +125,10 @@
                             <th>ID</th>
                             <th>Project Name</th>
                             <th>Company</th>
-                            <th>Contract Amount</th>
                             <th>Status</th>
                             <th>Created Date</th>
+                            <th>Contract Amount</th>
+                            <th>Submitted By</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -178,10 +189,36 @@
         </div>
     </div>
 
+        <!-- Scripts: Power Automate Integration -->
+    <script src="../js/core/power-automate-config.js"></script>
+    <script src="../js/core/power-automate-api.js"></script>
     <script src="../js/core/storage.js"></script>
     <script src="../js/core/auth.js"></script>
-    <script src="../js/core/api.js"></script>
     <script src="../js/Module/modal.js"></script>
     <script src="../js/pages/tracking.js"></script>
+    <script>
+        // Role switcher for users with admin access
+        (function initRoleSwitcher(){
+            if (!window.auth || !window.auth.isAuthenticated()) return;
+            const current = window.auth.getCurrentUser();
+            const roles = window.auth.getAvailableRoles ? window.auth.getAvailableRoles() : [];
+            const el = document.getElementById('roleSwitcher');
+            if (!el) return;
+            if (roles.length > 1) {
+                el.style.display = 'inline-block';
+                el.innerHTML = roles.map(r => `<option value="${r}" ${current.role===r?'selected':''}>${r.charAt(0).toUpperCase()+r.slice(1)}</option>`).join('');
+                el.addEventListener('change', (e) => {
+                    const res = window.auth.setActiveRole(e.target.value);
+                    if (res && res.success) {
+                        if (e.target.value === 'admin') {
+                            window.location.href = '../pages/admin.html';
+                        } else {
+                            window.location.href = '../pages/tracking.html';
+                        }
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

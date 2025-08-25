@@ -1,68 +1,164 @@
-import auth from '../core/auth.js';
-import api from '../core/api.js';
-import modal from '../Module/modal.js';
+import { auth } from '../core/auth.js';
 
 class AdminDashboard {
     constructor() {
+        this.allPOs = [];
         this.initializeAuth();
         this.bindEvents();
         this.loadPOs();
+        this.setupTabs();
     }
 
     initializeAuth() {
-        if (!auth.isAuthenticated() || !auth.isAdminUser()) {
-            window.location.href = '/index.html';
-            return;
+        // Simplified auth check - for debugging, we'll skip auth for now
+        const welcomeElement = document.getElementById('welcomeAdmin');
+        if (welcomeElement) {
+            welcomeElement.textContent = 'Welcome, Admin (Debug Mode)';
         }
     }
 
     bindEvents() {
-        document.getElementById('logoutBtn').addEventListener('click', () => auth.logout());
-        document.getElementById('newPOBtn').addEventListener('click', () => window.location.href = '/pages/form.html');
-        document.getElementById('searchInput').addEventListener('input', () => this.filterPOs());
-        document.getElementById('statusFilter').addEventListener('change', () => this.filterPOs());
-        document.getElementById('dateFilter').addEventListener('change', () => this.filterPOs());
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    auth.logout();
+                }
+            });
+        }
+        
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        if(applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', () => this.filterPOs());
+        }
+
+        const refreshBtn = document.getElementById('refreshList');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => this.loadPOs());
+        }
     }
 
     async loadPOs() {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const poTableContainer = document.getElementById('poTableContainer');
+        
+        console.log('loadPOs started. Hiding table and showing spinner.');
+        if(loadingSpinner) loadingSpinner.style.display = 'block';
+        if(poTableContainer) poTableContainer.style.display = 'none';
+
         try {
-            const pos = await api.getAllPOs();
+            // DEBUGGING: Load from a local file to test UI rendering and logic.
+            console.log("Fetching POs from local test file: ../../asset/data/test-data.json");
+            const response = await fetch('../asset/data/test-data.json');
+            console.log('Fetch response received:', { status: response.status, ok: response.ok });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const pos = await response.json();
+            console.log('Parsed POs:', pos);
+            
+            if (!pos || pos.length === 0) {
+                console.log('No POs found in data. Displaying message.');
+                this.displayMessage('No purchase orders found in the local test file.');
+                return;
+            }
+
+            this.allPOs = pos; // Cache for filtering
+            console.log('Calling displayPOs with fetched data.');
             this.displayPOs(pos);
+            console.log('Calling updateStats with fetched data.');
+            this.updateStats(pos);
+
         } catch (error) {
-            modal.showError('Failed to load POs. Please try again later.');
+            console.error('Failed to load POs from local test file:', error);
+            // Simple alert instead of modal for debugging
+            alert('Failed to load local test data. Check console for errors.');
+            this.displayMessage('Could not load Purchase Orders.');
+        } finally {
+            console.log('loadPOs finished. Hiding spinner, showing table.');
+            if(loadingSpinner) loadingSpinner.style.display = 'none';
+            if(poTableContainer) poTableContainer.style.display = 'block';
         }
     }
 
     displayPOs(pos) {
-        const poList = document.getElementById('poList');
-        poList.innerHTML = pos.map(po => this.createPOCard(po)).join('');
+        console.log('displayPOs called with:', pos);
+        const poTableBody = document.getElementById('poTableBody');
+        if (!poTableBody) {
+            console.error("Element with ID 'poTableBody' not found. Cannot display POs.");
+            return;
+        }
+        
+        console.log('Clearing existing table content.');
+        poTableBody.innerHTML = ''; // Clear existing rows
+
+        if (pos.length === 0) {
+            console.log('pos array is empty. Displaying "no match" message.');
+            poTableBody.innerHTML = '<tr><td colspan="9" class="no-pos-message">No purchase orders match the current filters.</td></tr>';
+            return;
+        }
+
+        console.log(`Generating and inserting ${pos.length} rows into the table.`);
+        pos.forEach((po, index) => {
+            const rowHTML = this.createPOTableRow(po);
+            // console.log(`Inserting row ${index + 1}:`, rowHTML); // This can be too verbose
+            poTableBody.insertAdjacentHTML('beforeend', rowHTML);
+        });
 
         // Add event listeners to action buttons
-        document.querySelectorAll('.po-action').forEach(button => {
+        const actionButtons = document.querySelectorAll('.po-action');
+        console.log(`Found ${actionButtons.length} action buttons. Adding event listeners.`);
+        actionButtons.forEach(button => {
             button.addEventListener('click', (e) => this.handlePOAction(e));
         });
+        console.log('Finished adding event listeners.');
+    }
+    
+    displayMessage(message) {
+        const poTableBody = document.getElementById('poTableBody');
+        if (poTableBody) {
+            poTableBody.innerHTML = `<tr><td colspan="9" class="no-pos-message">${message}</td></tr>`;
+        }
+        const totalPOs = document.getElementById('totalPOs');
+        if(totalPOs) totalPOs.textContent = 0;
     }
 
-    createPOCard(po) {
+    updateStats(pos) {
+        const totalPOs = pos.length;
+        const pendingPOs = pos.filter(p => p.status === 'Submitted').length;
+        const totalValue = pos.reduce((sum, p) => sum + (parseFloat(p.meta.contractAmount) || 0), 0);
+
+        document.getElementById('totalPOs').textContent = totalPOs;
+        document.getElementById('pendingPOs').textContent = pendingPOs;
+        document.getElementById('totalValue').textContent = `$${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    createPOTableRow(po) {
+        const poId = po.id || `local_${Date.now()}`;
+        const requestedBy = po.meta?.requestedBy || 'N/A';
+        const projectName = po.meta?.projectName || 'N/A';
+        const companyName = po.meta?.companyName || 'N/A';
+        const contractAmount = po.meta?.contractAmount ? `$${parseFloat(po.meta.contractAmount).toLocaleString()}` : '$0';
+        const status = po.status || 'Unknown';
+        const createdDate = po.createdAt ? new Date(po.createdAt).toLocaleDateString() : 'N/A';
+
         return `
-            <div class="po-card" data-po-id="${po.id}">
-                <div class="po-header">
-                    <h3>${po.meta.projectName}</h3>
-                    <span class="status ${po.status}">${po.status}</span>
-                </div>
-                <div class="po-details">
-                    <p><strong>Company:</strong> ${po.meta.companyName}</p>
-                    <p><strong>Requested By:</strong> ${po.meta.requestedBy}</p>
-                    <p><strong>Contract Amount:</strong> $${po.meta.contractAmount.toLocaleString()}</p>
-                    <p><strong>Submitted:</strong> ${new Date(po.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div class="po-actions">
-                    <button class="btn btn-primary po-action" data-action="view" data-po-id="${po.id}">View</button>
-                    <button class="btn btn-success po-action" data-action="approve" data-po-id="${po.id}">Approve</button>
-                    <button class="btn btn-danger po-action" data-action="reject" data-po-id="${po.id}">Reject</button>
-                    <button class="btn btn-secondary po-action" data-action="powerAutomate" data-po-id="${po.id}">Send to Power Automate</button>
-                </div>
-            </div>
+            <tr data-po-id="${poId}">
+                <td><input type="checkbox" class="po-select"></td>
+                <td>${poId}</td>
+                <td>${requestedBy}</td>
+                <td>${projectName}</td>
+                <td>${companyName}</td>
+                <td>${contractAmount}</td>
+                <td><span class="status ${status.toLowerCase()}">${status}</span></td>
+                <td>${createdDate}</td>
+                <td class="actions">
+                    <button class="btn-action po-action" data-action="view" data-po-id="${poId}">View</button>
+                    <button class="btn-action po-action" data-action="approve" data-po-id="${poId}">Approve</button>
+                </td>
+            </tr>
         `;
     }
 
@@ -70,230 +166,83 @@ class AdminDashboard {
         const action = event.target.dataset.action;
         const poId = event.target.dataset.poId;
 
-        switch (action) {
-            case 'view':
-                this.viewPODetails(poId);
-                break;
-            case 'approve':
-                this.approvePO(poId);
-                break;
-            case 'reject':
-                this.rejectPO(poId);
-                break;
-            case 'powerAutomate':
-                this.sendToPowerAutomate(poId);
-                break;
-        }
-    }
+        console.log(`Action: ${action}, PO ID: ${poId}`);
 
-    async viewPODetails(poId) {
-        try {
-            const po = await api.getPOById(poId);
-            modal.show({
-                title: 'Purchase Order Details',
-                content: this.createPODetailView(po),
-                size: 'large',
-                actions: [{
-                    id: 'close',
-                    label: 'Close',
-                    class: 'btn-secondary'
-                }]
-            });
-        } catch (error) {
-            modal.showError('Failed to load PO details.');
-        }
-    }
+        const po = this.allPOs.find(p => p.id === poId);
 
-    createPODetailView(po) {
-        return `
-            <div class="po-detail-view">
-                <h3>Project Details</h3>
-                <div class="detail-section">
-                    <p><strong>Project Name:</strong> ${po.meta.projectName}</p>
-                    <p><strong>General Contractor:</strong> ${po.meta.generalContractor}</p>
-                    <p><strong>Address:</strong> ${po.meta.address}</p>
-                    <p><strong>Project Manager:</strong> ${po.meta.projectManager}</p>
-                </div>
-
-                <h3>Financial Details</h3>
-                <div class="detail-section">
-                    <p><strong>Contract Amount:</strong> $${po.meta.contractAmount.toLocaleString()}</p>
-                    <p><strong>Add/Alt Amount:</strong> $${po.meta.addAltAmount.toLocaleString()}</p>
-                    <p><strong>Retainage %:</strong> ${po.meta.retainagePct}%</p>
-                </div>
-
-                <h3>Schedule</h3>
-                <table class="detail-table">
-                    <thead>
-                        <tr>
-                            <th>Prime Line</th>
-                            <th>Budget Code</th>
-                            <th>Description</th>
-                            <th>Qty</th>
-                            <th>Unit</th>
-                            <th>Total Cost</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${po.schedule.map(item => `
-                            <tr>
-                                <td>${item.primeLine}</td>
-                                <td>${item.budgetCode}</td>
-                                <td>${item.description}</td>
-                                <td>${item.qty}</td>
-                                <td>${item.unit}</td>
-                                <td>$${item.totalCost.toLocaleString()}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    async approvePO(poId) {
-        modal.showConfirm(
-            'Are you sure you want to approve this Purchase Order?',
-            async () => {
-                try {
-                    await api.updatePO(poId, { status: 'approved' });
-                    modal.showSuccess('Purchase Order approved successfully.');
-                    this.loadPOs();
-                } catch (error) {
-                    modal.showError('Failed to approve Purchase Order.');
-                }
-            }
-        );
-    }
-
-    async rejectPO(poId) {
-        modal.show({
-            title: 'Reject Purchase Order',
-            content: `
-                <div class="form-group">
-                    <label for="rejectReason">Reason for rejection:</label>
-                    <textarea id="rejectReason" rows="4"></textarea>
-                </div>
-            `,
-            actions: [
-                {
-                    id: 'cancel',
-                    label: 'Cancel',
-                    class: 'btn-secondary'
-                },
-                {
-                    id: 'reject',
-                    label: 'Reject',
-                    class: 'btn-danger',
-                    handler: async () => {
-                        const reason = document.getElementById('rejectReason').value;
-                        try {
-                            await api.updatePO(poId, { 
-                                status: 'rejected',
-                                rejectionReason: reason 
-                            });
-                            modal.showSuccess('Purchase Order rejected successfully.');
-                            this.loadPOs();
-                        } catch (error) {
-                            modal.showError('Failed to reject Purchase Order.');
-                        }
-                    }
-                }
-            ]
-        });
-    }
-
-    async sendToPowerAutomate(poId) {
-        try {
-            const po = await api.getPOById(poId);
-            
-            // Format data for Power Automate
-            const powerAutomateData = {
-                poNumber: po.id,
-                projectName: po.meta.projectName,
-                contractAmount: po.meta.contractAmount,
-                vendor: po.meta.companyName,
-                requestedBy: po.meta.requestedBy,
-                approvalDate: new Date().toISOString(),
-                status: 'pending_power_automate'
-            };
-
-            // Send to Power Automate webhook URL
-            const response = await fetch('YOUR_POWER_AUTOMATE_WEBHOOK_URL', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(powerAutomateData)
-            });
-
-            if (response.ok) {
-                modal.showSuccess('Successfully sent to Power Automate for processing.');
-                await api.updatePO(poId, { status: 'processing' });
-                this.loadPOs();
+        if (action === 'view') {
+            if (po) {
+                this.viewPODetails(po);
             } else {
-                throw new Error('Failed to send to Power Automate');
+                alert('Could not find PO details.');
             }
-        } catch (error) {
-            modal.showError('Failed to send to Power Automate. Please try again.');
+        } else {
+            alert(`Action '${action}' clicked for PO from '${po?.meta.companyName}'. This is a work in progress.`);
         }
     }
 
+    viewPODetails(po) {
+        // Simplified - just show alert for now
+        alert(`PO Details for: ${po.meta.projectName}\nCompany: ${po.meta.companyName}\nAmount: $${po.meta.contractAmount}`);
+    }
+    
     filterPOs() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const statusFilter = document.getElementById('statusFilter').value;
-        const dateFilter = document.getElementById('dateFilter').value;
+        if (!this.allPOs) return;
 
-        const cards = document.querySelectorAll('.po-card');
-        cards.forEach(card => {
-            const poData = this.extractPODataFromCard(card);
-            const matches = this.matchesFilters(poData, searchTerm, statusFilter, dateFilter);
-            card.style.display = matches ? 'block' : 'none';
+        const userFilter = document.getElementById('userFilter').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+        const contractorFilter = document.getElementById('contractorFilter').value.toLowerCase();
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const minAmount = parseFloat(document.getElementById('minAmount').value) || 0;
+        const maxAmount = parseFloat(document.getElementById('maxAmount').value) || Infinity;
+
+        const filteredPOs = this.allPOs.filter(po => {
+            const poDate = new Date(po.createdAt);
+            const poAmount = parseFloat(po.meta.contractAmount);
+
+            const matchesUser = !userFilter || (po.meta.requestedBy && po.meta.requestedBy.toLowerCase().includes(userFilter));
+            const matchesStatus = !statusFilter || (po.status && po.status.toLowerCase() === statusFilter);
+            const matchesContractor = !contractorFilter || (po.meta.companyName && po.meta.companyName.toLowerCase().includes(contractorFilter));
+            const matchesDate = (!dateFrom || poDate >= new Date(dateFrom)) && (!dateTo || poDate <= new Date(dateTo));
+            const matchesAmount = poAmount >= minAmount && poAmount <= maxAmount;
+
+            return matchesUser && matchesStatus && matchesContractor && matchesDate && matchesAmount;
         });
+
+        this.displayPOs(filteredPOs);
     }
+    
+    setupTabs() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
 
-    extractPODataFromCard(card) {
-        return {
-            projectName: card.querySelector('h3').textContent.toLowerCase(),
-            company: card.querySelector('p:nth-child(1)').textContent.toLowerCase(),
-            status: card.querySelector('.status').textContent.toLowerCase(),
-            date: new Date(card.querySelector('p:nth-child(4)').textContent.split(': ')[1])
-        };
-    }
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.tab;
 
-    matchesFilters(poData, searchTerm, statusFilter, dateFilter) {
-        const matchesSearch = searchTerm === '' || 
-            poData.projectName.includes(searchTerm) || 
-            poData.company.includes(searchTerm);
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
 
-        const matchesStatus = statusFilter === '' || poData.status === statusFilter;
-
-        const matchesDate = this.dateFilterMatches(poData.date, dateFilter);
-
-        return matchesSearch && matchesStatus && matchesDate;
-    }
-
-    dateFilterMatches(date, filter) {
-        if (filter === 'all') return true;
-
-        const now = new Date();
-        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const startOfWeek = new Date(startOfDay);
-        startOfWeek.setDate(startOfDay.getDate() - startOfDay.getDay());
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-        switch (filter) {
-            case 'today':
-                return date >= startOfDay;
-            case 'week':
-                return date >= startOfWeek;
-            case 'month':
-                return date >= startOfMonth;
-            default:
-                return true;
-        }
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tab}Tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
     }
 }
 
-// Initialize the admin dashboard
-new AdminDashboard();
+// Simple initialization - bypass all the complex component registry
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Admin page DOM loaded, initializing dashboard directly...');
+    try {
+        new AdminDashboard();
+        console.log('Admin dashboard initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize admin dashboard:', error);
+        alert('Failed to initialize admin dashboard. Check console for errors.');
+    }
+});

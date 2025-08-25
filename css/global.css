@@ -583,3 +583,33 @@ body {
         font-size: 13px;
     }
 }
+
+/* Global Loading Animation Styles */
+.btn-loading {
+    background-color: #6c757d !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.btn-loading-text {
+    vertical-align: middle;
+}

@@ -4,6 +4,13 @@ class AuthManager {
         console.log('=== AUTH MANAGER CONSTRUCTOR ===');
         this.currentUser = null;
         this.sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
+        
+        // OneDrive integration endpoints - REPLACE WITH YOUR ACTUAL POWER AUTOMATE URLs
+        // User Management Flow: Create flow named "Apex-PO-User-Management"
+        this.ONEDRIVE_USER_ENDPOINT = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5318a42f0c0f4d339862250fa4b2bb88/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=EUpzsCEZqn5zgWONTgEw7HOnRpYeFNDBIHvTDLGaQB8';
+        // User Retrieval Flow: For getting user data from OneDrive
+        this.ONEDRIVE_RETRIEVE_ENDPOINT = 'YOUR_USER_RETRIEVAL_POWER_AUTOMATE_URL_HERE';
+        
         // Ensure storage is available
         console.log('Checking storage availability...');
         console.log('window.storage exists:', !!window.storage);
@@ -13,8 +20,11 @@ class AuthManager {
         console.log('this.storage assigned:', !!this.storage);
         
         if (!this.storage) {
-            console.error('CRITICAL: Storage not available!');
-            throw new Error('Storage manager not available');
+            console.error('CRITICAL: Storage not available! Auth will retry initialization...');
+            // Don't throw error, just mark as not ready
+            this.storageReady = false;
+        } else {
+            this.storageReady = true;
         }
         
         this.demoAccounts = {
@@ -33,6 +43,14 @@ class AuthManager {
                 role: 'user',
                 name: 'Demo User',
                 company: 'Test Company'
+            },
+            vcabrillos: {
+                email: 'vcabrillos@apexbuilds.com',
+                username: 'vcabrillos',
+                password: 'demo123',
+                role: 'user',
+                name: 'Virgilio Cabrillos Jr.',
+                company: 'Apex Building Group'
             }
         };
         this.init();
@@ -57,33 +75,33 @@ class AuthManager {
             password: password ? '***masked***' : 'empty' 
         });
         
+        // Check if storage is ready
+        if (!this.storageReady || !this.storage) {
+            console.error('Storage not ready for login attempt');
+            return {
+                success: false,
+                message: 'System is still initializing. Please wait a moment and try again.'
+            };
+        }
+        
         try {
             console.log('Starting login validation...');
             console.log('Demo accounts available:', Object.keys(this.demoAccounts));
-            // Demo account validation
-            const demoAdmin = this.demoAccounts.admin;
-            const demoUser = this.demoAccounts.user;
-
-            console.log('Checking against demo admin:', { 
-                email: demoAdmin.email, 
-                username: demoAdmin.username 
-            });
-            console.log('Checking against demo user:', { 
-                email: demoUser.email, 
-                username: demoUser.username 
-            });
-
+            
             let user = null;
 
-            // Check for demo admin (support both email and username)
-            if ((emailOrUsername === demoAdmin.email || emailOrUsername === demoAdmin.username) && password === demoAdmin.password) {
-                console.log('Demo admin authentication successful');
-                user = { ...demoAdmin };
-            }
-            // Check for demo user (support both email and username)
-            else if ((emailOrUsername === demoUser.email || emailOrUsername === demoUser.username) && password === demoUser.password) {
-                console.log('Demo user authentication successful');
-                user = { ...demoUser };
+            // Check all demo accounts (support both email and username)
+            for (const [accountKey, accountData] of Object.entries(this.demoAccounts)) {
+                console.log(`Checking against ${accountKey}:`, { 
+                    email: accountData.email, 
+                    username: accountData.username 
+                });
+                
+                if ((emailOrUsername === accountData.email || emailOrUsername === accountData.username) && password === accountData.password) {
+                    console.log(`${accountKey} authentication successful`);
+                    user = { ...accountData };
+                    break;
+                }
             }
 
             if (!user) {
@@ -184,10 +202,31 @@ class AuthManager {
                 role: 'user' // Default role
             });
 
+            // Save new user to OneDrive Business via Power Automate
+            let oneDriveMessage = '';
+            try {
+                const oneDriveResult = await this.saveUserToOneDrive(newUser);
+                console.log('OneDrive sync result:', oneDriveResult);
+                
+                // Handle different OneDrive sync results
+                if (oneDriveResult.success) {
+                    if (oneDriveResult.syncStatus === 'synced') {
+                        oneDriveMessage = ' User data synced to OneDrive.';
+                    } else if (oneDriveResult.syncStatus === 'exists') {
+                        oneDriveMessage = ' User credentials already exist in OneDrive.';
+                    }
+                } else {
+                    oneDriveMessage = ' (OneDrive sync failed - user created locally only)';
+                }
+            } catch (oneDriveError) {
+                console.warn('Failed to save user to OneDrive:', oneDriveError.message);
+                oneDriveMessage = ' (OneDrive sync failed - user created locally only)';
+            }
+
             return {
                 success: true,
                 user: newUser,
-                message: 'Registration successful'
+                message: `Registration successful.${oneDriveMessage}`
             };
 
         } catch (error) {
@@ -201,12 +240,38 @@ class AuthManager {
     // Logout method
     logout() {
         try {
-            // Clear session data
-            this.storage.clearCurrentUser();
+            // Clear app session data
+            if (this.storage) {
+                this.storage.clearCurrentUser();
+            }
             this.currentUser = null;
 
-            // Redirect to login
-            this.redirectToLogin();
+            // Clear OAuth/session artifacts
+            try {
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('ms_graph_token');
+                localStorage.removeItem('oauth_state');
+                localStorage.removeItem('code_verifier');
+                sessionStorage.removeItem('oauth_state');
+                sessionStorage.removeItem('code_verifier');
+            } catch (_) {}
+
+            // Force account selection on next sign-in
+            try { sessionStorage.setItem('force_login', '1'); } catch (_) {}
+
+            // Redirect through Azure AD logout to end AAD session, then back to index
+            const tenantId = (window.m365Config && typeof window.m365Config.getGraphConfig === 'function')
+                ? window.m365Config.getGraphConfig().tenantId
+                : null;
+            const postLogout = `${window.location.origin}/index.html`;
+            if (tenantId) {
+                const aadLogout = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/logout?post_logout_redirect_uri=${encodeURIComponent(postLogout)}`;
+                window.location.href = aadLogout;
+            } else {
+                // Fallback: just go to login
+                this.redirectToLogin();
+            }
 
             return {
                 success: true,
@@ -223,16 +288,29 @@ class AuthManager {
 
     // Check if user is authenticated
     isAuthenticated() {
+        console.log('=== IS AUTHENTICATED CHECK ===');
+        console.log('Current user exists:', !!this.currentUser);
+        
+        // If no current user, try to check session first
         if (!this.currentUser) {
+            console.log('No current user, checking session...');
+            this.checkSession();
+        }
+        
+        if (!this.currentUser) {
+            console.log('Still no current user after session check');
             return false;
         }
 
         // Check if session has expired
+        console.log('Checking expiration:', this.currentUser.expiresAt);
         if (new Date() > new Date(this.currentUser.expiresAt)) {
+            console.log('Session expired, logging out');
             this.logout();
             return false;
         }
 
+        console.log('User is authenticated');
         return true;
     }
 
@@ -256,23 +334,200 @@ class AuthManager {
         return this.isAuthenticated() ? this.currentUser : null;
     }
 
+    // Get available roles for current user (defaults based on current role)
+    getAvailableRoles() {
+        if (!this.isAuthenticated()) return [];
+        const roles = this.currentUser.roles;
+        if (Array.isArray(roles) && roles.length) return roles;
+        // Derive when not set
+        return this.currentUser.role === 'admin' ? ['admin', 'user'] : ['user'];
+    }
+
+    // Set active role for the current session and persist appropriately
+    setActiveRole(newRole) {
+        if (!this.isAuthenticated()) {
+            return { success: false, message: 'Not authenticated' };
+        }
+        const allowed = this.getAvailableRoles();
+        if (!allowed.includes(newRole)) {
+            return { success: false, message: 'Role not permitted for this user' };
+        }
+        this.currentUser.role = newRole;
+        if (!Array.isArray(this.currentUser.roles) || !this.currentUser.roles.length) {
+            this.currentUser.roles = allowed;
+        }
+
+        // Persist depending on session type
+        if (this.currentUser.isOAuth) {
+            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        } else if (this.storage) {
+            this.storage.setCurrentUser(this.currentUser);
+        } else {
+            localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+        }
+
+        return { success: true, user: this.currentUser };
+    }
+
     // Check and restore session from storage
     checkSession() {
-        const sessionData = this.storage.getCurrentUser();
+        console.log('=== CHECK SESSION START ===');
+        
+        // Check for OAuth session first
+        try {
+            const oauthUserData = localStorage.getItem('currentUser');
+            console.log('OAuth user data found:', !!oauthUserData);
+            
+            if (oauthUserData) {
+                const userData = JSON.parse(oauthUserData);
+                console.log('Parsed OAuth user data:', userData);
+                
+                // Check if it's an OAuth session
+                if (userData.isOAuth === true) {
+                    console.log('OAuth session detected');
+                    
+                    // Check if session is still valid
+                    if (new Date() <= new Date(userData.expiresAt)) {
+                        console.log('OAuth session is valid');
+                        this.currentUser = userData;
+                        
+                        // Try to refresh user info from Microsoft Graph API if available
+                        this.refreshUserInfoFromGraph();
+                        
+                        return true;
+                    } else {
+                        console.log('OAuth session expired');
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('id_token');
+                        return false;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error checking OAuth session:', error);
+        }
+        
+        // Fallback to standard storage method
+        const sessionData = this.storage ? this.storage.getCurrentUser() : null;
+        console.log('Standard session data found:', !!sessionData);
         
         if (sessionData) {
             // Check if session is still valid
             if (new Date() <= new Date(sessionData.expiresAt)) {
+                console.log('Standard session is valid');
                 this.currentUser = sessionData;
                 return true;
             } else {
+                console.log('Standard session expired');
                 // Session expired, clear it
-                this.storage.clearCurrentUser();
+                if (this.storage) {
+                    this.storage.clearCurrentUser();
+                }
                 return false;
             }
         }
         
+        console.log('No valid session found');
         return false;
+    }
+
+    /**
+     * Refresh user information from Microsoft Graph API
+     */
+    async refreshUserInfoFromGraph() {
+        try {
+            console.log('=== REFRESHING USER INFO FROM GRAPH API ===');
+            
+            // Check if Microsoft Graph API is available
+            if (typeof MicrosoftGraphAPI !== 'undefined' && window.poSystemApp?.msGraphAPI) {
+                console.log('Using Microsoft Graph API from app...');
+                
+                const userProfile = await window.poSystemApp.msGraphAPI.getUserProfile();
+                if (userProfile && userProfile.displayName) {
+                    console.log(`Updating user name from ${this.currentUser?.name} to ${userProfile.displayName}`);
+                    
+                    // Update current user with real Microsoft info
+                    if (this.currentUser) {
+                        this.currentUser.name = userProfile.displayName;
+                        this.currentUser.username = userProfile.displayName;
+                        this.currentUser.displayName = userProfile.displayName;
+                        this.currentUser.givenName = userProfile.givenName || userProfile.displayName.split(' ')[0];
+                        this.currentUser.familyName = userProfile.surname || userProfile.displayName.split(' ')[1] || '';
+                        
+                        if (userProfile.mail || userProfile.userPrincipalName) {
+                            this.currentUser.email = userProfile.mail || userProfile.userPrincipalName;
+                        }
+                        
+                        // Save updated user info
+                        localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                        
+                        console.log('✅ User info updated with Microsoft Graph data:', this.currentUser);
+                        return true;
+                    }
+                }
+            } else {
+                console.log('Microsoft Graph API not available, trying direct token approach...');
+                
+                // Try to get user info directly using stored token
+                const storedToken = localStorage.getItem('ms_graph_token');
+                if (storedToken) {
+                    try {
+                        const tokenData = JSON.parse(storedToken);
+                        const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+                            headers: {
+                                'Authorization': `Bearer ${tokenData.access_token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const userProfile = await response.json();
+                            console.log('Got user profile directly from Graph API:', userProfile);
+                            
+                            if (this.currentUser && userProfile.displayName) {
+                                this.currentUser.name = userProfile.displayName;
+                                this.currentUser.username = userProfile.displayName;
+                                this.currentUser.displayName = userProfile.displayName;
+                                this.currentUser.givenName = userProfile.givenName || userProfile.displayName.split(' ')[0];
+                                this.currentUser.familyName = userProfile.surname || userProfile.displayName.split(' ')[1] || '';
+                                
+                                if (userProfile.mail || userProfile.userPrincipalName) {
+                                    this.currentUser.email = userProfile.mail || userProfile.userPrincipalName;
+                                }
+                                
+                                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                                console.log('✅ User info updated via direct Graph API call:', this.currentUser);
+                                return true;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error with direct Graph API call:', error);
+                    }
+                }
+            }
+            
+            return false;
+        } catch (error) {
+            console.log('Could not refresh user info from Graph API:', error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Manual method to refresh user name (can be called from console)
+     */
+    async refreshUserName() {
+        console.log('=== MANUAL USER NAME REFRESH ===');
+        const success = await this.refreshUserInfoFromGraph();
+        if (success) {
+            console.log('✅ User name refreshed successfully');
+            // Reload the page to show updated name
+            window.location.reload();
+        } else {
+            console.log('❌ Could not refresh user name');
+        }
+        return success;
     }
 
     // Extend session
@@ -380,9 +635,11 @@ class AuthManager {
             }
         }
 
-        // Redirect authenticated users away from login page
+        // Do NOT auto-redirect authenticated users away from the login page.
+        // This prevents "auto login" behavior when visiting index.html directly.
+        // Users can choose to proceed via UI (e.g., a Continue button) instead.
         if (filename === 'index.html' && this.isAuthenticated()) {
-            this.redirectToDashboard();
+            console.log('Authenticated session detected on index.html; staying on page (no auto-redirect).');
         }
     }
 
@@ -517,19 +774,202 @@ class AuthManager {
     hasPermission(permission) {
         return this.getPermissions().includes(permission);
     }
+    
+    // OneDrive Integration Methods
+    async saveUserToOneDrive(userData) {
+        try {
+            console.log('💾 Saving user to OneDrive...', userData.username);
+            
+            const payload = {
+                action: 'save_user',
+                userData: {
+                    id: userData.id || Date.now(),
+                    username: userData.username,
+                    email: userData.email,
+                    role: userData.role || 'user',
+                    company: userData.company || 'Apex Construction',
+                    createdAt: userData.createdAt || new Date().toISOString(),
+                    lastLogin: new Date().toISOString(),
+                    status: userData.status || 'active'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch(this.ONEDRIVE_USER_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            // Parse response body
+            const responseData = await response.json();
+
+            // Handle different Power Automate response types
+            if (response.status === 200) {
+                switch (responseData.status) {
+                    case 'success':
+                        console.log('✅ User saved to OneDrive successfully');
+                        return { 
+                            success: true, 
+                            syncStatus: 'synced',
+                            message: 'User successfully added to OneDrive'
+                        };
+                    
+                    case 'exists':
+                        console.warn('⚠️ User already exists in OneDrive');
+                        return { 
+                            success: true, 
+                            syncStatus: 'exists',
+                            message: 'User already exists in OneDrive'
+                        };
+                    
+                    case 'fail':
+                        console.error('❌ Power Automate reported failure');
+                        return { 
+                            success: false, 
+                            syncStatus: 'failed',
+                            error: 'Power Automate reported failure'
+                        };
+                    
+                    default:
+                        console.error('❌ Unknown response status:', responseData.status);
+                        return { 
+                            success: false, 
+                            syncStatus: 'unknown',
+                            error: `Unknown status: ${responseData.status}`
+                        };
+                }
+            } else if (response.status === 500) {
+                console.error('❌ Server error from Power Automate');
+                return { 
+                    success: false, 
+                    syncStatus: 'error',
+                    error: 'Server error from Power Automate'
+                };
+            } else {
+                console.error('❌ Failed to save user to OneDrive:', response.status);
+                return { 
+                    success: false, 
+                    syncStatus: 'failed',
+                    error: `HTTP ${response.status}`
+                };
+            }
+        } catch (error) {
+            console.error('❌ OneDrive user save error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async retrieveUsersFromOneDrive(filters = {}) {
+        try {
+            console.log('📥 Retrieving users from OneDrive...');
+            
+            const payload = {
+                action: 'get_users',
+                filters: {
+                    role: filters.role || null,
+                    status: filters.status || 'active'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            const response = await fetch(this.ONEDRIVE_RETRIEVE_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Users retrieved from OneDrive:', data.users?.length || 0);
+                return { success: true, users: data.users || [] };
+            } else {
+                console.error('❌ Failed to retrieve users from OneDrive:', response.status);
+                return { success: false, error: `HTTP ${response.status}` };
+            }
+        } catch (error) {
+            console.error('❌ OneDrive user retrieval error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async syncUserLogin(userData) {
+        // Save login timestamp to OneDrive
+        try {
+            const payload = {
+                action: 'update_login',
+                userData: {
+                    id: userData.id || Date.now(),
+                    username: userData.username,
+                    email: userData.email,
+                    role: userData.role || 'user',
+                    company: userData.company || 'Apex Construction',
+                    lastLogin: new Date().toISOString(),
+                    status: userData.status || 'active'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            await fetch(this.ONEDRIVE_USER_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            console.log('✅ User login synced to OneDrive');
+        } catch (error) {
+            console.error('❌ Failed to sync login to OneDrive:', error);
+        }
+    }
 }
 
-// Initialize auth manager
+// Initialize auth manager with better error handling
 console.log('=== INITIALIZING AUTH MANAGER ===');
-console.log('Storage available:', !!window.storage);
-const auth = new AuthManager();
-console.log('Auth manager created:', !!auth);
 
-// Make auth available globally
-window.auth = auth;
-console.log('Auth assigned to window.auth:', !!window.auth);
+let auth; // Declare auth in the module scope
+
+function initializeAuth() {
+    console.log('Storage available:', !!window.storage);
+    
+    if (!window.storage) {
+        console.log('Storage not available yet, waiting...');
+        setTimeout(initializeAuth, 100);
+        return;
+    }
+    
+    try {
+        console.log('Creating AuthManager...');
+        auth = new AuthManager(); // Assign to the module-scoped variable
+        console.log('Auth manager created:', !!auth);
+
+        // Make auth available globally
+        window.auth = auth;
+        console.log('Auth assigned to window.auth:', !!window.auth);
+        console.log('Demo accounts available:', Object.keys(auth.demoAccounts));
+        console.log('Demo user credentials:', {
+            username: auth.demoAccounts.user.username,
+            email: auth.demoAccounts.user.email,
+            password: auth.demoAccounts.user.password
+        });
+    } catch (error) {
+        console.error('Failed to initialize auth manager:', error);
+        setTimeout(initializeAuth, 500); // Retry after 500ms
+    }
+}
+
+// Start initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuth);
+} else {
+    initializeAuth();
+}
 
 // Export for use in other modules
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = AuthManager;
-}
+export { auth };
+

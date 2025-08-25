@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subcontract Purchase Order Request - ApexBuilds</title>
+    <style type="text/css">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.5;
+            color: #0f172a;
+            background: #ffffff;
+        }
+        
+        .pdf-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            position: relative;
+        }
+        
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            color: white;
+            padding: 15px 30px;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .company-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-container {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+            color: #1e40af;
+        }
+        
+        .company-info h1 {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 0;
+        }
+        
+        .company-info .tagline {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .por-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .por-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            font-weight: 600;
+        }
+        
+        .por-number {
+            font-size: 14px;
+            font-weight: 700;
+            margin: 2px 0;
+        }
+        
+        .por-date {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+        
+        /* Project Bar */
+        .project-bar {
+            background: #2563eb;
+            padding: 10px 30px;
+            border-bottom: 2px solid #3b82f6;
+        }
+        
+        .project-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 3px;
+        }
+        
+        .project-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        /* Content */
+        .content {
+            padding: 20px 30px;
+        }
+        
+        /* Section Headers */
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .section-icon {
+            width: 28px;
+            height: 28px;
+            background: #3b82f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            flex: 1;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .info-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            margin-bottom: 3px;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            font-size: 12px;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        
+        /* Vendor Card */
+        .vendor-card {
+            background: #f0f9ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .vendor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .vendor-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        
+        .vendor-type {
+            background: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .vendor-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 11px;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: #f1f5f9;
+        }
+        
+        th {
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 9px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        
+        td {
+            padding: 8px 10px;
+            font-size: 11px;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        /* Financial Summary */
+        .financial-summary {
+            background: #fafafa;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        /* Status Track */
+        .status-track {
+            background: #f0f9ff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 20px;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #0f172a;
+            color: white;
+            padding: 15px 30px;
+            margin-top: 30px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            opacity: 0.8;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            .pdf-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="company-section">
+                    <div class="logo-container">AB</div>
+                    <div class="company-info">
+                        <h1>APEX BUILDS</h1>
+                        <div class="tagline">Subcontract Purchase Order Request</div>
+                    </div>
+                </div>
+                <div class="por-badge">
+                    <div class="por-label">POR Reference</div>
+                    <div class="por-number">POR-2025-BC-001</div>
+                    <div class="por-date">Created: Aug 23, 2025</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Project Bar -->
+        <div class="project-bar">
+            <div class="project-name">Balton Commons Residential Development</div>
+            <div class="project-meta">
+                <span>📍 1234 Main Street, Brooklyn, NY 11201</span>
+                <span>👤 PM: John Smith</span>
+                <span>📊 Type: New Construction</span>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Project Information -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">P</div>
+                    <div class="section-title">Project Information</div>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">General Contractor</div>
+                        <div class="info-value">Turner Construction</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Owner/Developer</div>
+                        <div class="info-value">Brooklyn Dev Partners</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Apex Owner</div>
+                        <div class="info-value">R. Horsford</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Project Manager</div>
+                        <div class="info-value">John Smith</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Requested By</div>
+                        <div class="info-value">Michael Chen</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">Construction</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contract Financials -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">$</div>
+                    <div class="section-title">Contract Financial Information</div>
+                </div>
+                
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Contract Amount</div>
+                        <div class="info-value" style="color: #059669; font-weight: 700; font-size: 14px;">$2,450,000</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Add/Alt Amount</div>
+                        <div class="info-value" style="color: #059669; font-weight: 700; font-size: 14px;">$125,000</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Retainage %</div>
+                        <div class="info-value" style="color: #1e40af; font-weight: 700; font-size: 14px;">10%</div>
+                    </div>
+                    <div class="info-card" style="grid-column: 1 / -1;">
+                        <div class="info-label">Add/Alt Details</div>
+                        <div class="info-value">Additional structural reinforcement for floors 3-5, upgraded fire safety systems</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vendor Information -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">V</div>
+                    <div class="section-title">Vendor/Subcontractor Information</div>
+                </div>
+                
+                <div class="vendor-card">
+                    <div class="vendor-header">
+                        <div class="vendor-title">Elite Mechanical Systems Inc.</div>
+                        <div class="vendor-type">Subcontractor</div>
+                    </div>
+                    <div class="vendor-details">
+                        <div><strong>Contact:</strong> James Wilson</div>
+                        <div><strong>Email:</strong> jwilson@elitemech.com</div>
+                        <div><strong>Cell:</strong> (718) 555-1234</div>
+                        <div><strong>Office:</strong> (718) 555-5000</div>
+                        <div style="grid-column: 1 / -1;"><strong>Work Type:</strong> HVAC Installation and Mechanical Systems</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Important Dates -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">📅</div>
+                    <div class="section-title">Important Dates</div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; padding: 15px 0;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase;">Notice to Proceed</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 4px;">Aug 15, 2025</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase;">Anticipated Start</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 4px;">Sept 1, 2025</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase;">Substantial Completion</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 4px;">Dec 15, 2025</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #64748b; font-weight: 600; text-transform: uppercase;">100% Complete</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #0f172a; margin-top: 4px;">Jan 15, 2026</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schedule of Values -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">📊</div>
+                    <div class="section-title">Schedule of Values</div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Line</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-center">Unit</th>
+                            <th class="text-right">Cost</th>
+                            <th class="text-right">Scheduled</th>
+                            <th class="text-right">Apex Value</th>
+                            <th class="text-right">Profit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.1</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">HVAC-001</span></td>
+                            <td>HVAC Equipment Install</td>
+                            <td class="text-center">5</td>
+                            <td class="text-center">EA</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$450,000</td>
+                            <td class="text-right">$450,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$495,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$45,000</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.2</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">HVAC-002</span></td>
+                            <td>Ductwork & Distribution</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">LS</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$380,000</td>
+                            <td class="text-right">$380,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$418,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$38,000</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.3</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">HVAC-003</span></td>
+                            <td>Controls & Automation</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">LS</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$125,000</td>
+                            <td class="text-right">$125,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$137,500</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$12,500</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.4</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">PLMB-001</span></td>
+                            <td>Plumbing Rough-In</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">LS</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$285,000</td>
+                            <td class="text-right">$285,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$313,500</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$28,500</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.5</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">PLMB-002</span></td>
+                            <td>Fixtures & Equipment</td>
+                            <td class="text-center">120</td>
+                            <td class="text-center">EA</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$240,000</td>
+                            <td class="text-right">$240,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$264,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$24,000</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #1e40af; font-weight: 700;">15.6</td>
+                            <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">FIRE-001</span></td>
+                            <td>Fire Protection System</td>
+                            <td class="text-center">1</td>
+                            <td class="text-center">LS</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$180,000</td>
+                            <td class="text-right">$180,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 600;">$198,000</td>
+                            <td class="text-right" style="color: #059669; font-weight: 700;">$18,000</td>
+                        </tr>
+                        <!-- Subtotal Row -->
+                        <tr style="background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 700;">
+                            <td colspan="5" style="text-align: right; padding-right: 10px; font-size: 12px; color: #1e40af;">SUBTOTAL</td>
+                            <td class="text-right" style="color: #1e40af; font-size: 12px;">$1,660,000</td>
+                            <td class="text-right" style="color: #1e40af; font-size: 12px;">$1,660,000</td>
+                            <td class="text-right" style="color: #059669; font-size: 12px;">$1,826,000</td>
+                            <td class="text-right" style="color: #059669; font-size: 12px;">$166,000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Scope of Work -->
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">📋</div>
+                    <div class="section-title">Scope of Work</div>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%">Item</th>
+                            <th style="width: 60%">Description</th>
+                            <th style="width: 12%" class="text-center">Included</th>
+                            <th style="width: 13%" class="text-center">Excluded</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: 600;">HVAC-01</td>
+                            <td>Supply and installation of all HVAC equipment</td>
+                            <td class="text-center"><span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✓</span></td>
+                            <td class="text-center">—</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">PLMB-01</td>
+                            <td>All plumbing rough-in and waste/vent piping</td>
+                            <td class="text-center"><span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✓</span></td>
+                            <td class="text-center">—</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">FIRE-01</td>
+                            <td>Complete fire suppression system</td>
+                            <td class="text-center"><span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✓</span></td>
+                            <td class="text-center">—</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">ELEC-01</td>
+                            <td>Electrical connections to mechanical equipment</td>
+                            <td class="text-center">—</td>
+                            <td class="text-center"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✗</span></td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight: 600;">SITE-01</td>
+                            <td>Site utilities beyond 5 feet from building</td>
+                            <td class="text-center">—</td>
+                            <td class="text-center"><span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✗</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Financial Summary -->
+            <div class="financial-summary">
+                <div class="section-header" style="border: none; padding: 0; margin-bottom: 10px;">
+                    <div class="section-icon" style="width: 24px; height: 24px; font-size: 11px;">💰</div>
+                    <div class="section-title" style="font-size: 13px;">Financial Summary</div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Base:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">$2,450,000</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Add/Alt:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">$125,000</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Current POR:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">$1,826,000</span>
+                    </div>
+                    <div style="padding: 6px 12px; background: #10b981; border-radius: 6px;">
+                        <span style="font-size: 10px; color: white;">TOTAL:</span>
+                        <span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">$2,575,000</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Authorization Section -->
+            <div class="section" style="margin-top: 20px;">
+                <div class="section-header">
+                    <div class="section-icon" style="background: #f59e0b;">📝</div>
+                    <div class="section-title">Authorization & Process Control</div>
+                </div>
+                
+                <!-- Process Fields -->
+                <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 6px; padding: 8px 12px; margin-bottom: 15px; font-size: 11px;">
+                    <span style="color: #92400e; font-weight: 700;">JOB#:</span>
+                    <span style="color: #78350f; font-weight: 600; margin-right: 12px;">APX-2025-BC-M001</span>
+                    <span style="color: #92400e; font-weight: 700;">CONTRACT:</span>
+                    <span style="color: #78350f; font-weight: 600; margin-right: 12px;">CTR-2025-0823-15</span>
+                    <span style="color: #92400e; font-weight: 700;">COST:</span>
+                    <span style="color: #78350f; font-weight: 600; margin-right: 12px;">15000-MECH</span>
+                    <span style="color: #92400e; font-weight: 700;">INS EXP:</span>
+                    <span style="color: #78350f; font-weight: 600;">12/31/25</span>
+                </div>
+                
+                <!-- Signatures -->
+                <div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px;">
+                            <div style="border-bottom: 1px solid #3b82f6; margin-bottom: 6px; padding-bottom: 15px;"></div>
+                            <div style="font-size: 9px; font-weight: 700; color: #64748b;">PM/APM</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">Date: _______</div>
+                        </div>
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px;">
+                            <div style="border-bottom: 1px solid #3b82f6; margin-bottom: 6px; padding-bottom: 15px;"></div>
+                            <div style="font-size: 9px; font-weight: 700; color: #64748b;">SPM</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">Date: _______</div>
+                        </div>
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px;">
+                            <div style="border-bottom: 1px solid #3b82f6; margin-bottom: 6px; padding-bottom: 15px;"></div>
+                            <div style="font-size: 9px; font-weight: 700; color: #64748b;">B. DONOHUE</div>
+                            <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">Date: _______</div>
+                        </div>
+                        <div style="background: #eff6ff; border: 1px solid #2563eb; border-radius: 4px; padding: 8px;">
+                            <div style="border-bottom: 2px solid #1e40af; margin-bottom: 6px; padding-bottom: 15px;"></div>
+                            <div style="font-size: 9px; font-weight: 700; color: #1e40af;">R. HORSFORD</div>
+                            <div style="font-size: 9px; color: #1e40af; font-weight: 600; margin-top: 2px;">Date: _______</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                        <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: 700; margin-bottom: 4px;">Notes:</div>
+                        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 3px; padding: 5px; min-height: 25px; font-size: 10px; color: #94a3b8; font-style: italic;">
+                            Approval conditions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status Tracking -->
+            <div class="status-track">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #0f172a;">Document Status</div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 10px;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #10b981;"></span>
+                        <span>PA Synced</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; font-size: 10px; color: #334155;">
+                    <span><strong>ID:</strong> 2025-BC-001</span>
+                    <span><strong>Created:</strong> Aug 23, 10:45 AM</span>
+                    <span><strong>Synced:</strong> Aug 23, 10:46 AM</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <div>
+                    <strong>Document Reference:</strong> POR-2025-BC-001<br>
+                    Generated: August 23, 2025 at 2:45 PM EST<br>
+                    This document is confidential and proprietary to Apex Building Group, Inc.
+                </div>
+                <div style="text-align: right;">
+                    <strong>APEX BUILDING GROUP</strong><br>
+                    50 Main Street, Yonkers, NY 10701<br>
+                    procurement@apexbuilds.com | (914) 555-1000
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

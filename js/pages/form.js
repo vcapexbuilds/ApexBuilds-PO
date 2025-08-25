@@ -75,10 +75,47 @@ class POForm {
     }
 
     initializeAuth() {
-        // Use global auth object that's loaded via script tag
-        if (!window.auth || !window.auth.isAuthenticated()) {
+        // Check multiple authentication methods
+        const isAuthenticatedViaAuth = window.auth && window.auth.isAuthenticated();
+        const isAuthenticatedViaLocalStorage = localStorage.getItem('isAuthenticated') === 'true';
+        const hasCurrentUser = localStorage.getItem('currentUser') || (window.storage && window.storage.getCurrentUser());
+        
+        console.log('Authentication check:', {
+            authObject: isAuthenticatedViaAuth,
+            localStorage: isAuthenticatedViaLocalStorage,
+            hasUser: !!hasCurrentUser
+        });
+        
+        if (!isAuthenticatedViaAuth && !isAuthenticatedViaLocalStorage && !hasCurrentUser) {
+            console.log('Not authenticated, redirecting to login');
             window.location.href = '/index.html';
             return;
+        }
+        
+        // Check user role for proper page redirection
+        let currentUser = null;
+        if (window.storage && window.storage.getCurrentUser) {
+            currentUser = window.storage.getCurrentUser();
+        } else if (localStorage.getItem('currentUser')) {
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        }
+        
+        if (currentUser) {
+            console.log('Current user:', currentUser);
+            // Redirect based on role if this is the initial login
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromLogin = urlParams.get('from') === 'login';
+            
+            if (fromLogin) {
+                if (currentUser.role === 'admin') {
+                    window.location.href = '/pages/admin.html';
+                    return;
+                } else {
+                    // For regular users, stay on form page or go to tracking
+                    // You can change this to redirect to tracking page if preferred
+                    // window.location.href = '/pages/tracking.html';
+                }
+            }
         }
 
         // Check if we're revising an existing PO
@@ -407,7 +444,7 @@ class POForm {
     }
 
     collectFormData() {
-        // Build meta object in the requested flat structure
+        // Build meta object in the enhanced structure
         const val = (id) => {
             const el = document.getElementById(id);
             return el ? el.value : '';
@@ -453,16 +490,50 @@ class POForm {
                 : []
         };
 
-        // Add metadata
+        // Legacy fields for backward compatibility
         formData.createdAt = new Date().toISOString();
         formData.sent = false;
         formData.timestamp = Date.now();
         formData.id = this.revisionId || Date.now();
+        
+        // Enhanced user information for UserPOManager
+        const currentUser = window.auth ? window.auth.getCurrentUser() : null;
+        if (currentUser) {
+            formData.submittedBy = {
+                userId: currentUser.id,
+                username: currentUser.username || currentUser.name,
+                email: currentUser.email,
+                upn: currentUser.upn || currentUser.email,
+                company: currentUser.company || 'Apex Building Corporation',
+                role: currentUser.role || 'user',
+                department: currentUser.department || 'General',
+                submittedAt: new Date().toISOString()
+            };
+        } else {
+            // Fallback for cases where auth isn't available
+            formData.submittedBy = {
+                userId: 'anonymous',
+                username: 'Anonymous User',
+                email: '',
+                upn: '',
+                company: 'Apex Building Corporation',
+                role: 'user',
+                department: 'General',
+                submittedAt: new Date().toISOString()
+            };
+        }
 
-        console.log('=== COLLECTED FORM DATA ===');
-        console.log('Form data:', JSON.stringify(formData, null, 2));
+        console.log('=== COLLECTED ENHANCED FORM DATA ===');
+        console.log('Form data structure:', {
+            meta: !!formData.meta,
+            schedule: formData.schedule.length,
+            scope: formData.scope.length,
+            submittedBy: !!formData.submittedBy,
+            userId: formData.submittedBy.userId
+        });
         console.log('Schedule items count:', formData.schedule.length);
         console.log('First schedule item fields:', formData.schedule.length > 0 ? Object.keys(formData.schedule[0]) : 'No schedule items');
+        console.log('User context:', formData.submittedBy);
         console.log('Schedule data validation:', {
             hasSchedule: Array.isArray(formData.schedule),
             scheduleLength: formData.schedule.length,
@@ -525,10 +596,10 @@ class POForm {
     }
 
     async handleSubmit(event) {
-        console.log('🚀🚀🚀 === FORM SUBMIT HANDLER CALLED === 🚀🚀🚀');
+        console.log('🚀🚀🚀 === ENHANCED FORM SUBMIT HANDLER === 🚀🚀🚀');
         console.log('Event received:', event);
-        console.log('Event type:', event ? event.type : 'no event');
-        console.log('Event target:', event ? event.target : 'no target');
+        console.log('HybridPOManager available:', !!window.hybridPOManager);
+        console.log('UserPOManager available:', !!window.userPOManager);
         console.log('Timestamp:', new Date().toISOString());
         
         if (event) {
@@ -541,47 +612,121 @@ class POForm {
         
         // Add a visible indicator that submit was triggered
         const submitBtn = document.querySelector('button[type="submit"]');
+        let originalText = '';
+        let originalClass = '';
         if (submitBtn) {
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '🔄 Processing...';
+            originalText = submitBtn.innerHTML;
+            originalClass = submitBtn.className;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span><span class="btn-loading-text">Processing...</span>';
+            submitBtn.className = originalClass + ' btn-loading';
             submitBtn.disabled = true;
             
-            // Reset after 10 seconds as failsafe
+            // Reset after 30 seconds as failsafe
             setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }, 10000);
+                if (submitBtn.disabled) {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.className = originalClass;
+                    submitBtn.disabled = false;
+                }
+            }, 30000);
         }
-        
+
         try {
             console.log('Checking dependencies...');
-            console.log('this.api available:', !!this.api);
-            console.log('this.storage available:', !!this.storage);
-            console.log('window.modal available:', !!window.modal);
+            console.log('Enhanced dependencies:', {
+                hybridPOManager: !!window.hybridPOManager,
+                userPOManager: !!window.userPOManager,
+                api: !!this.api,
+                storage: !!this.storage,
+                modal: !!window.modal
+            });
             
-            if (!this.api) {
-                console.error('❌ CRITICAL: this.api not available!');
-                alert('System Error: API not available. Please refresh the page.');
+            // Prefer hybrid PO manager for Google Drive integration
+            const poManager = window.hybridPOManager || window.userPOManager;
+            const managerType = window.hybridPOManager ? 'HybridPOManager (MS365 + Google Drive)' : 'UserPOManager (legacy)';
+            
+            if (!poManager) {
+                console.error('❌ CRITICAL: No PO Manager available!');
+                alert('System Error: PO Manager not available. Please refresh the page.');
                 return;
             }
             
+            console.log(`✅ Using ${managerType} for submission`);
+            
             if (!window.modal) {
-                console.error('❌ CRITICAL: window.modal not available!');
+                console.error('❌ CRITICAL: Modal system not available!');
                 alert('System Error: Modal system not available. Please refresh the page.');
                 return;
             }
             
-            console.log('Collecting form data...');
+            console.log('Collecting form data for enhanced submission...');
             const formData = this.collectFormData();
             console.log('✅ Form data collected:', formData);
             
-            console.log('Showing confirmation modal...');
-            // Show confirmation modal with summary
+            // Calculate total amount for business rules
+            const totalAmount = formData.schedule.reduce((sum, item) => sum + (Number(item.totalCost) || 0), 0);
+            console.log('Total PO Amount:', totalAmount);
+            
+            console.log('Showing enhanced confirmation modal...');
+            // Show enhanced confirmation modal with PO preview
             window.modal.show({
-                title: 'Confirm Submission',
-                content: this.createSubmissionSummary(formData),
+                title: 'Confirm Purchase Order Submission',
+                content: this.createEnhancedSubmissionSummary(formData, totalAmount),
                 size: 'large',
                 actions: [
+                    {
+                        id: 'save-draft',
+                        label: 'Save as Draft',
+                        class: 'btn-secondary',
+                        handler: async () => {
+                            try {
+                                console.log('Saving as draft...');
+                                window.modal.showLoadingModal('Saving Draft...');
+                                
+                                const result = await poManager.submitPO(formData, { 
+                                    isDraft: true,
+                                    comments: 'Saved as draft from form submission'
+                                });
+                                
+                                window.modal.hideLoadingModal();
+                                
+                                if (result.success) {
+                                    // Clear form draft from old storage
+                                    this.storage.clearDraft();
+                                    
+                                    window.modal.show({
+                                        title: 'Draft Saved Successfully!',
+                                        content: `
+                                            <div class="success-details">
+                                                <p><strong>PO Number:</strong> ${result.poNumber}</p>
+                                                <p><strong>Status:</strong> Draft</p>
+                                                <p><strong>Total Amount:</strong> $${totalAmount.toLocaleString()}</p>
+                                                <p>You can continue editing this draft or submit it later from your dashboard.</p>
+                                            </div>
+                                        `,
+                                        actions: [{
+                                            id: 'continue',
+                                            label: 'Continue Editing',
+                                            class: 'btn-secondary'
+                                        }, {
+                                            id: 'dashboard',
+                                            label: 'Go to Dashboard',
+                                            class: 'btn-primary',
+                                            handler: () => {
+                                                window.location.href = '/pages/tracking.html';
+                                            }
+                                        }]
+                                    });
+                                } else {
+                                    window.modal.showErrorModal('Draft Save Failed', result.error);
+                                }
+                            } catch (error) {
+                                window.modal.hideLoadingModal();
+                                console.error('Draft save error:', error);
+                                window.modal.showError(`Failed to save draft: ${error.message}`);
+                            }
+                        }
+                    },
                     {
                         id: 'cancel',
                         label: 'Cancel',
@@ -589,57 +734,159 @@ class POForm {
                     },
                     {
                         id: 'confirm',
-                        label: 'Confirm & Submit',
+                        label: 'Submit for Approval',
                         class: 'btn-primary',
                         handler: async () => {
                             try {
-                                console.log('User confirmed submission, proceeding...');
-                                // Show loading modal
-                                window.modal.showLoadingModal('Submitting Purchase Order...');
+                                console.log('User confirmed submission, proceeding with enhanced flow...');
                                 
-                                formData.sent = true;
-                                formData.sentAt = new Date().toISOString();
+                                // Show loading modal with enhanced messaging
+                                window.modal.showLoadingModal('Submitting Purchase Order...', 
+                                    'Creating PO with approval workflow and audit trail');
                                 
-                                console.log('Calling this.api.createPO...');
-                                
-                                // Add timeout to prevent hanging
-                                const submitTimeout = new Promise((_, reject) => {
-                                    setTimeout(() => reject(new Error('Submission timeout after 30 seconds')), 30000);
+                                // Submit through enhanced PO Manager (Hybrid or User)
+                                const result = await poManager.submitPO(formData, {
+                                    priority: this.determinePriority(formData, totalAmount),
+                                    expectedDelivery: formData.meta?.importantDates?.substantialCompletion,
+                                    comments: 'Submitted via enhanced form system',
+                                    reason: `New PO submission for ${formData.meta?.projectName || 'project'}`
                                 });
                                 
-                                const submitPromise = this.api.createPO(formData);
+                                console.log('Enhanced submission result:', result);
                                 
-                                const result = await Promise.race([submitPromise, submitTimeout]);
-                                console.log('API result received:', result);
+                                // Also submit through legacy API for Power Automate compatibility
+                                let legacyResult = null;
+                                try {
+                                    formData.sent = true;
+                                    formData.sentAt = new Date().toISOString();
+                                    legacyResult = await this.api.createPO(formData);
+                                    console.log('Legacy API result:', legacyResult);
+                                } catch (legacyError) {
+                                    console.warn('Legacy API submission failed:', legacyError);
+                                }
                                 
                                 // Hide loading modal
                                 window.modal.hideLoadingModal();
                                 
                                 if (result.success) {
-                                    console.log('Submission successful!');
+                                    console.log('Enhanced submission successful!');
+                                    
+                                    // Clear form draft
                                     this.storage.clearDraft();
                                     
-                                    // Show detailed success message
-                                    const syncStatus = result.syncStatus || 'unknown';
-                                    const powerAutomateStatus = syncStatus === 'synced' ? 
+                                    // Show enhanced success modal
+                                    const approvalStatus = result.requiresApproval ? 
+                                        '⏳ Pending Approval - Notifications sent to approvers' : 
+                                        '✅ Auto-Approved';
+                                    
+                                    const powerAutomateStatus = legacyResult?.success ? 
                                         '✅ Successfully sent to Power Automate' : 
-                                        '⚠️ Saved locally, will retry sending to Power Automate';
+                                        '⚠️ Will retry sending to Power Automate';
                                     
                                     window.modal.show({
                                         title: 'Purchase Order Submitted Successfully!',
                                         content: `
-                                            <div class="success-details">
-                                                <p><strong>PO ID:</strong> ${result.po.id}</p>
-                                                <p><strong>Status:</strong> ${result.po.status}</p>
-                                                <p><strong>Local Storage:</strong> ✅ Saved successfully</p>
-                                                <p><strong>Power Automate:</strong> ${powerAutomateStatus}</p>
-                                                <p><strong>Submitted At:</strong> ${new Date(result.po.sentAt).toLocaleString()}</p>
+                                            <div class="enhanced-success-details">
+                                                <div class="success-header">
+                                                    <h3>📋 PO Details</h3>
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>PO Number:</strong> <span class="highlight">${result.poNumber}</span>
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>PO ID:</strong> ${result.poId}
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>Status:</strong> <span class="status-${result.status}">${result.status.toUpperCase()}</span>
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>Total Amount:</strong> $${totalAmount.toLocaleString()}
+                                                </div>
+                                                
+                                                <div class="success-header">
+                                                    <h3>🔄 Processing Status</h3>
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>Enhanced Tracking:</strong> ✅ Saved with full audit trail
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>Approval Workflow:</strong> ${approvalStatus}
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>Power Automate:</strong> ${powerAutomateStatus}
+                                                </div>
+                                                <div class="success-row">
+                                                    <strong>OneDrive Sync:</strong> ⏳ Queued for synchronization
+                                                </div>
+                                                
+                                                ${result.requiresApproval ? `
+                                                <div class="approval-info">
+                                                    <p><strong>Next Steps:</strong></p>
+                                                    <ul>
+                                                        <li>Approval notifications have been sent</li>
+                                                        <li>You'll receive email updates on status changes</li>
+                                                        <li>Track progress in your PO dashboard</li>
+                                                    </ul>
+                                                </div>
+                                                ` : ''}
                                             </div>
+                                            
+                                            <style>
+                                            .enhanced-success-details {
+                                                text-align: left;
+                                                line-height: 1.6;
+                                            }
+                                            .success-header {
+                                                margin: 20px 0 10px 0;
+                                                padding-bottom: 8px;
+                                                border-bottom: 2px solid #e0e0e0;
+                                            }
+                                            .success-header h3 {
+                                                margin: 0;
+                                                color: #2c3e50;
+                                                font-size: 1.1em;
+                                            }
+                                            .success-row {
+                                                margin: 8px 0;
+                                                padding: 4px 0;
+                                            }
+                                            .highlight {
+                                                background: #fff3cd;
+                                                padding: 2px 6px;
+                                                border-radius: 3px;
+                                                font-weight: bold;
+                                            }
+                                            .status-submitted {
+                                                color: #28a745;
+                                                font-weight: bold;
+                                            }
+                                            .approval-info {
+                                                background: #f8f9fa;
+                                                padding: 15px;
+                                                border-radius: 5px;
+                                                margin-top: 15px;
+                                                border-left: 4px solid #007bff;
+                                            }
+                                            .approval-info ul {
+                                                margin: 10px 0 0 0;
+                                                padding-left: 20px;
+                                            }
+                                            .approval-info li {
+                                                margin: 5px 0;
+                                            }
+                                            </style>
                                         `,
                                         actions: [{
-                                            id: 'ok',
-                                            label: 'View My POs',
+                                            id: 'track-po',
+                                            label: 'Track This PO',
                                             class: 'btn-primary',
+                                            handler: () => {
+                                                window.location.href = `/pages/tracking.html?po=${result.poNumber}`;
+                                            }
+                                        }, {
+                                            id: 'dashboard',
+                                            label: 'Go to Dashboard',
+                                            class: 'btn-secondary',
                                             handler: () => {
                                                 const currentUser = window.auth?.getCurrentUser();
                                                 if (currentUser?.role === 'admin') {
@@ -651,36 +898,41 @@ class POForm {
                                         }]
                                     });
                                 } else {
-                                    console.log('Submission failed:', result);
+                                    console.log('Enhanced submission failed:', result);
                                     window.modal.showErrorModal(
                                         'Submission Failed',
                                         `Failed to submit Purchase Order: ${result.error || 'Unknown error'}`
                                     );
                                 }
                             } catch (error) {
-                                console.error('Submit error:', error);
+                                console.error('Enhanced submit error:', error);
                                 window.modal.hideLoadingModal();
-                                
-                                // Reset submit button
-                                const submitBtn = document.querySelector('button[type="submit"]');
-                                if (submitBtn) {
-                                    submitBtn.style.background = '';
-                                    submitBtn.style.transform = '';
-                                    submitBtn.textContent = 'Submit Purchase Order';
-                                    submitBtn.disabled = false;
-                                }
                                 
                                 window.modal.showError(
                                     `Submission Failed: ${error.message || 'Network or server error'}`
                                 );
+                            } finally {
+                                // Reset submit button
+                                if (submitBtn) {
+                                    submitBtn.innerHTML = originalText;
+                                    submitBtn.className = originalClass;
+                                    submitBtn.disabled = false;
+                                }
                             }
                         }
                     }
                 ]
             });
         } catch (error) {
-            console.error('Error preparing submission:', error);
+            console.error('Error preparing enhanced submission:', error);
             window.modal.showError('Failed to prepare submission. Please check your inputs and try again.');
+            
+            // Reset submit button on error
+            if (submitBtn) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.className = originalClass;
+                submitBtn.disabled = false;
+            }
         }
     }
 
@@ -706,6 +958,171 @@ class POForm {
                 </div>
             </div>
         `;
+    }
+
+    createEnhancedSubmissionSummary(data, totalAmount) {
+        const priority = this.determinePriority(data, totalAmount);
+        const approvalRequired = this.determineApprovalRequired(totalAmount);
+        const estimatedApprovalTime = this.estimateApprovalTime(totalAmount);
+        
+        return `
+            <div class="enhanced-submission-summary">
+                <div class="summary-section">
+                    <h3>📋 Project Details</h3>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <strong>Project Name:</strong> ${data.meta.projectName || 'Not specified'}
+                        </div>
+                        <div class="summary-item">
+                            <strong>General Contractor:</strong> ${data.meta.generalContractor || 'Not specified'}
+                        </div>
+                        <div class="summary-item">
+                            <strong>Project Manager:</strong> ${data.meta.projectManager || 'Not specified'}
+                        </div>
+                        <div class="summary-item">
+                            <strong>Contract Amount:</strong> $${Number(data.meta.contractAmount || 0).toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h3>💰 Financial Summary</h3>
+                    <div class="financial-summary">
+                        <div class="summary-item highlight">
+                            <strong>Total PO Amount:</strong> <span class="amount">$${totalAmount.toLocaleString()}</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Schedule Items:</strong> ${data.schedule.length}
+                        </div>
+                        <div class="summary-item">
+                            <strong>Scope Items:</strong> ${data.scope.length} (${data.scope.filter(item => item.included).length} included, ${data.scope.filter(item => item.excluded).length} excluded)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-section">
+                    <h3>⚡ Processing Information</h3>
+                    <div class="processing-info">
+                        <div class="summary-item">
+                            <strong>Priority Level:</strong> <span class="priority-${priority}">${priority.toUpperCase()}</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Approval Required:</strong> ${approvalRequired ? '✅ Yes' : '❌ No'}
+                        </div>
+                        ${approvalRequired ? `
+                        <div class="summary-item">
+                            <strong>Estimated Approval Time:</strong> ${estimatedApprovalTime}
+                        </div>
+                        ` : ''}
+                        <div class="summary-item">
+                            <strong>PO Number:</strong> <em>Will be generated upon submission</em>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="summary-warning">
+                    <h4>⚠️ Before You Submit</h4>
+                    <ul>
+                        <li>Review all project details and financial information</li>
+                        <li>Ensure all schedule items are complete and accurate</li>
+                        <li>Verify scope items are properly categorized</li>
+                        ${approvalRequired ? '<li>This PO will require approval before processing</li>' : ''}
+                        <li>You can save as draft to continue editing later</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <style>
+            .enhanced-submission-summary {
+                text-align: left;
+                line-height: 1.5;
+            }
+            .summary-section {
+                margin: 20px 0;
+                padding: 15px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                background: #f9f9f9;
+            }
+            .summary-section h3 {
+                margin: 0 0 15px 0;
+                color: #2c3e50;
+                font-size: 1.1em;
+                border-bottom: 2px solid #3498db;
+                padding-bottom: 5px;
+            }
+            .summary-grid, .financial-summary, .processing-info {
+                display: grid;
+                gap: 10px;
+            }
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .summary-item {
+                padding: 8px;
+                background: white;
+                border-radius: 4px;
+                border-left: 3px solid #3498db;
+            }
+            .summary-item.highlight {
+                background: #e8f6f3;
+                border-left-color: #27ae60;
+            }
+            .amount {
+                font-size: 1.2em;
+                font-weight: bold;
+                color: #27ae60;
+            }
+            .priority-normal { color: #3498db; }
+            .priority-high { color: #e67e22; }
+            .priority-urgent { color: #e74c3c; font-weight: bold; }
+            .summary-warning {
+                background: #fff3cd;
+                border: 1px solid #ffc107;
+                border-radius: 8px;
+                padding: 15px;
+                margin-top: 20px;
+            }
+            .summary-warning h4 {
+                margin: 0 0 10px 0;
+                color: #856404;
+            }
+            .summary-warning ul {
+                margin: 0;
+                padding-left: 20px;
+            }
+            .summary-warning li {
+                margin: 5px 0;
+                color: #856404;
+            }
+            </style>
+        `;
+    }
+
+    determinePriority(data, totalAmount) {
+        // Determine priority based on amount and project urgency
+        if (totalAmount > 200000) return 'urgent';
+        if (totalAmount > 100000) return 'high';
+        
+        // Check for urgent keywords in project name or type
+        const urgentKeywords = ['urgent', 'emergency', 'critical', 'asap', 'rush'];
+        const projectText = (data.meta.projectName + ' ' + data.meta.typeStatus).toLowerCase();
+        const hasUrgentKeywords = urgentKeywords.some(keyword => projectText.includes(keyword));
+        
+        if (hasUrgentKeywords) return 'high';
+        
+        return 'normal';
+    }
+
+    determineApprovalRequired(totalAmount) {
+        // Business rule: amounts over $50K require approval
+        return totalAmount > 50000;
+    }
+
+    estimateApprovalTime(totalAmount) {
+        if (totalAmount > 200000) return '2-3 business days';
+        if (totalAmount > 100000) return '1-2 business days';
+        return '4-24 hours';
     }
 }
 

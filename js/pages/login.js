@@ -109,8 +109,10 @@ class LoginPage {
         // Show loading state
         const submitButton = form.querySelector('button[type="submit"]');
         const originalText = submitButton ? submitButton.textContent : '';
+        const originalClass = submitButton ? submitButton.className : '';
         if (submitButton) {
-            submitButton.textContent = 'Logging in...';
+            submitButton.innerHTML = '<span class="loading-spinner"></span><span class="btn-loading-text">Logging in...</span>';
+            submitButton.className = originalClass + ' btn-loading';
             submitButton.disabled = true;
         }
         console.log('Button state updated to loading');
@@ -168,7 +170,8 @@ class LoginPage {
             // Reset button state
             console.log('Resetting button state');
             if (submitButton) {
-                submitButton.textContent = originalText;
+                submitButton.innerHTML = originalText;
+                submitButton.className = originalClass;
                 submitButton.disabled = false;
             }
         }
@@ -239,7 +242,11 @@ class LoginPage {
         // Show loading state
         const submitButton = form.querySelector('button[type="submit"]');
         const originalText = submitButton.textContent;
-        submitButton.textContent = 'Creating Account...';
+        const originalClass = submitButton.className;
+        
+        // Add loading animation
+        submitButton.innerHTML = '<span class="loading-spinner"></span><span class="btn-loading-text">Creating Account...</span>';
+        submitButton.className = originalClass + ' btn-loading';
         submitButton.disabled = true;
 
         try {
@@ -287,7 +294,8 @@ class LoginPage {
             }
         } finally {
             // Reset button state
-            submitButton.textContent = originalText;
+            submitButton.innerHTML = originalText;
+            submitButton.className = originalClass;
             submitButton.disabled = false;
         }
     }

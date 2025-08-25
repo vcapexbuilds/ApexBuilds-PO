@@ -854,3 +854,216 @@ input[type="checkbox"] {
         flex: none;
     }
 }
+
+/* Submitted By Styling */
+.submitted-by {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.admin-badge {
+    background: #ffc107;
+    color: #856404;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.submitter-info {
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.submitter-info small {
+    color: #666;
+    font-size: 11px;
+}
+
+.po-details-modal .detail-item {
+    margin-bottom: 15px;
+}
+
+.po-details-modal .submitter-info {
+    margin-top: 5px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+/* PO Cards Container - Compact Grid */
+.po-cards-container {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 10px;
+    background: rgba(248, 249, 250, 0.3);
+}
+
+/* Enhanced PO Item Cards - Compact Version */
+.po-item {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.po-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.po-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.po-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.po-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+    line-height: 1.2;
+    flex: 1;
+    margin-right: 12px;
+}
+
+.po-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+.po-details p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #555;
+}
+
+.po-details strong {
+    color: #333;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+/* Status Badge - Compact */
+.status {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-draft {
+    background: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.status-submitted {
+    background: rgba(255, 193, 7, 0.15);
+    color: #b8860b;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.status-approved {
+    background: rgba(40, 167, 69, 0.15);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-rejected {
+    background: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.3);
+}
+
+/* No POs Message */
+.no-pos {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    background: rgba(248, 249, 250, 0.8);
+    border-radius: 12px;
+    border: 1px dashed #ddd;
+}
+
+.no-pos::before {
+    content: "📄";
+    display: block;
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+/* Responsive adjustments - More Compact */
+@media (max-width: 768px) {
+    .po-cards-container {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        padding: 8px;
+    }
+    
+    .po-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .po-details {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    
+    .po-item {
+        padding: 10px 12px;
+        margin-bottom: 6px;
+    }
+    
+    .po-header h3 {
+        font-size: 14px;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 1200px) {
+    .po-cards-container {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 8px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .po-cards-container {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}

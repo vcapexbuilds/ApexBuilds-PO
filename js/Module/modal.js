@@ -485,6 +485,11 @@ window.showErrorModal = showErrorModal;
 window.showConfirmModal = showConfirmModal;
 window.validateForm = validateForm;
 
+// Register with the component registry
+if (window.ComponentRegistry) {
+    window.ComponentRegistry.register('modal', window.modal);
+}
+
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = ModalManager;

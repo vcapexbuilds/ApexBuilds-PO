@@ -301,6 +301,13 @@
         </div>
     </div>
 
+    <!-- Load M365 runtime overrides and config to enable OneDrive saving on this page -->
+    <script src="../js/core/runtime-overrides.js"></script>
+    <script src="../js/core/microsoft365-config-new.js"></script>
+    <script src="../js/core/microsoft-graph-api-new.js"></script>
+    <script src="../js/core/power-automate-webhooks.js"></script>
+    <script src="../js/core/real-m365-integration.js"></script>
+
     <script src="../js/core/storage.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/api.js"></script>
@@ -311,42 +318,25 @@
         function testBackButton() {
             console.log('testBackButton called!');
             
+            // Simplified navigation - always go to tracking page (main dashboard)
             // Check if we can use the modal
             if (typeof window.showConfirmModal === 'function') {
                 window.showConfirmModal(
                     'Confirm Navigation',
                     'Are you sure you want to leave? Any unsaved changes will be lost.',
                     function() {
-                        // Navigate to appropriate dashboard based on user role
-                        if (window.auth && window.auth.isAuthenticated()) {
-                            const currentUser = window.auth.getCurrentUser();
-                            if (currentUser && currentUser.role === 'admin') {
-                                window.location.href = '../pages/admin.html';
-                            } else {
-                                window.location.href = '../pages/tracking.html';
-                            }
-                        } else {
-                            // If not authenticated, redirect to login
-                            window.location.href = '../index.html';
-                        }
+                        // Always navigate to tracking page (main dashboard)
+                        console.log('Navigating to tracking page...');
+                        window.location.href = '../pages/tracking.html';
                     },
                     null
                 );
             } else {
                 console.log('Modal not available, using basic confirm');
                 if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
-                    // Navigate to appropriate dashboard based on user role
-                    if (window.auth && window.auth.isAuthenticated()) {
-                        const currentUser = window.auth.getCurrentUser();
-                        if (currentUser && currentUser.role === 'admin') {
-                            window.location.href = '../pages/admin.html';
-                        } else {
-                            window.location.href = '../pages/tracking.html';
-                        }
-                    } else {
-                        // If not authenticated, redirect to login
-                        window.location.href = '../index.html';
-                    }
+                    // Always navigate to tracking page (main dashboard)
+                    console.log('Navigating to tracking page...');
+                    window.location.href = '../pages/tracking.html';
                 }
             }
         }
@@ -434,17 +424,65 @@
         }
     </script>
     
+    
     <!-- Load core modules first -->
     <script src="../js/core/storage.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/api.js"></script>
+    <script src="../js/core/enhanced-data-structure.js"></script>
+    <script src="../js/core/enhanced-integration-manager.js"></script>
+    <script src="../js/core/integration-demo.js"></script>
+    <script src="../js/core/real-m365-integration.js"></script>
+    
+    <!-- OneDrive + Power Automate integration -->
+    <script src="../js/core/onedrive-powerautomate-manager.js"></script>
+    
+    <!-- Legacy fallbacks -->
+    <script src="../js/core/local-file-saver.js"></script>
+    <script src="../js/core/user-po-manager.js"></script>
+    <script>
+        // Initialize OneDrive + Power Automate PO Manager
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize OneDrive + Power Automate manager
+                if (typeof OneDrivePowerAutomatePOManager !== 'undefined') {
+                    window.oneDrivePowerAutomatePOManager = new OneDrivePowerAutomatePOManager();
+                    const initResult = await window.oneDrivePowerAutomatePOManager.initialize();
+                    if (initResult.success) {
+                        console.log('✅ OneDrive + Power Automate PO Manager ready');
+                        // Also make it available as hybridPOManager for compatibility with form.js
+                        window.hybridPOManager = window.oneDrivePowerAutomatePOManager;
+                    } else {
+                        console.warn('⚠️ OneDrive + Power Automate Manager initialization failed:', initResult.error);
+                    }
+                } else {
+                    console.warn('OneDrivePowerAutomatePOManager not available, using fallbacks');
+                }
+                
+                // Legacy fallbacks
+                if (typeof LocalFileSaver !== 'undefined') {
+                    window.localSaver = new LocalFileSaver();
+                    console.log('✅ Local File Saver ready as fallback');
+                }
+                
+                if (typeof RealM365Integration !== 'undefined') {
+                    window.m365 = new RealM365Integration();
+                    await window.m365.initialize();
+                    console.log('M365 integration available');
+                }
+            } catch (e) {
+                console.warn('Integration init on form page:', e.message);
+                console.log('Continuing with available systems');
+            }
+        });
+    </script>
     <script src="../js/Module/modal.js"></script>
     <script src="../js/Module/dynamic-form.js"></script>
     <script src="../js/pages/form.js"></script>
     
-    <!-- FIXED FORM SUBMISSION -->
+    <!-- HYBRID FORM SUBMISSION - MS Auth + Google Drive Storage -->
     <script>
-        // Override the form submit to use the working direct submission logic
+        // Override the form submit to use hybrid approach
         window.addEventListener('load', () => {
             const form = document.getElementById('poForm');
             const submitBtn = document.querySelector('button[type="submit"]');
@@ -460,15 +498,15 @@
                             return;
                         }
 
+                        // HYBRID APPROACH: MS Auth (required) + Google Drive storage (preferred)
+                        console.log('Form submission - using hybrid approach (MS Auth + Google Drive)');
+                        
                         // Collect form data
                         const formData = window.poForm.collectFormData();
 
-                        // Validate required fields - Allow completely empty submissions
-                        // No validation required - user can submit any data
-
                         // Show confirmation
                         const projectName = formData.meta.projectName || 'Untitled Project';
-                        if (!confirm(`Submit PO for "${projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nClick OK to submit.`)) {
+                        if (!confirm(`Submit PO for "${projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nThis will use MS365 authentication and save to Google Drive (with local backup).`)) {
                             return;
                         }
 
@@ -476,11 +514,67 @@
                         submitBtn.textContent = '🔄 Processing...';
                         submitBtn.disabled = true;
 
-                        // Submit to API
-                        const result = await window.api.createPO(formData);
+                        let result;
+                        
+                        // Try hybrid PO manager first (best option)
+                        if (window.hybridPOManager && typeof window.hybridPOManager.submitPO === 'function') {
+                            console.log('Using hybrid PO manager - MS Auth + Google Drive storage');
+                            
+                            try {
+                                result = await window.hybridPOManager.submitPO(formData, { isDraft: false, saveLocalBackup: true });
+                            } catch (error) {
+                                console.warn('Hybrid manager failed, will try alternative:', error.message);
+                                
+                                // If Google Drive not setup, offer to set it up
+                                if (error.message.includes('Google Drive') || error.message.includes('not authenticated')) {
+                                    const setupChoice = await window.hybridPOManager.showAuthSetupDialog();
+                                    if (setupChoice === 'google-drive') {
+                                        // Retry with Google Drive setup
+                                        result = await window.hybridPOManager.submitPO(formData, { isDraft: false, saveLocalBackup: true });
+                                    } else {
+                                        // Use local storage
+                                        result = await window.hybridPOManager.saveLocally(formData, window.hybridPOManager.generatePONumber(), { isDraft: false });
+                                    }
+                                } else {
+                                    throw error;
+                                }
+                            }
+                        }
+                        
+                        // Fallback to local saver if hybrid failed
+                        if (!result || !result.success) {
+                            console.log('Falling back to local file saver');
+                            if (window.localSaver && typeof window.localSaver.submitPO === 'function') {
+                                result = await window.localSaver.submitPO(formData, { isDraft: false });
+                            } else {
+                                throw new Error('No storage system available');
+                            }
+                        }
 
                         if (result && result.success) {
-                            alert(`SUCCESS! Purchase Order submitted successfully!\n\nPO ID: ${result.po.id}\nStatus: ${result.po.status}\nPower Automate: ${result.syncStatus === 'synced' ? 'Sent successfully' : 'Queued for retry'}`);
+                            let message = `SUCCESS! Purchase Order submitted successfully!\n\n🎯 PO Number: ${result.poNumber}`;
+                            
+                            if (result.primaryStorage) {
+                                message += `\n� Primary Storage: ${result.primaryStorage}`;
+                            }
+                            
+                            if (result.storage) {
+                                if (result.storage.googleDrive && result.storage.googleDrive.success) {
+                                    message += `\n☁️ Google Drive: ✅ Saved successfully`;
+                                }
+                                if (result.storage.local && result.storage.local.success) {
+                                    message += `\n💾 Local File: ✅ Downloaded to Downloads`;
+                                }
+                                if (result.storage.localBackup && result.storage.localBackup.success) {
+                                    message += `\n� Backup: ✅ Local backup created`;
+                                }
+                            }
+                            
+                            if (result.folderStructure) {
+                                message += `\n\n📁 Folder Structure: ${result.folderStructure}`;
+                            }
+                            
+                            alert(message);
                             
                             // Reset form and redirect
                             form.reset();

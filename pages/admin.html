@@ -17,6 +17,7 @@
             <span id="welcomeAdmin">Welcome, Admin</span>
             <button id="logoutBtn" class="logout-btn" onclick="if(confirm('Are you sure you want to logout?')) { auth.logout(); }">Logout</button>
         </div>
+            <select id="roleSwitcher" class="logout-btn" style="margin-right:8px; display:none;"></select>
     </div>
 
     <div class="container">
@@ -48,6 +49,7 @@
                 <button class="tab-button active" data-tab="pos">Purchase Orders</button>
                 <button class="tab-button" data-tab="users">User Management</button>
                 <button class="tab-button" data-tab="reports">Reports</button>
+                <button class="tab-button" data-tab="settings">Admin Settings</button>
             </div>
 
             <!-- Purchase Orders Tab -->
@@ -111,12 +113,12 @@
                         </div>
                     </div>
 
-                    <div id="loadingSpinner" class="loading-state">
+                    <div id="loadingSpinner" class="loading-state" style="display: none;">
                         <div class="spinner"></div>
                         <p>Loading purchase orders...</p>
                     </div>
 
-                    <div id="poTable" class="table-container" style="display: none;">
+                    <div id="poTableContainer" class="table-container">
                         <table>
                             <thead>
                                 <tr>
@@ -147,186 +149,42 @@
 
             <!-- User Management Tab -->
             <div id="usersTab" class="tab-content">
-                <div class="user-management">
-                    <div class="list-header">
-                        <h3>User Management</h3>
-                        <button id="addUser" class="btn-primary">Add New User</button>
-                    </div>
-
-                    <div id="userTable" class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Company</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th>Created Date</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="userTableBody">
-                                <!-- Dynamic content -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <h2>User Management</h2>
+                <p>User management interface will be here.</p>
             </div>
 
             <!-- Reports Tab -->
             <div id="reportsTab" class="tab-content">
-                <div class="reports-section">
-                    <h3>System Reports</h3>
-                    
-                    <div class="report-cards">
-                        <div class="report-card">
-                            <h4>Monthly PO Summary</h4>
-                            <p>Generate monthly purchase order summary report</p>
-                            <button class="btn-primary" data-report="monthly">Generate Report</button>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h4>User Activity Report</h4>
-                            <p>View user activity and PO submission patterns</p>
-                            <button class="btn-primary" data-report="activity">Generate Report</button>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h4>Financial Summary</h4>
-                            <p>Total contract values and financial overview</p>
-                            <button class="btn-primary" data-report="financial">Generate Report</button>
-                        </div>
-                        
-                        <div class="report-card">
-                            <h4>Export All Data</h4>
-                            <p>Export all purchase orders and user data</p>
-                            <button class="btn-primary" data-report="export">Export Data</button>
-                        </div>
-                    </div>
-                </div>
+                <h2>Reports</h2>
+                <p>Reporting and analytics will be here.</p>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content">
+                <h2>Admin Settings</h2>
+                <p>Global settings for the application will be here.</p>
             </div>
         </div>
     </div>
 
-    <!-- PO Details Modal -->
-    <div id="poDetailsModal" class="modal large">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="poDetailsTitle">Purchase Order Details</h3>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body" id="poDetailsBody">
-                <!-- Dynamic content -->
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-success" id="approvePO">Approve</button>
-                <button type="button" class="btn-danger" id="rejectPO">Reject</button>
-                <button type="button" class="btn-secondary" id="editPO">Edit</button>
-                <button type="button" class="btn-primary" id="closePODetails">Close</button>
-            </div>
-        </div>
-    </div>
+    <!-- Component Placeholders -->
+    <div id="modalContainer"></div>
 
-    <!-- User Form Modal -->
-    <div id="userFormModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="userFormTitle">Add New User</h3>
-                <span class="close">&times;</span>
-            </div>
-            <div class="modal-body">
-                <form id="userForm">
-                    <div class="form-group">
-                        <label for="userUsername">Username *</label>
-                        <input type="text" id="userUsername" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userEmail">Email *</label>
-                        <input type="email" id="userEmail" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userPassword">Password *</label>
-                        <input type="password" id="userPassword" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userCompany">Company *</label>
-                        <input type="text" id="userCompany" name="company" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="userRole">Role *</label>
-                        <select id="userRole" name="role" required>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="userStatus">Status *</label>
-                        <select id="userStatus" name="status" required>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" id="cancelUserForm">Cancel</button>
-                <button type="button" class="btn-primary" id="saveUser">Save User</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Status Update Modal -->
-    <div id="statusModal" class="modal">
-        <div class="modal-content">
-            <h3 id="statusTitle">Update Status</h3>
-            <div class="form-group">
-                <label for="newStatus">New Status:</label>
-                <select id="newStatus">
-                    <option value="Draft">Draft</option>
-                    <option value="Submitted">Submitted</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="statusComments">Comments:</label>
-                <textarea id="statusComments" rows="3" placeholder="Add comments..."></textarea>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" id="cancelStatus">Cancel</button>
-                <button type="button" class="btn-primary" id="updateStatus">Update Status</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h3>Confirm Action</h3>
-            <p id="confirmMessage">Are you sure?</p>
-            <div class="modal-actions">
-                <button type="button" class="btn-secondary" id="confirmCancel">Cancel</button>
-                <button type="button" class="btn-danger" id="confirmOk">Confirm</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success/Error Modal -->
-    <div id="messageModal" class="modal">
-        <div class="modal-content">
-            <h3 id="messageTitle">Message</h3>
-            <p id="messageText">Message content</p>
-            <div class="modal-actions">
-                <button type="button" class="btn-primary" id="messageOk">OK</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Scripts: Simplified for Power Automate Integration -->
+    <!-- Power Automate Configuration -->
+    <script src="../js/core/power-automate-config.js"></script>
+    <!-- Power Automate API (first) -->
+    <script src="../js/core/power-automate-api.js"></script>
+    
+    <!-- Core utilities -->
     <script src="../js/core/storage.js"></script>
-    <script src="../js/core/auth.js"></script>
-    <script src="../js/core/api.js"></script>
-    <script src="../js/modules/modal.js"></script>
-    <script src="../js/pages/admin.js"></script>
+    <script src="../js/Module/modal.js"></script>
+    <script src="../js/core/config.js"></script>
+
+    <!-- Authentication -->
+    <script src="../js/core/auth.js" type="module"></script>
+
+    <!-- Page-specific script -->
+    <script src="../js/pages/admin.js" type="module"></script>
 </body>
 </html>
