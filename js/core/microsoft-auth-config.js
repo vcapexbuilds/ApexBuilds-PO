@@ -9,9 +9,7 @@ window.MICROSOFT_AUTH_CONFIG = {
     
     // OAuth Flow Configuration
     authority: 'https://login.microsoftonline.com/a543e2f6-ae4b-4d1d-b263-a38786ce6844',
-    redirectUri: window.location.protocol === 'file:' 
-        ? 'http://localhost:3000' // For local development
-        : window.location.origin + window.location.pathname, // For web deployment
+    redirectUri: 'http://localhost:8080/pages/form.html', // Must match Azure AD app registration
     
     // Scopes to request
     scopes: [

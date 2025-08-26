@@ -113,13 +113,6 @@
                 </form>
             </div>
 
-            <!-- Toggle Demo Mode -->
-            <div class="demo-toggle">
-                <button type="button" class="toggle-demo-btn" id="toggleDemoBtn">
-                    🔧 Show Demo Login
-                </button>
-            </div>
-
         </div>
     </div>
 
@@ -252,11 +245,11 @@
                             microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft';
                         }
                     } else {
-                        statusElement.textContent = '🔐 Microsoft OAuth Ready - PA Demo Mode';
+                        statusElement.textContent = '🔐 Microsoft OAuth Ready';
                         statusIcon.textContent = '🔐';
                         if (microsoftLoginBtn) {
                             microsoftLoginBtn.disabled = false;
-                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft (Demo Mode)';
+                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft';
                         }
                     }
                 } else if (hasMicrosoftAuth) {

@@ -342,7 +342,7 @@
                     function() {
                         // Always navigate to tracking page (main dashboard)
                         console.log('Navigating to tracking page...');
-                        window.location.href = '../pages/tracking.html';
+                        window.location.href = '/pages/tracking.html';
                     },
                     null
                 );
@@ -351,7 +351,7 @@
                 if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
                     // Always navigate to tracking page (main dashboard)
                     console.log('Navigating to tracking page...');
-                    window.location.href = '../pages/tracking.html';
+                    window.location.href = '/pages/tracking.html';
                 }
             }
         }
@@ -538,7 +538,7 @@
                                 message += `\n🚀 Power Automate: ✅ Submitted successfully`;
                                 message += `\n📡 Endpoint: ${result.endpoint ? 'Connected' : 'N/A'}`;
                             } else if (result.storage === 'local-storage') {
-                                message += `\n💾 Local Storage: ✅ Saved (Demo Mode)`;
+                                message += `\n💾 Local Storage: ✅ Saved`;
                             }
                             
                             alert(message);
@@ -547,9 +547,9 @@
                             form.reset();
                             const currentUser = window.auth?.getCurrentUser() || JSON.parse(localStorage.getItem('currentUser') || '{}');
                             if (currentUser?.role === 'admin') {
-                                window.location.href = 'admin.html';
+                                window.location.href = '/pages/admin.html';
                             } else {
-                                window.location.href = 'tracking.html';
+                                window.location.href = '/pages/tracking.html';
                             }
                         } else {
                             alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
@@ -594,9 +594,9 @@
                             form.reset();
                             const currentUser = window.auth?.getCurrentUser();
                             if (currentUser?.role === 'admin') {
-                                window.location.href = 'admin.html';
+                                window.location.href = '/pages/admin.html';
                             } else {
-                                window.location.href = 'tracking.html';
+                                window.location.href = '/pages/tracking.html';
                             }
                         } else {
                             alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
@@ -629,30 +629,49 @@
     <script src="../js/core/simple-po-handler.js"></script>
     
     <script>
+    // Handle Microsoft OAuth callback when page loads
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // Check if this page load is from Microsoft OAuth redirect
+            if (window.location.search.includes('code=') && window.MicrosoftAuthConfig) {
+                console.log('🔄 Handling Microsoft OAuth callback...');
+                const tokenData = await window.MicrosoftAuthConfig.handleCallback();
+                if (tokenData) {
+                    console.log('✅ Microsoft OAuth login successful!');
+                    // Clear URL parameters to clean up the address bar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    // Refresh user info
+                    await setupUserForCentralizedSubmission();
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error handling OAuth callback:', error);
+            alert('Authentication failed: ' + error.message);
+        }
+    });
+
     // Debug and setup user info for centralized processing
     async function setupUserForCentralizedSubmission() {
         console.log('=== SETTING UP USER FOR CENTRALIZED PROCESSING ===');
         
-        // For testing - set a default user if none exists
-        let hasUser = false;
-        
-        // Check Microsoft Auth
+        // Check Microsoft Auth FIRST - don't override real user with test user
         if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.isAuthenticated()) {
             try {
                 const msUser = await window.MicrosoftAuthConfig.getUserInfo();
-                console.log('✅ Microsoft User Info found:', msUser);
+                console.log('✅ Real Microsoft User Info found:', msUser);
                 
-                // Store this user info for centralized form submission
+                // Store the REAL user info for centralized form submission
                 const userForSubmission = {
                     username: msUser.displayName || msUser.name || msUser.userPrincipalName || 'Microsoft User',
                     email: msUser.userPrincipalName || msUser.mail || msUser.email || 'user@company.com',
-                    role: 'user', // You can enhance this based on group membership or other logic
+                    firstName: msUser.givenName || (msUser.displayName ? msUser.displayName.split(' ')[0] : 'User'),
+                    role: 'user',
                     microsoftId: msUser.id,
-                    source: 'microsoft-oauth'
+                    source: 'microsoft-oauth-real'
                 };
                 localStorage.setItem('currentUser', JSON.stringify(userForSubmission));
-                console.log('✅ User stored for centralized submission:', userForSubmission);
-                hasUser = true;
+                console.log('✅ REAL user stored for centralized submission:', userForSubmission);
+                return; // Exit early - we have real user data
                 
             } catch (error) {
                 console.error('❌ Error getting Microsoft user info:', error);
@@ -660,28 +679,39 @@
         }
         
         // Check existing auth module user
-        if (!hasUser && window.auth && window.auth.getCurrentUser) {
+        if (window.auth && window.auth.getCurrentUser) {
             const authUser = window.auth.getCurrentUser();
             console.log('📋 Auth module user found:', authUser);
             if (authUser && (authUser.username || authUser.email)) {
-                hasUser = true;
+                console.log('Using auth module user - not overriding');
+                return; // Don't override with test data
             }
         }
         
-        // If no user found anywhere, set a test user for development
-        if (!hasUser) {
-            console.log('⚠️ No authenticated user found - setting test user for development');
-            const testUser = {
-                username: 'Test User',
-                email: 'test@apexbuilding.com',
-                role: 'user',
-                source: 'test-default'
-            };
-            localStorage.setItem('currentUser', JSON.stringify(testUser));
-            console.log('📋 Test user set:', testUser);
+        // Check if we already have real user data stored
+        const existingUser = localStorage.getItem('currentUser');
+        if (existingUser) {
+            try {
+                const user = JSON.parse(existingUser);
+                if (user.source === 'microsoft-oauth-real') {
+                    console.log('✅ Real Microsoft user already stored, not overriding');
+                    return;
+                }
+            } catch (error) {
+                console.warn('Error parsing existing user:', error);
+            }
         }
         
-        console.log('=== USER SETUP COMPLETE ===');
+        // Only set test user if no real user found anywhere
+        console.log('⚠️ No authenticated user found - setting fallback user');
+        const fallbackUser = {
+            username: 'User',
+            email: 'user@apexbuilding.com',
+            role: 'user',
+            source: 'fallback-default'
+        };
+        localStorage.setItem('currentUser', JSON.stringify(fallbackUser));
+        console.log('📋 Fallback user set:', fallbackUser);
     }
     
     // Run user setup when page loads

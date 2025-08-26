@@ -6,7 +6,19 @@ class TrackingDashboard {
         this.allPOs = [];
         this.filteredPOs = [];
         
-        // Simplified initialization - don't wait for complex dependencies
+        // Ensure DOM is ready before binding events
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM ready, starting initialization...');
+                this.initialize();
+            });
+        } else {
+            console.log('DOM already ready, starting initialization...');
+            this.initialize();
+        }
+    }
+    
+    initialize() {
         console.log('Initializing tracking dashboard...');
         this.initializeAuth();
         this.bindEvents();
@@ -16,18 +28,16 @@ class TrackingDashboard {
     initializeAuth() {
         console.log('=== TRACKING AUTH INITIALIZATION ===');
         
-        // First, try to get real Microsoft OAuth user
-        if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.isAuthenticated()) {
-            console.log('Microsoft OAuth is authenticated, getting real user...');
-            
-            // Get user info from Microsoft OAuth
-            window.MicrosoftAuthConfig.getUserInfo().then(msUser => {
-                console.log('Real Microsoft user info:', msUser);
-                
-                if (msUser) {
-                    let firstName = '';
+        // Give auth system time to fully initialize
+        setTimeout(() => {
+            // FIRST: Check if we have Microsoft OAuth user data stored
+            const storedMSUser = localStorage.getItem('microsoftUser');
+            if (storedMSUser) {
+                try {
+                    const msUser = JSON.parse(storedMSUser);
+                    console.log('Found Microsoft OAuth user:', msUser);
                     
-                    // Extract first name from Microsoft user data
+                    let firstName = '';
                     if (msUser.givenName) {
                         firstName = msUser.givenName;
                     } else if (msUser.displayName) {
@@ -35,132 +45,195 @@ class TrackingDashboard {
                     } else if (msUser.name) {
                         firstName = msUser.name.split(' ')[0];
                     } else if (msUser.userPrincipalName) {
-                        firstName = msUser.userPrincipalName.split('@')[0].split('.')[0];
-                    } else {
-                        firstName = 'User';
+                        firstName = msUser.userPrincipalName.split('@')[0];
                     }
                     
-                    // Capitalize first letter
-                    firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                    
-                    console.log('Real first name from Microsoft OAuth:', firstName);
-                    document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
-                    
-                    // Store the real user data
-                    const realUser = {
-                        username: msUser.displayName || msUser.name || msUser.userPrincipalName,
-                        email: msUser.userPrincipalName || msUser.mail,
-                        firstName: firstName,
-                        source: 'microsoft-oauth-real'
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(realUser));
-                    return;
+                    if (firstName) {
+                        const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                        console.log('Using Microsoft OAuth name:', capitalizedName);
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${capitalizedName}`;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error parsing Microsoft user:', error);
                 }
-            }).catch(error => {
-                console.error('Error getting Microsoft user info:', error);
-                this.fallbackUserSetup();
-            });
-        }
-        // Check regular auth system
-        else if (window.auth && window.auth.isAuthenticated()) {
-            const currentUser = window.auth.getCurrentUser();
-            console.log('Current user from auth system:', currentUser);
-            
-            if (currentUser) {
-                let firstName = this.extractFirstName(currentUser);
-                console.log('First name from auth system:', firstName);
-                document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
-                return;
             }
-        }
-        
-        // Fallback to stored user or default
-        this.fallbackUserSetup();
+            
+            // SECOND: Check local auth system (demo accounts)
+            if (window.auth && window.auth.isAuthenticated()) {
+                const currentUser = window.auth.getCurrentUser();
+                console.log('Current user from auth system:', currentUser);
+                
+                if (currentUser) {
+                    let firstName = this.extractFirstName(currentUser);
+                    console.log('First name from auth system:', firstName);
+                    
+                    if (firstName && firstName !== 'User') {
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+                        
+                        // Store for consistency
+                        const userData = {
+                            username: currentUser.username || currentUser.name || firstName,
+                            email: currentUser.email || '',
+                            firstName: firstName,
+                            source: 'auth-system'
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(userData));
+                        return;
+                    }
+                }
+            }
+            
+            // THIRD: Fallback to stored user or default
+            this.fallbackUserSetup();
+        }, 100); // Small delay to let auth finish initializing
     }
     
     fallbackUserSetup() {
         console.log('Using fallback user setup...');
         
-        // Try to get user from localStorage
-        try {
-            const storedUser = localStorage.getItem('currentUser');
-            if (storedUser) {
-                const user = JSON.parse(storedUser);
-                console.log('Stored user found:', user);
-                
-                // Skip if it's the test user, try to get real data
-                if (user.source !== 'microsoft-oauth-real' && (user.username === 'Test User' || user.username === 'test')) {
-                    console.log('Skipping test user, using default...');
-                    document.getElementById('welcomeUser').textContent = 'Welcome, User';
-                    return;
+        // Try multiple storage keys for Microsoft user data
+        const possibleKeys = ['microsoftUser', 'currentUser', 'authUser', 'user'];
+        
+        for (const key of possibleKeys) {
+            try {
+                const storedData = localStorage.getItem(key);
+                if (storedData) {
+                    const user = JSON.parse(storedData);
+                    console.log(`Found stored data in ${key}:`, user);
+                    
+                    let firstName = this.extractFirstName(user);
+                    console.log('Extracted first name:', firstName);
+                    
+                    if (firstName && firstName !== 'User') {
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+                        return; // Success, exit the function
+                    }
                 }
-                
-                let firstName = this.extractFirstName(user);
-                document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
-            } else {
-                document.getElementById('welcomeUser').textContent = 'Welcome, User';
+            } catch (error) {
+                console.warn(`Error parsing ${key}:`, error);
             }
-        } catch (error) {
-            console.warn('Error parsing stored user:', error);
-            document.getElementById('welcomeUser').textContent = 'Welcome, User';
         }
+        
+        // If nothing found, show default
+        console.log('No user data found, using default');
+        document.getElementById('welcomeUser').textContent = 'Welcome, User';
     }
     
     extractFirstName(user) {
+        console.log('Extracting first name from user:', user);
         let firstName = '';
         
         if (user.firstName) {
             firstName = user.firstName;
         } else if (user.givenName) {
             firstName = user.givenName;
+        } else if (user.name) {
+            // Extract first name from full name like "Virgilio Cabrillos Jr."
+            firstName = user.name.split(' ')[0];
         } else if (user.displayName) {
             firstName = user.displayName.split(' ')[0];
-        } else if (user.name) {
-            firstName = user.name.split(' ')[0];
         } else if (user.username && user.username !== 'Test User') {
-            firstName = user.username.split(' ')[0];
+            // Just use the username as fallback
+            firstName = user.username;
         } else if (user.email) {
             firstName = user.email.split('@')[0].split('.')[0];
         } else {
             firstName = 'User';
         }
         
+        console.log('Raw first name:', firstName);
+        
         // Capitalize first letter
-        return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        console.log('Capitalized first name:', capitalized);
+        
+        return capitalized;
     }
     }
 
     bindEvents() {
-        console.log('Binding events...');
+        console.log('=== BINDING EVENTS ===');
+        console.log('Document ready state:', document.readyState);
+        console.log('DOM fully loaded:', document.readyState === 'complete');
         
-        // New PO button
-        const newPOBtn = document.getElementById('newPOBtn');
-        if (newPOBtn) {
-            newPOBtn.addEventListener('click', () => {
-                console.log('New PO button clicked, navigating to form...');
-                window.location.href = '../pages/form.html';
-            });
-            console.log('New PO button event bound successfully');
-        } else {
-            console.error('New PO button not found!');
-        }
+        // Wait a bit to ensure all DOM elements are fully rendered
+        setTimeout(() => {
+            console.log('🔍 Looking for newPOBtn element...');
+            
+            // New PO button
+            const newPOBtn = document.getElementById('newPOBtn');
+            console.log('newPOBtn element:', newPOBtn);
+            
+            if (newPOBtn) {
+                console.log('✅ Found newPOBtn, adding event listener...');
+                newPOBtn.addEventListener('click', (event) => {
+                    event.preventDefault(); // Prevent any default behavior
+                    console.log('🎯 New PO button clicked via event listener!');
+                    console.log('Current URL:', window.location.href);
+                    console.log('Redirecting to:', window.location.origin + '/pages/form.html');
+                    // Use absolute path to ensure proper navigation with local server
+                    window.location.href = '/pages/form.html';
+                });
+                
+                // Add a visual confirmation that event is bound
+                newPOBtn.title = 'Event listener bound - Ready to navigate';
+                console.log('✅ New PO button event bound successfully with title update');
+            } else {
+                console.error('❌ New PO button not found! Available elements:');
+                console.log('All buttons:', document.querySelectorAll('button'));
+                console.log('Elements with newPOBtn id:', document.querySelectorAll('#newPOBtn'));
+            }
 
-        // Filter and action buttons - wrap in try-catch for safety
-        try {
-            document.getElementById('projectFilter').addEventListener('input', () => this.filterPOs());
-            document.getElementById('statusFilter').addEventListener('change', () => this.filterPOs());
-            document.getElementById('dateFrom').addEventListener('change', () => this.filterPOs());
-            document.getElementById('dateTo').addEventListener('change', () => this.filterPOs());
-            document.getElementById('applyFilters').addEventListener('click', () => this.filterPOs());
-            document.getElementById('clearFilters').addEventListener('click', () => this.clearFilters());
-            document.getElementById('refreshList').addEventListener('click', () => this.loadPOs());
-            document.getElementById('exportList').addEventListener('click', () => this.exportPOs());
-            const myOnlyEl = document.getElementById('myPOsOnly');
-            if (myOnlyEl) myOnlyEl.addEventListener('change', () => this.filterPOs());
-            console.log('All event binding completed successfully');
-        } catch (error) {
-            console.error('Error binding events:', error);
-        }
+            // Filter and action buttons - wrap in try-catch for safety
+            try {
+                // Check if each element exists before binding
+                const elements = [
+                    'projectFilter', 'statusFilter', 'dateFrom', 'dateTo', 
+                    'applyFilters', 'clearFilters', 'refreshList', 'exportList'
+                ];
+                
+                elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        console.log(`✅ Found ${id}, binding event`);
+                        switch(id) {
+                            case 'projectFilter':
+                            case 'statusFilter':
+                            case 'dateFrom':
+                            case 'dateTo':
+                                element.addEventListener('input', () => this.filterPOs());
+                                if (id === 'statusFilter') element.addEventListener('change', () => this.filterPOs());
+                                break;
+                            case 'applyFilters':
+                                element.addEventListener('click', () => this.filterPOs());
+                                break;
+                            case 'clearFilters':
+                                element.addEventListener('click', () => this.clearFilters());
+                                break;
+                            case 'refreshList':
+                                element.addEventListener('click', () => this.loadPOs());
+                                break;
+                            case 'exportList':
+                                element.addEventListener('click', () => this.exportPOs());
+                                break;
+                        }
+                    } else {
+                        console.log(`⚠️ Element ${id} not found, skipping...`);
+                    }
+                });
+                
+                const myOnlyEl = document.getElementById('myPOsOnly');
+                if (myOnlyEl) {
+                    myOnlyEl.addEventListener('change', () => this.filterPOs());
+                    console.log('✅ myPOsOnly checkbox event bound');
+                }
+                
+                console.log('🎉 All event binding completed successfully');
+            } catch (error) {
+                console.error('❌ Error binding events:', error);
+            }
+        }, 100); // Small delay to ensure DOM is fully rendered
     }
 
     async loadPOs() {

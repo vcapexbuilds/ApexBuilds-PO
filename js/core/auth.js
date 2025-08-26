@@ -43,14 +43,6 @@ class AuthManager {
                 role: 'user',
                 name: 'Demo User',
                 company: 'Test Company'
-            },
-            vcabrillos: {
-                email: 'vcabrillos@apexbuilds.com',
-                username: 'vcabrillos',
-                password: 'demo123',
-                role: 'user',
-                name: 'Virgilio Cabrillos Jr.',
-                company: 'Apex Building Group'
             }
         };
         this.init();
@@ -970,6 +962,6 @@ if (document.readyState === 'loading') {
     initializeAuth();
 }
 
-// Export for use in other modules
-export { auth };
+// Make auth available globally
+window.auth = auth;
 
