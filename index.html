@@ -145,6 +145,11 @@
         </div>
     </div>
 
+    <!-- Load Microsoft Authentication Configuration -->
+    <script src="js/core/microsoft-auth-config.js"></script>
+    <!-- SPA Alternative (for testing) -->
+    <script src="js/core/microsoft-auth-spa.js"></script>
+    
     <!-- Load Power Automate Integration Modules -->
     <script src="js/core/power-automate-config.js"></script>
     <script src="js/core/power-automate-api.js"></script>
@@ -180,6 +185,9 @@
             // Check integration status
             checkIntegrationStatus();
             
+            // Handle OAuth callback if present
+            handleOAuthCallback();
+            
             // Set up event listeners
             if (microsoftLoginBtn) {
                 microsoftLoginBtn.addEventListener('click', handleMicrosoftLogin);
@@ -214,37 +222,52 @@
             if (!statusElement) return;
             
             setTimeout(() => {
-                console.log('=== CHECKING POWER AUTOMATE INTEGRATION STATUS ===');
-                console.log('PowerAutomateConfig available:', typeof PowerAutomateConfig !== 'undefined');
+                console.log('=== CHECKING MICROSOFT & POWER AUTOMATE INTEGRATION STATUS ===');
+                console.log('MicrosoftAuth available:', typeof window.MicrosoftAuth !== 'undefined');
+                console.log('MICROSOFT_AUTH_CONFIG available:', typeof window.MICROSOFT_AUTH_CONFIG !== 'undefined');
                 console.log('PowerAutomateAPI available:', typeof PowerAutomateAPI !== 'undefined');
+                console.log('POWER_AUTOMATE_CONFIG available:', typeof window.POWER_AUTOMATE_CONFIG !== 'undefined');
                 
-                if (window.powerAutomateConfig) {
-                    const config = window.powerAutomateConfig.getFlowConfig();
-                    console.log('PA config:', config);
-                }
+                const hasMicrosoftAuth = typeof window.MicrosoftAuth !== 'undefined' && 
+                                       typeof window.MICROSOFT_AUTH_CONFIG !== 'undefined';
+                const hasPowerAutomate = typeof PowerAutomateAPI !== 'undefined' && 
+                                       typeof window.POWER_AUTOMATE_CONFIG !== 'undefined';
                 
-                if (typeof PowerAutomateConfig !== 'undefined' && 
-                    typeof PowerAutomateAPI !== 'undefined') {
+                if (hasMicrosoftAuth && hasPowerAutomate) {
+                    // Check Power Automate configuration
+                    const config = window.POWER_AUTOMATE_CONFIG.endpoints;
+                    const hasPlaceholders = config && config.getAllPOs && 
+                                          (config.getAllPOs.includes('YOUR_FLOW_URL') || 
+                                           config.getAllPOs.includes('XXXXXX'));
                     
-                    // Check if configuration has real values or just placeholders
-                    const config = window.powerAutomateConfig?.getFlowConfig();
-                    const isConfigured = config && 
-                                        config.getAllPOs && 
-                                        !config.getAllPOs.includes('YOUR_FLOW_URL');
+                    console.log('PA Configuration check - has placeholders:', hasPlaceholders);
+                    console.log('Sample PA endpoint:', config?.getAllPOs);
+                    console.log('MS Auth config:', window.MICROSOFT_AUTH_CONFIG);
                     
-                    console.log('Configuration check result:', isConfigured);
-                    
-                    if (isConfigured) {
-                        statusElement.textContent = '✅ Power Automate Integration Ready';
+                    if (config && !hasPlaceholders) {
+                        statusElement.textContent = '✅ Microsoft OAuth & Power Automate Ready';
                         statusIcon.textContent = '✅';
-                        microsoftLoginBtn.disabled = false;
+                        if (microsoftLoginBtn) {
+                            microsoftLoginBtn.disabled = false;
+                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft';
+                        }
                     } else {
-                        statusElement.textContent = '⚠️ PA Integration Available (Not Configured)';
-                        statusIcon.textContent = '⚠️';
-                        microsoftLoginBtn.disabled = false; // Still allow demo login
+                        statusElement.textContent = '🔐 Microsoft OAuth Ready - PA Demo Mode';
+                        statusIcon.textContent = '🔐';
+                        if (microsoftLoginBtn) {
+                            microsoftLoginBtn.disabled = false;
+                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft (Demo Mode)';
+                        }
+                    }
+                } else if (hasMicrosoftAuth) {
+                    statusElement.textContent = '🔐 Microsoft OAuth Available - PA Missing';
+                    statusIcon.textContent = '⚠️';
+                    if (microsoftLoginBtn) {
+                        microsoftLoginBtn.disabled = false;
+                        microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft (Limited)';
                     }
                 } else {
-                    statusElement.textContent = '❌ Integration Not Available';
+                    statusElement.textContent = '❌ Microsoft OAuth Not Available';
                     statusIcon.textContent = '❌';
                     if (microsoftLoginBtn) {
                         microsoftLoginBtn.disabled = true;
@@ -254,12 +277,13 @@
             }, 1000);
         }
 
-        // Microsoft OAuth Login Handler - Simplified for PA integration
+        // Microsoft OAuth Login Handler - Now supports both Web and SPA
         async function handleMicrosoftLogin() {
-            console.log('Microsoft login button clicked');
+            console.log('Microsoft OAuth login button clicked');
             
             try {
                 showLoadingModal();
+                
                 // Persist requested role for callback handling
                 try {
                     const choiceEl = document.getElementById('oauthRoleChoice');
@@ -267,45 +291,118 @@
                     sessionStorage.setItem('requestedRole', requestedRole);
                 } catch(_) {}
                 
-                // Check if Power Automate configuration is available
-                if (typeof PowerAutomateConfig === 'undefined' || !window.powerAutomateConfig) {
-                    throw new Error('Power Automate configuration not loaded. Please ensure all modules are loaded properly.');
-                }
-                
-                // Validate configuration before attempting authentication
-                const config = window.powerAutomateConfig.getFlowConfig();
-                console.log('Current configuration:', config);
-                
-                if (!config || !config.validateUser || config.validateUser.includes('YOUR_FLOW_URL')) {
+                // Try SPA flow first (works with current Azure AD setup)
+                if (typeof window.MicrosoftSPA !== 'undefined' && window.MICROSOFT_SPA_CONFIG) {
+                    console.log('✅ Using SPA flow (implicit) - works with current Azure AD setup');
+                    
+                    const authUrl = window.MicrosoftSPA.buildAuthUrl();
+                    console.log('🔗 Redirecting to Microsoft OAuth (SPA):', authUrl);
+                    
                     hideLoadingModal();
-                    showErrorModal(
-                        'Power Automate Not Configured',
-                        'Power Automate authentication is not configured yet. To enable real PA integration, please: 1. Set up Power Automate flows 2. Update the configuration in js/core/power-automate-config.js 3. Add your flow URLs For now, you can use the Demo Login below to test the system.'
-                    );
+                    window.location.href = authUrl;
                     return;
                 }
                 
-                console.log('✅ Configuration validated - proceeding with real authentication');
-                
-                // Initialize PA integration if not already done
-                if (window.powerAutomateAPI) {
-                    console.log('Using existing Power Automate API instance');
-                } else {
-                    console.log('Creating new Power Automate API instance');
-                    window.powerAutomateAPI = new PowerAutomateAPI();
+                // Fallback to Web flow (requires Azure AD configuration change)
+                if (typeof window.MicrosoftAuth !== 'undefined' && window.MICROSOFT_AUTH_CONFIG) {
+                    console.log('⚠️ Using Web flow - requires Azure AD Web platform configuration');
+                    
+                    const authUrl = await window.MicrosoftAuth.buildAuthUrl();
+                    console.log('🔗 Redirecting to Microsoft OAuth (Web):', authUrl);
+                    
+                    hideLoadingModal();
+                    window.location.href = authUrl;
+                    return;
                 }
                 
-                // For now, redirect to demo login since OAuth is not implemented yet
-                hideLoadingModal();
-                showErrorModal(
-                    'OAuth Implementation Pending',
-                    'Microsoft OAuth integration will be implemented in the next phase. For now, please use the Demo Login below to test the system.'
-                );
+                throw new Error('No Microsoft OAuth configuration available');
                 
             } catch (error) {
-                console.error('Microsoft login error:', error);
+                console.error('Microsoft OAuth login error:', error);
                 hideLoadingModal();
-                showErrorModal('Authentication Error', error.message || 'An error occurred during login.');
+                showErrorModal('Microsoft OAuth Error', error.message || 'An error occurred during Microsoft authentication.');
+            }
+        }
+        
+        // Handle OAuth callback - supports both Web and SPA flows
+        async function handleOAuthCallback() {
+            console.log('Checking for OAuth callback...');
+            
+            try {
+                let tokenData = null;
+                let userInfo = null;
+                let authType = '';
+                
+                // Try SPA callback first (tokens in URL fragment)
+                if (window.MicrosoftSPA && window.location.hash.includes('access_token')) {
+                    console.log('📱 Processing SPA OAuth callback...');
+                    tokenData = window.MicrosoftSPA.handleCallback();
+                    if (tokenData) {
+                        userInfo = await window.MicrosoftSPA.getUserInfo();
+                        authType = 'microsoft-spa';
+                    }
+                }
+                
+                // Try Web callback (authorization code in query parameters)
+                if (!tokenData && window.MicrosoftAuth && window.location.search.includes('code=')) {
+                    console.log('🌐 Processing Web OAuth callback...');
+                    tokenData = await window.MicrosoftAuth.handleCallback();
+                    if (tokenData) {
+                        userInfo = await window.MicrosoftAuth.getUserInfo();
+                        authType = 'microsoft-web';
+                    }
+                }
+                
+                if (!tokenData) {
+                    console.log('Not an OAuth callback - continuing with normal page load');
+                    return;
+                }
+                
+                console.log('✅ OAuth callback successful (' + authType + ') - processing user info...');
+                showLoadingModal();
+                
+                console.log('📋 User info received:', userInfo);
+                
+                // Create user session
+                const requestedRole = sessionStorage.getItem('requestedRole') || 'auto';
+                const userRole = requestedRole === 'auto' ? 'user' : requestedRole;
+                
+                const sessionUser = {
+                    id: userInfo.id,
+                    username: userInfo.userPrincipalName,
+                    email: userInfo.mail || userInfo.userPrincipalName,
+                    displayName: userInfo.displayName,
+                    role: userRole,
+                    company: 'Apex Building Group',
+                    authType: authType,
+                    tenantId: window.MICROSOFT_AUTH_CONFIG?.tenantId || window.MICROSOFT_SPA_CONFIG?.tenantId,
+                    expiresAt: new Date(Date.now() + 8*60*60*1000).toISOString()
+                };
+                
+                // Store user session
+                if (window.storage && typeof window.storage.setCurrentUser === 'function') {
+                    window.storage.setCurrentUser(sessionUser);
+                } else {
+                    localStorage.setItem('currentUser', JSON.stringify(sessionUser));
+                }
+                
+                // Clean up session storage
+                sessionStorage.removeItem('requestedRole');
+                
+                hideLoadingModal();
+                
+                // Redirect to appropriate dashboard
+                console.log('🚀 Redirecting to dashboard...');
+                window.location.href = userRole === 'admin' ? 'pages/admin.html' : 'pages/form.html';
+                
+            } catch (error) {
+                console.error('OAuth callback error:', error);
+                hideLoadingModal();
+                showErrorModal(
+                    'Authentication Failed', 
+                    'Microsoft authentication failed: ' + (error.message || 'Unknown error') + 
+                    '\n\nYou can try again or use Demo Login below.'
+                );
             }
         }
 

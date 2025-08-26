@@ -252,6 +252,15 @@
 
             <!-- Submit Button -->
             <div class="form-actions">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                    <label for="importance" style="font-size: 12px; color: #666; white-space: nowrap;">Priority:</label>
+                    <select id="importance" name="importance" style="padding: 4px 8px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; min-width: 100px;">
+                        <option value="normal">📋 Normal</option>
+                        <option value="urgent">⚡ Urgent</option>
+                        <option value="critical">🚨 Critical</option>
+                        <option value="low">📝 Low</option>
+                    </select>
+                </div>
                 <button type="button" id="clearForm" class="btn-secondary">Clear Form</button>
                 <button type="submit" class="btn-primary">Submit Purchase Order</button>
             </div>
@@ -311,6 +320,12 @@
     <script src="../js/core/storage.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/api.js"></script>
+    
+    <!-- Power Automate Integration -->
+    <script src="../js/core/power-automate-config.js"></script>
+    <script src="../js/core/power-automate-api.js"></script>
+    <script src="../js/core/simple-po-handler.js"></script>
+    
     <script src="../js/Module/modal.js"></script>
     
     <!-- Global logout function -->
@@ -493,63 +508,62 @@
                     e.preventDefault();
                     
                     try {
-                        if (!window.poForm || !window.api) {
+                        if (!window.SimplePOHandler) {
                             alert('System not ready. Please refresh the page.');
                             return;
                         }
 
-                        // HYBRID APPROACH: MS Auth (required) + Google Drive storage (preferred)
-                        console.log('Form submission - using hybrid approach (MS Auth + Google Drive)');
+                        console.log('Form submission - using Simple PO Handler with Power Automate');
                         
-                        // Collect form data
-                        const formData = window.poForm.collectFormData();
+                        // Collect form data using Simple PO Handler
+                        const formData = window.SimplePOHandler.collectFormData();
 
                         // Show confirmation
-                        const projectName = formData.meta.projectName || 'Untitled Project';
-                        if (!confirm(`Submit PO for "${projectName}"?\n\nSchedule items: ${formData.schedule.length}\n\nThis will use MS365 authentication and save to Google Drive (with local backup).`)) {
+                        const projectName = formData.projectName || 'Untitled Project';
+                        if (!confirm(`Submit PO for "${projectName}"?\n\nThis will submit the PO to Power Automate for processing.`)) {
                             return;
                         }
 
                         // Update button state
-                        submitBtn.textContent = '🔄 Processing...';
+                        submitBtn.textContent = '🔄 Submitting to Power Automate...';
                         submitBtn.disabled = true;
 
-                        let result;
-                        
-                        // Try hybrid PO manager first (best option)
-                        if (window.hybridPOManager && typeof window.hybridPOManager.submitPO === 'function') {
-                            console.log('Using hybrid PO manager - MS Auth + Google Drive storage');
+                        // Submit using Simple PO Handler
+                        const result = await window.SimplePOHandler.submitPO(formData);
+
+                        if (result && result.success) {
+                            let message = `SUCCESS! Purchase Order submitted!\n\n🎯 PO Number: ${result.poNumber}`;
                             
-                            try {
-                                result = await window.hybridPOManager.submitPO(formData, { isDraft: false, saveLocalBackup: true });
-                            } catch (error) {
-                                console.warn('Hybrid manager failed, will try alternative:', error.message);
-                                
-                                // If Google Drive not setup, offer to set it up
-                                if (error.message.includes('Google Drive') || error.message.includes('not authenticated')) {
-                                    const setupChoice = await window.hybridPOManager.showAuthSetupDialog();
-                                    if (setupChoice === 'google-drive') {
-                                        // Retry with Google Drive setup
-                                        result = await window.hybridPOManager.submitPO(formData, { isDraft: false, saveLocalBackup: true });
-                                    } else {
-                                        // Use local storage
-                                        result = await window.hybridPOManager.saveLocally(formData, window.hybridPOManager.generatePONumber(), { isDraft: false });
-                                    }
-                                } else {
-                                    throw error;
-                                }
+                            if (result.storage === 'power-automate') {
+                                message += `\n🚀 Power Automate: ✅ Submitted successfully`;
+                                message += `\n📡 Endpoint: ${result.endpoint ? 'Connected' : 'N/A'}`;
+                            } else if (result.storage === 'local-storage') {
+                                message += `\n💾 Local Storage: ✅ Saved (Demo Mode)`;
                             }
-                        }
-                        
-                        // Fallback to local saver if hybrid failed
-                        if (!result || !result.success) {
-                            console.log('Falling back to local file saver');
-                            if (window.localSaver && typeof window.localSaver.submitPO === 'function') {
-                                result = await window.localSaver.submitPO(formData, { isDraft: false });
+                            
+                            alert(message);
+                            
+                            // Reset form and redirect
+                            form.reset();
+                            const currentUser = window.auth?.getCurrentUser() || JSON.parse(localStorage.getItem('currentUser') || '{}');
+                            if (currentUser?.role === 'admin') {
+                                window.location.href = 'admin.html';
                             } else {
-                                throw new Error('No storage system available');
+                                window.location.href = 'tracking.html';
                             }
+                        } else {
+                            alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
                         }
+
+                    } catch (error) {
+                        console.error('Form submission error:', error);
+                        alert(`Error submitting form: ${error.message}`);
+                    } finally {
+                        // Reset button state
+                        submitBtn.textContent = 'Submit Purchase Order';
+                        submitBtn.disabled = false;
+                    }
+                });
 
                         if (result && result.success) {
                             let message = `SUCCESS! Purchase Order submitted successfully!\n\n🎯 PO Number: ${result.poNumber}`;
@@ -607,5 +621,76 @@
             }
         });
     </script>
+    
+    <!-- Microsoft Authentication Scripts -->
+    <script src="../js/core/microsoft-auth-config.js"></script>
+    <script src="../js/core/microsoft-auth-spa.js"></script>
+    <script src="../js/core/power-automate-config.js"></script>
+    <script src="../js/core/simple-po-handler.js"></script>
+    
+    <script>
+    // Debug and setup user info for centralized processing
+    async function setupUserForCentralizedSubmission() {
+        console.log('=== SETTING UP USER FOR CENTRALIZED PROCESSING ===');
+        
+        // For testing - set a default user if none exists
+        let hasUser = false;
+        
+        // Check Microsoft Auth
+        if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.isAuthenticated()) {
+            try {
+                const msUser = await window.MicrosoftAuthConfig.getUserInfo();
+                console.log('✅ Microsoft User Info found:', msUser);
+                
+                // Store this user info for centralized form submission
+                const userForSubmission = {
+                    username: msUser.displayName || msUser.name || msUser.userPrincipalName || 'Microsoft User',
+                    email: msUser.userPrincipalName || msUser.mail || msUser.email || 'user@company.com',
+                    role: 'user', // You can enhance this based on group membership or other logic
+                    microsoftId: msUser.id,
+                    source: 'microsoft-oauth'
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userForSubmission));
+                console.log('✅ User stored for centralized submission:', userForSubmission);
+                hasUser = true;
+                
+            } catch (error) {
+                console.error('❌ Error getting Microsoft user info:', error);
+            }
+        }
+        
+        // Check existing auth module user
+        if (!hasUser && window.auth && window.auth.getCurrentUser) {
+            const authUser = window.auth.getCurrentUser();
+            console.log('📋 Auth module user found:', authUser);
+            if (authUser && (authUser.username || authUser.email)) {
+                hasUser = true;
+            }
+        }
+        
+        // If no user found anywhere, set a test user for development
+        if (!hasUser) {
+            console.log('⚠️ No authenticated user found - setting test user for development');
+            const testUser = {
+                username: 'Test User',
+                email: 'test@apexbuilding.com',
+                role: 'user',
+                source: 'test-default'
+            };
+            localStorage.setItem('currentUser', JSON.stringify(testUser));
+            console.log('📋 Test user set:', testUser);
+        }
+        
+        console.log('=== USER SETUP COMPLETE ===');
+    }
+    
+    // Run user setup when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(setupUserForCentralizedSubmission, 1000);
+    });
+    </script>
+    
+    <!-- Clean Form Submission Handler -->
+    <script src="../js/pages/clean-form-handler.js"></script>
 </body>
 </html>

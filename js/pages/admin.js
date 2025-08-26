@@ -10,10 +10,68 @@ class AdminDashboard {
     }
 
     initializeAuth() {
-        // Simplified auth check - for debugging, we'll skip auth for now
+        console.log('=== ADMIN AUTH INITIALIZATION ===');
+        
         const welcomeElement = document.getElementById('welcomeAdmin');
-        if (welcomeElement) {
-            welcomeElement.textContent = 'Welcome, Admin (Debug Mode)';
+        if (!welcomeElement) return;
+        
+        // Check if auth is available and user is authenticated
+        if (window.auth && window.auth.isAuthenticated()) {
+            const currentUser = window.auth.getCurrentUser();
+            console.log('Current admin user:', currentUser);
+            
+            if (currentUser) {
+                let firstName = '';
+                
+                // Try to get first name from various user properties
+                if (currentUser.givenName) {
+                    firstName = currentUser.givenName;
+                } else if (currentUser.displayName) {
+                    firstName = currentUser.displayName.split(' ')[0];
+                } else if (currentUser.name) {
+                    firstName = currentUser.name.split(' ')[0];
+                } else if (currentUser.username) {
+                    firstName = currentUser.username.split(' ')[0];
+                } else if (currentUser.email) {
+                    firstName = currentUser.email.split('@')[0].split('.')[0];
+                } else {
+                    firstName = 'Admin';
+                }
+                
+                // Capitalize first letter
+                firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                
+                console.log('Admin first name extracted:', firstName);
+                welcomeElement.textContent = `Welcome, ${firstName}`;
+            }
+        } else {
+            // Try to get user from localStorage
+            try {
+                const storedUser = localStorage.getItem('currentUser');
+                if (storedUser) {
+                    const user = JSON.parse(storedUser);
+                    let firstName = '';
+                    
+                    if (user.username) {
+                        firstName = user.username.split(' ')[0];
+                    } else if (user.name) {
+                        firstName = user.name.split(' ')[0];
+                    } else if (user.email) {
+                        firstName = user.email.split('@')[0].split('.')[0];
+                    } else {
+                        firstName = 'Admin';
+                    }
+                    
+                    // Capitalize first letter
+                    firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                    welcomeElement.textContent = `Welcome, ${firstName}`;
+                } else {
+                    welcomeElement.textContent = 'Welcome, Admin';
+                }
+            } catch (error) {
+                console.warn('Error parsing stored user for admin:', error);
+                welcomeElement.textContent = 'Welcome, Admin';
+            }
         }
     }
 

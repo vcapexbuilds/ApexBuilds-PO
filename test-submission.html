@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PO Submission</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { padding: 8px; width: 300px; }
+        button { padding: 10px 20px; margin: 10px 5px; }
+        .debug { background: #f5f5f5; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Test PO Submission - Centralized Processing</h1>
+    
+    <div class="debug">
+        <h3>User Debug Info:</h3>
+        <div id="userDebug">Loading...</div>
+        <button onclick="checkUserData()">Check User Data</button>
+        <button onclick="setTestUser()">Set Test User</button>
+    </div>
+    
+    <form id="poForm">
+        <div class="form-group">
+            <label for="projectName">Project Name:</label>
+            <input type="text" id="projectName" name="projectName" value="Test Project">
+        </div>
+        
+        <div class="form-group">
+            <label for="generalContractor">General Contractor:</label>
+            <input type="text" id="generalContractor" name="generalContractor" value="Test Contractor">
+        </div>
+        
+        <div class="form-group">
+            <label for="contractAmount">Contract Amount:</label>
+            <input type="number" id="contractAmount" name="contractAmount" value="50000">
+        </div>
+        
+        <div class="form-group">
+            <label for="importance">PO Importance:</label>
+            <select id="importance" name="importance">
+                <option value="normal" selected>Normal</option>
+                <option value="urgent">Urgent</option>
+                <option value="critical">Critical</option>
+                <option value="low">Low Priority</option>
+            </select>
+        </div>
+        
+        <button type="submit">Submit to Centralized System</button>
+        <button type="button" onclick="testSubmission()">Test Submission (Debug)</button>
+    </form>
+    
+    <div class="debug">
+        <h3>Submission Debug:</h3>
+        <div id="submissionDebug"></div>
+    </div>
+    
+    <!-- Load required scripts -->
+    <script src="js/core/power-automate-config.js"></script>
+    <script src="js/core/simple-po-handler.js"></script>
+    
+    <script>
+        // Set test user
+        function setTestUser() {
+            const testUser = {
+                username: 'John Smith',
+                email: 'john.smith@apexbuilding.com',
+                role: 'user',
+                source: 'manual-test'
+            };
+            localStorage.setItem('currentUser', JSON.stringify(testUser));
+            console.log('✅ Test user set:', testUser);
+            checkUserData();
+        }
+        
+        // Check current user data
+        function checkUserData() {
+            const stored = localStorage.getItem('currentUser');
+            const authUser = window.auth ? window.auth.getCurrentUser() : null;
+            
+            document.getElementById('userDebug').innerHTML = `
+                <strong>localStorage currentUser:</strong><br>
+                <pre>${stored || 'Not found'}</pre><br>
+                
+                <strong>window.auth user:</strong><br>
+                <pre>${authUser ? JSON.stringify(authUser, null, 2) : 'Not found'}</pre>
+            `;
+        }
+        
+        // Test submission function
+        async function testSubmission() {
+            try {
+                const form = document.getElementById('poForm');
+                const formData = new FormData(form);
+                const data = {};
+                
+                for (const [key, value] of formData.entries()) {
+                    data[key] = value;
+                }
+                
+                console.log('📋 Test form data:', data);
+                
+                if (window.SimplePOHandler) {
+                    const result = await window.SimplePOHandler.submitPO(data);
+                    
+                    document.getElementById('submissionDebug').innerHTML = `
+                        <strong>Submission Result:</strong><br>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                    
+                    console.log('📄 Full submission result:', result);
+                } else {
+                    document.getElementById('submissionDebug').innerHTML = 'SimplePOHandler not found!';
+                }
+                
+            } catch (error) {
+                console.error('Test submission error:', error);
+                document.getElementById('submissionDebug').innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        // Regular form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserData();
+            
+            const form = document.getElementById('poForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await testSubmission();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,16 +5,16 @@
 window.POWER_AUTOMATE_CONFIG = {
     // Main PO operations
     endpoints: {
-        // GET all purchase orders
+        // POST create new purchase order - YOUR ACTUAL POWER AUTOMATE ENDPOINT
+        createPO: 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/146de521bc3a415d9dbbdfec5476be38/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=_bSEuYWnBRzJs_p7EvROZXVi6KLitzuyOtIlD7lEqLA',
+        
+        // GET all purchase orders (placeholder - update when you have the endpoint)
         getAllPOs: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
         
-        // GET user-specific purchase orders
+        // GET user-specific purchase orders (placeholder)
         getUserPOs: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
         
-        // POST create new purchase order
-        createPO: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
-        
-        // PUT update existing purchase order
+        // PUT update existing purchase order (placeholder)
         updatePO: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
         
         // DELETE purchase order

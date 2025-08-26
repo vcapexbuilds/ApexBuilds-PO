@@ -1,0 +1,104 @@
+{
+  "poNumber": "APEX-250826-1430-001",
+  "meta": {
+    "projectName": "Downtown Office Complex Phase 2",
+    "generalContractor": "ABC Construction LLC",
+    "address": "123 Main Street, Downtown City, State 12345",
+    "owner": "Downtown Development Corp",
+    "apexOwner": "John Manager",
+    "typeStatus": "New Construction",
+    "projectManager": "Sarah Johnson",
+    "contractAmount": 2500000,
+    "addAltAmount": 150000,
+    "addAltDetails": "Additional HVAC upgrades and premium finishes",
+    "retainagePct": 5,
+    "requestedBy": "Mike Chen",
+    "companyName": "Premier Subcontractors Inc",
+    "contactName": "Mike Chen",
+    "cellNumber": "(555) 123-4567",
+    "email": "mike.chen@premiercontractors.com",
+    "officeNumber": "(555) 987-6543",
+    "vendorType": "Electrical",
+    "workType": "Commercial Electrical Installation",
+    "importantDates": {
+      "noticeToProceed": "2025-09-01",
+      "anticipatedStart": "2025-09-15",
+      "substantialCompletion": "2025-12-15",
+      "hundredPercent": "2025-12-30"
+    }
+  },
+  "schedule": [
+    {
+      "primeLine": "16000",
+      "budgetCode": "EC-001",
+      "description": "Electrical rough-in - floors 1-5",
+      "qty": 5,
+      "unit": 1,
+      "totalCost": 125000,
+      "scheduled": 125000,
+      "apexContractValue": 150000,
+      "profit": 25000
+    },
+    {
+      "primeLine": "16100",
+      "budgetCode": "EC-002", 
+      "description": "Electrical fixtures and finish work",
+      "qty": 200,
+      "unit": 1,
+      "totalCost": 85000,
+      "scheduled": 85000,
+      "apexContractValue": 105000,
+      "profit": 20000
+    },
+    {
+      "primeLine": "16200",
+      "budgetCode": "EC-003",
+      "description": "Emergency power systems",
+      "qty": 2,
+      "unit": 1,
+      "totalCost": 45000,
+      "scheduled": 45000,
+      "apexContractValue": 55000,
+      "profit": 10000
+    }
+  ],
+  "scope": [
+    {
+      "item": "Electrical Rough-In",
+      "description": "Complete electrical rough-in including conduit, wiring, and panel installation for all floors",
+      "included": true,
+      "excluded": false
+    },
+    {
+      "item": "Lighting Fixtures",
+      "description": "Supply and installation of all interior and exterior lighting fixtures per specifications",
+      "included": true,
+      "excluded": false
+    },
+    {
+      "item": "Data/Communications Wiring", 
+      "description": "Low voltage wiring for data, phone, and security systems",
+      "included": false,
+      "excluded": true
+    },
+    {
+      "item": "Generator Connection",
+      "description": "Connection of backup generator to emergency power panel",
+      "included": true,
+      "excluded": false
+    }
+  ],
+  "createdAt": "2025-08-26T14:30:15.234Z",
+  "sent": true,
+  "status": "submitted",
+  "importance": "normal",
+  "timestamp": 1724684215234,
+  "id": 1724684215234,
+  "sentAt": "2025-08-26T14:30:15.234Z",
+  "submittedBy": {
+    "username": "John Smith",
+    "email": "john.smith@apexbuilding.com",
+    "role": "user",
+    "submittedAt": "2025-08-26T14:30:15.234Z"
+  }
+}

@@ -1,4 +1,14 @@
 {
   "name": "apex-po-system-test",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "Apex Building Group Purchase Order System with Microsoft OAuth",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "dev": "python -m http.server 3000",
+    "serve": "python -m http.server 3000"
+  },
+  "keywords": ["purchase-order", "microsoft-oauth", "power-automate"],
+  "author": "Apex Building Group",
+  "license": "MIT"
 }

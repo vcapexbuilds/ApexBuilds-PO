@@ -16,28 +16,118 @@ class TrackingDashboard {
     initializeAuth() {
         console.log('=== TRACKING AUTH INITIALIZATION ===');
         
-        // Simplified auth check
-        if (!window.auth || !window.auth.isAuthenticated()) {
-            console.log('Not authenticated, but continuing for testing...');
-            // Don't redirect for now, just set a default user for testing
-            document.getElementById('welcomeUser').textContent = 'Welcome, Test User';
-        } else {
-            // Update welcome message
+        // First, try to get real Microsoft OAuth user
+        if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.isAuthenticated()) {
+            console.log('Microsoft OAuth is authenticated, getting real user...');
+            
+            // Get user info from Microsoft OAuth
+            window.MicrosoftAuthConfig.getUserInfo().then(msUser => {
+                console.log('Real Microsoft user info:', msUser);
+                
+                if (msUser) {
+                    let firstName = '';
+                    
+                    // Extract first name from Microsoft user data
+                    if (msUser.givenName) {
+                        firstName = msUser.givenName;
+                    } else if (msUser.displayName) {
+                        firstName = msUser.displayName.split(' ')[0];
+                    } else if (msUser.name) {
+                        firstName = msUser.name.split(' ')[0];
+                    } else if (msUser.userPrincipalName) {
+                        firstName = msUser.userPrincipalName.split('@')[0].split('.')[0];
+                    } else {
+                        firstName = 'User';
+                    }
+                    
+                    // Capitalize first letter
+                    firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                    
+                    console.log('Real first name from Microsoft OAuth:', firstName);
+                    document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+                    
+                    // Store the real user data
+                    const realUser = {
+                        username: msUser.displayName || msUser.name || msUser.userPrincipalName,
+                        email: msUser.userPrincipalName || msUser.mail,
+                        firstName: firstName,
+                        source: 'microsoft-oauth-real'
+                    };
+                    localStorage.setItem('currentUser', JSON.stringify(realUser));
+                    return;
+                }
+            }).catch(error => {
+                console.error('Error getting Microsoft user info:', error);
+                this.fallbackUserSetup();
+            });
+        }
+        // Check regular auth system
+        else if (window.auth && window.auth.isAuthenticated()) {
             const currentUser = window.auth.getCurrentUser();
             console.log('Current user from auth system:', currentUser);
             
             if (currentUser) {
-                const userName = currentUser.displayName || 
-                               currentUser.name || 
-                               currentUser.givenName || 
-                               currentUser.username || 
-                               (currentUser.email ? currentUser.email.split('@')[0] : '') ||
-                               'User';
-                
-                console.log('Final userName selected:', userName);
-                document.getElementById('welcomeUser').textContent = `Welcome, ${userName}`;
+                let firstName = this.extractFirstName(currentUser);
+                console.log('First name from auth system:', firstName);
+                document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+                return;
             }
         }
+        
+        // Fallback to stored user or default
+        this.fallbackUserSetup();
+    }
+    
+    fallbackUserSetup() {
+        console.log('Using fallback user setup...');
+        
+        // Try to get user from localStorage
+        try {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                console.log('Stored user found:', user);
+                
+                // Skip if it's the test user, try to get real data
+                if (user.source !== 'microsoft-oauth-real' && (user.username === 'Test User' || user.username === 'test')) {
+                    console.log('Skipping test user, using default...');
+                    document.getElementById('welcomeUser').textContent = 'Welcome, User';
+                    return;
+                }
+                
+                let firstName = this.extractFirstName(user);
+                document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+            } else {
+                document.getElementById('welcomeUser').textContent = 'Welcome, User';
+            }
+        } catch (error) {
+            console.warn('Error parsing stored user:', error);
+            document.getElementById('welcomeUser').textContent = 'Welcome, User';
+        }
+    }
+    
+    extractFirstName(user) {
+        let firstName = '';
+        
+        if (user.firstName) {
+            firstName = user.firstName;
+        } else if (user.givenName) {
+            firstName = user.givenName;
+        } else if (user.displayName) {
+            firstName = user.displayName.split(' ')[0];
+        } else if (user.name) {
+            firstName = user.name.split(' ')[0];
+        } else if (user.username && user.username !== 'Test User') {
+            firstName = user.username.split(' ')[0];
+        } else if (user.email) {
+            firstName = user.email.split('@')[0].split('.')[0];
+        } else {
+            firstName = 'User';
+        }
+        
+        // Capitalize first letter
+        return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+    }
     }
 
     bindEvents() {
