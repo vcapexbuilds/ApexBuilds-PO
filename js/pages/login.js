@@ -39,28 +39,207 @@ class LoginPage {
     setupEventListeners() {
         console.log('=== SETTING UP EVENT LISTENERS ===');
         
-        // Login form submission
-        const loginForm = document.getElementById('loginForm');
-        console.log('Login form found:', !!loginForm);
+        // Microsoft Login Button
+        const microsoftLoginBtn = document.getElementById('microsoftLoginBtn');
+        console.log('Microsoft login button found:', !!microsoftLoginBtn);
         
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
-                console.log('LOGIN FORM SUBMITTED');
-                this.handleLogin(e);
+        if (microsoftLoginBtn) {
+            microsoftLoginBtn.addEventListener('click', (e) => {
+                console.log('MICROSOFT LOGIN BUTTON CLICKED');
+                this.handleMicrosoftLogin(e);
             });
-            console.log('Login form event listener attached');
+            console.log('Microsoft login button event listener attached');
         } else {
-            console.error('Login form not found!');
+            console.error('Microsoft login button not found!');
         }
-
-        // Register modal handlers
-        this.setupRegistrationHandlers();
+        
+        // Demo Login Form
+        const demoLoginForm = document.getElementById('demoLoginForm');
+        console.log('Demo login form found:', !!demoLoginForm);
+        
+        if (demoLoginForm) {
+            demoLoginForm.addEventListener('submit', (e) => {
+                console.log('DEMO LOGIN FORM SUBMITTED');
+                this.handleDemoLogin(e);
+            });
+            console.log('Demo login form event listener attached');
+        }
+        
+        // Toggle demo login visibility
+        const loginDivider = document.querySelector('.login-divider');
+        if (loginDivider) {
+            loginDivider.addEventListener('click', () => {
+                const demoSection = document.getElementById('demoLoginSection');
+                if (demoSection) {
+                    const isHidden = demoSection.style.display === 'none';
+                    demoSection.style.display = isHidden ? 'block' : 'none';
+                    console.log('Demo section toggled:', isHidden ? 'visible' : 'hidden');
+                }
+            });
+        }
 
         // Modal event handlers
         this.setupModalHandlers();
 
         // Enter key handling for better UX
         this.setupKeyboardHandlers();
+    }
+
+    // Handle Microsoft OAuth Login
+    async handleMicrosoftLogin(event) {
+        console.log('=== MICROSOFT LOGIN HANDLER ===');
+        event.preventDefault();
+        
+        try {
+            this.showLoadingModal('Connecting to Microsoft...');
+            
+            // Check if Microsoft Auth is available
+            if (typeof window.MicrosoftAuth === 'undefined') {
+                console.error('Microsoft Auth not available');
+                this.showErrorModal('Authentication Error', 'Microsoft authentication is not configured.');
+                return;
+            }
+            
+            // Get role selection
+            const roleSelect = document.getElementById('oauthRoleChoice');
+            const selectedRole = roleSelect ? roleSelect.value : 'auto';
+            
+            console.log('Selected role:', selectedRole);
+            
+            // Attempt Microsoft OAuth login
+            const result = await window.MicrosoftAuth.login();
+            
+            if (result && result.account) {
+                console.log('Microsoft login successful:', result.account);
+                
+                // Store authentication data
+                const userData = {
+                    id: result.account.homeAccountId,
+                    username: result.account.username,
+                    name: result.account.name,
+                    role: selectedRole === 'auto' ? this.determineRoleFromAccount(result.account) : selectedRole,
+                    provider: 'microsoft',
+                    accessToken: result.accessToken,
+                    loginTime: new Date().toISOString()
+                };
+                
+                // Use auth system to complete login
+                const loginSuccess = await auth.login(userData.username, null, userData.role, userData);
+                
+                if (loginSuccess) {
+                    console.log('Login completed successfully');
+                    this.hideLoadingModal();
+                    
+                    // Redirect based on role
+                    if (userData.role === 'admin') {
+                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
+                    } else {
+                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
+                    }
+                } else {
+                    throw new Error('Login process failed');
+                }
+            } else {
+                throw new Error('Microsoft authentication failed');
+            }
+            
+        } catch (error) {
+            console.error('Microsoft login error:', error);
+            this.hideLoadingModal();
+            this.showErrorModal('Login Failed', error.message || 'Microsoft authentication failed. Please try again.');
+        }
+    }
+
+    // Handle Demo Login
+    async handleDemoLogin(event) {
+        console.log('=== DEMO LOGIN HANDLER ===');
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        
+        const username = formData.get('username');
+        const password = formData.get('password');
+        const role = formData.get('role') || 'user';
+
+        console.log('Demo login attempt:', { username, role });
+
+        if (!username || !password) {
+            this.showErrorModal('Invalid Input', 'Please enter both username and password.');
+            return;
+        }
+
+        try {
+            this.showLoadingModal('Signing in...');
+            
+            // Simulate login delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Use the auth system for demo login
+            const loginSuccess = await auth.login(username, password, role);
+            
+            if (loginSuccess) {
+                console.log('Demo login successful');
+                this.hideLoadingModal();
+                
+                // Redirect based on role
+                if (role === 'admin') {
+                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
+                } else {
+                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
+                }
+            } else {
+                throw new Error('Invalid credentials');
+            }
+            
+        } catch (error) {
+            console.error('Demo login error:', error);
+            this.hideLoadingModal();
+            this.showErrorModal('Login Failed', error.message || 'Invalid username or password.');
+        }
+    }
+
+    // Determine role from Microsoft account
+    determineRoleFromAccount(account) {
+        // Simple role determination logic - you can customize this
+        if (account.username && account.username.includes('admin')) {
+            return 'admin';
+        }
+        return 'user';
+    }
+
+    // Show loading modal
+    showLoadingModal(message = 'Loading...') {
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+            const messageElement = modal.querySelector('p');
+            if (messageElement) {
+                messageElement.textContent = message;
+            }
+            modal.style.display = 'flex';
+        }
+    }
+
+    // Hide loading modal
+    hideLoadingModal() {
+        const modal = document.getElementById('loadingModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // Show error modal
+    showErrorModal(title, message) {
+        const modal = document.getElementById('errorModal');
+        if (modal) {
+            const titleElement = modal.querySelector('#errorTitle');
+            const messageElement = modal.querySelector('#errorMessage');
+            
+            if (titleElement) titleElement.textContent = title;
+            if (messageElement) messageElement.textContent = message;
+            
+            modal.style.display = 'flex';
+        }
     }
 
     // Check for existing session
@@ -539,6 +718,10 @@ User Access: user/user123 (Role: User)`);
 const loginPage = new LoginPage();
 
 // Demo credentials removed for GitHub Pages production
+
+// Initialize the login page when the script loads
+console.log('Initializing Login Page...');
+window.loginPageInstance = new LoginPage();
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
