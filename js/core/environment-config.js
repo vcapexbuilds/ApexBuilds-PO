@@ -25,8 +25,8 @@ class EnvironmentConfig {
             // For local development
             return window.location.origin;
         } else {
-            // For GitHub Pages or other hosting
-            return window.location.origin + (window.location.pathname.includes('/apex-po-system-test') ? '/apex-po-system-test' : '');
+            // For GitHub Pages - your actual site
+            return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
         }
     }
     
@@ -39,7 +39,7 @@ class EnvironmentConfig {
             auth: {
                 redirectUri: this.isLocal 
                     ? `${this.baseUrl}/pages/tracking.html`
-                    : `${this.baseUrl}/pages/tracking.html`, // You'll need to update this with your actual GitHub Pages URL
+                    : 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html', // Your actual GitHub Pages URL
                     
                 // The actual production URL should be something like:
                 // : 'https://vcapexbuilds.github.io/apex-po-system-test/pages/tracking.html'
