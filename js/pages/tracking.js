@@ -33,13 +33,31 @@ class TrackingDashboard {
             console.log('🌍 Made PODataManager globally accessible as window.poDataManager');
             
             // Override the PO Data Manager's display method to use our existing rendering
-            this.poDataManager.displayPOs = (pos) => {
-                console.log('📊 TrackingDashboard: Received POs from Power Automate:', pos);
-                console.log('📊 Raw PO data structure:', JSON.stringify(pos?.[0], null, 2));
-                this.allPOs = pos || [];
+            this.poDataManager.displayPOs = (data) => {
+                console.log('📊 TrackingDashboard: Received data from Power Automate:', data);
+                
+                // Handle different data formats
+                let posArray = [];
+                if (Array.isArray(data)) {
+                    // Direct array format
+                    posArray = data;
+                } else if (data && Array.isArray(data.pos)) {
+                    // Object with pos property format { pos: [...], filtered: true, ... }
+                    posArray = data.pos;
+                } else {
+                    console.warn('⚠️ Unknown data format received:', typeof data, data);
+                    posArray = [];
+                }
+                
+                console.log('📊 Extracted PO array:', posArray);
+                console.log('📊 First PO structure:', JSON.stringify(posArray?.[0], null, 2));
+                
+                this.allPOs = posArray;
                 this.filterPOs();
                 this.updateStats(this.filteredPOs);
-                this.renderPOs(); // Add this to actually display the POs
+                
+                // Use the table-based displayPOs method instead of card-based renderPOs
+                this.displayPOs(this.filteredPOs);
             };
             
             // Override the error display to use our existing error handling
@@ -398,8 +416,10 @@ class TrackingDashboard {
     }
 
     renderPOs() {
-        console.log('=== RENDER POs ===');
-        console.log('Rendering POs:', this.filteredPOs);
+        console.log('=== RENDER POs START ===');
+        console.log('this.filteredPOs:', this.filteredPOs);
+        console.log('filteredPOs length:', this.filteredPOs?.length);
+        console.log('filteredPOs type:', typeof this.filteredPOs, Array.isArray(this.filteredPOs));
         
         // Safety check: Ensure this.filteredPOs is an array
         if (!Array.isArray(this.filteredPOs)) {
