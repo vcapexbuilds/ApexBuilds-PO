@@ -3,29 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex PO System - Microsoft Login</title>
+    <title>Apex PO System - Login</title>
     <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/oauth-login.css">
+    <link rel="stylesheet" href="css/auth.css">
     
     <!-- Environment Configuration - Load first -->
     <script src="js/core/environment-config.js"></script>
     
     <style>
-        .integration-status {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            border-left: 4px solid #17a2b8;
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        .status-item {
+        
+        .login-form {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            margin-bottom: 2rem;
+        }
+        
+        .company-logo {
+            height: 60px;
+            margin-bottom: 1rem;
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0.5rem 0;
+        }
+        
+        .subtitle {
+            color: #718096;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+        
+        .microsoft-login-btn {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            background: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            font-size: 14px;
-            color: #495057;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 2rem 0;
         }
-        .status-icon {
+        
+        .microsoft-login-btn:hover {
+            background: #106ebe;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 120, 212, 0.3);
+        }
+        
+        .microsoft-icon {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .login-divider {
+            position: relative;
+            margin: 1.5rem 0;
+            color: #a0aec0;
+            font-size: 0.875rem;
+        }
+        
+        .login-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        
+        .login-divider span {
+            background: white;
+            padding: 0 1rem;
+        }
+        
+        .demo-login-section {
+            margin-top: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #0078d4;
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+        
+        .demo-login-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-login-btn:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+        
+        .role-choice {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .role-choice label {
+            font-size: 0.875rem;
+            color: #718096;
+        }
+        
+        .role-choice select {
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+        }
+        
+        /* Loading styles */
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
             margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .loading-spinner-large {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #0078d4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        .btn-primary {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #106ebe;
         }
     </style>
 </head>
@@ -35,19 +249,20 @@
             <div class="logo">
                 <img src="asset/images/apex-logo.svg" alt="Apex Building Group" class="company-logo">
                 <h1>PO SYSTEM</h1>
-                <p class="subtitle">Secure Microsoft Authentication</p>
+                <p class="subtitle">Secure Authentication</p>
             </div>
             
             <!-- Microsoft OAuth Login -->
             <div class="oauth-login-section">
-                <div class="role-choice" style="margin-bottom:8px; display:flex; gap:8px; align-items:center;">
-                    <label for="oauthRoleChoice" style="font-size:13px; color:#555;">Continue as:</label>
-                    <select id="oauthRoleChoice" style="padding:6px 8px; font-size:13px;">
+                <div class="role-choice">
+                    <label for="oauthRoleChoice">Continue as:</label>
+                    <select id="oauthRoleChoice">
                         <option value="auto" selected>Auto (based on account)</option>
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+                
                 <button type="button" class="microsoft-login-btn" id="microsoftLoginBtn">
                     <svg class="microsoft-icon" viewBox="0 0 23 23" width="20" height="20">
                         <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -57,29 +272,6 @@
                     </svg>
                     Sign in with Microsoft
                 </button>
-                
-                <div class="oauth-benefits">
-                    <div class="benefit-item">
-                        <span class="benefit-icon">🔒</span>
-                        <span>Secure organizational login</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">👥</span>
-                        <span>No additional passwords</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="benefit-icon">⚡</span>
-                        <span>Single sign-on experience</span>
-                    </div>
-                </div>
-                
-                <!-- Integration Status -->
-                <div class="integration-status" id="integrationStatus">
-                    <div class="status-item">
-                        <span class="status-icon">🔄</span>
-                        <span id="statusText">Loading integration...</span>
-                    </div>
-                </div>
             </div>
 
             <!-- Divider -->
@@ -101,7 +293,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="role">Role (optional for demo)</label>
+                        <label for="role">Role</label>
                         <select id="role" name="role">
                             <option value="">Auto from account</option>
                             <option value="admin">Admin</option>
@@ -123,19 +315,17 @@
     <!-- Loading Modal -->
     <div id="loadingModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <div class="loading-content">
-                <div class="loading-spinner-large"></div>
-                <h3>Authenticating with Microsoft</h3>
-                <p>Please wait while we verify your credentials...</p>
-            </div>
+            <div class="loading-spinner-large"></div>
+            <h3>Authenticating</h3>
+            <p>Please wait...</p>
         </div>
     </div>
 
     <!-- Error Modal -->
     <div id="errorModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <h3 id="errorTitle">Authentication Error</h3>
-            <p id="errorMessage">An error occurred during authentication.</p>
+            <h3 id="errorTitle">Error</h3>
+            <p id="errorMessage">Something went wrong.</p>
             <div class="modal-actions">
                 <button type="button" class="btn-primary" id="errorOkBtn">OK</button>
             </div>
@@ -158,128 +348,12 @@
     
     <!-- Main application -->
     <script src="js/app.js"></script>
-
+    
     <!-- Login page specific script -->
-    <script>
-        console.log('=== APEX PO SYSTEM v2.2.0 LOGIN PAGE ===');
-        
-        // DOM Elements
-        let microsoftLoginBtn, loadingModal, errorModal, toggleDemoBtn, demoLoginSection, demoLoginForm;
-        
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Login page DOM loaded - initializing...');
-            
-            // Get DOM elements
-            microsoftLoginBtn = document.getElementById('microsoftLoginBtn');
-            loadingModal = document.getElementById('loadingModal');
-            errorModal = document.getElementById('errorModal');
-            toggleDemoBtn = document.getElementById('toggleDemoBtn');
-            demoLoginSection = document.getElementById('demoLoginSection');
-            demoLoginForm = document.getElementById('demoLoginForm');
+    <script src="js/pages/login.js"></script>
 
-            
-            // Check integration status
-            checkIntegrationStatus();
-            
-            // Handle OAuth callback if present
-            handleOAuthCallback();
-            
-            // Set up event listeners
-            if (microsoftLoginBtn) {
-                microsoftLoginBtn.addEventListener('click', handleMicrosoftLogin);
-                console.log('Microsoft login button listener attached');
-            }
-            
-            if (toggleDemoBtn) {
-                toggleDemoBtn.addEventListener('click', toggleDemoMode);
-            }
-            
-            if (demoLoginForm) {
-                demoLoginForm.addEventListener('submit', handleDemoLogin);
-            }
-
-            
-            // Close error modal
-            const errorOkBtn = document.getElementById('errorOkBtn');
-            if (errorOkBtn) {
-                errorOkBtn.addEventListener('click', () => {
-                    errorModal.style.display = 'none';
-                });
-            }
-            
-            console.log('Login page initialized successfully');
-        });
-
-        // Check integration status
-        function checkIntegrationStatus() {
-            const statusElement = document.getElementById('statusText');
-            const statusIcon = document.querySelector('.status-icon');
-            
-            if (!statusElement) return;
-            
-            setTimeout(() => {
-                console.log('=== CHECKING MICROSOFT & POWER AUTOMATE INTEGRATION STATUS ===');
-                console.log('MicrosoftAuth available:', typeof window.MicrosoftAuth !== 'undefined');
-                console.log('MICROSOFT_AUTH_CONFIG available:', typeof window.MICROSOFT_AUTH_CONFIG !== 'undefined');
-                console.log('PowerAutomateAPI available:', typeof PowerAutomateAPI !== 'undefined');
-                console.log('POWER_AUTOMATE_CONFIG available:', typeof window.POWER_AUTOMATE_CONFIG !== 'undefined');
-                
-                const hasMicrosoftAuth = typeof window.MicrosoftAuth !== 'undefined' && 
-                                       typeof window.MICROSOFT_AUTH_CONFIG !== 'undefined';
-                const hasPowerAutomate = typeof PowerAutomateAPI !== 'undefined' && 
-                                       typeof window.POWER_AUTOMATE_CONFIG !== 'undefined';
-                
-                if (hasMicrosoftAuth && hasPowerAutomate) {
-                    // Check Power Automate configuration
-                    const config = window.POWER_AUTOMATE_CONFIG.endpoints;
-                    const hasPlaceholders = config && config.getAllPOs && 
-                                          (config.getAllPOs.includes('YOUR_FLOW_URL') || 
-                                           config.getAllPOs.includes('XXXXXX'));
-                    
-                    console.log('PA Configuration check - has placeholders:', hasPlaceholders);
-                    console.log('Sample PA endpoint:', config?.getAllPOs);
-                    console.log('MS Auth config:', window.MICROSOFT_AUTH_CONFIG);
-                    
-                    if (config && !hasPlaceholders) {
-                        statusElement.textContent = '✅ Microsoft OAuth & Power Automate Ready';
-                        statusIcon.textContent = '✅';
-                        if (microsoftLoginBtn) {
-                            microsoftLoginBtn.disabled = false;
-                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft';
-                        }
-                    } else {
-                        statusElement.textContent = '🔐 Microsoft OAuth Ready';
-                        statusIcon.textContent = '🔐';
-                        if (microsoftLoginBtn) {
-                            microsoftLoginBtn.disabled = false;
-                            microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft';
-                        }
-                    }
-                } else if (hasMicrosoftAuth) {
-                    statusElement.textContent = '🔐 Microsoft OAuth Available - PA Missing';
-                    statusIcon.textContent = '⚠️';
-                    if (microsoftLoginBtn) {
-                        microsoftLoginBtn.disabled = false;
-                        microsoftLoginBtn.innerHTML = '🔐 Sign in with Microsoft (Limited)';
-                    }
-                } else {
-                    statusElement.textContent = '❌ Microsoft OAuth Not Available';
-                    statusIcon.textContent = '❌';
-                    if (microsoftLoginBtn) {
-                        microsoftLoginBtn.disabled = true;
-                        microsoftLoginBtn.innerHTML = '⚠️ Integration Loading...';
-                    }
-                }
-            }, 1000);
-        }
-
-        // Microsoft OAuth Login Handler - Now supports both Web and SPA
-        async function handleMicrosoftLogin() {
-            console.log('Microsoft OAuth login button clicked');
-            
-            try {
-                showLoadingModal();
+</body>
+</html>
                 
                 // Persist requested role for callback handling
                 try {
