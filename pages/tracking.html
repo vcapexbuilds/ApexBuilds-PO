@@ -91,6 +91,9 @@
                         // Also store for Microsoft-specific checks
                         localStorage.setItem('microsoftUser', JSON.stringify(userData));
                         
+                        // Store in the storage system with prefix (for auth.js compatibility)
+                        localStorage.setItem('apex_po_currentUser', JSON.stringify(userData));
+                        
                         // Set session storage as well
                         sessionStorage.setItem('currentUser', JSON.stringify(userData));
                         sessionStorage.setItem('isAuthenticated', 'true');

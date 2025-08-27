@@ -59,12 +59,41 @@ class TrackingDashboard {
         
         // Give auth system time to fully initialize
         setTimeout(() => {
+            console.log('🔍 Checking all auth data sources...');
+            console.log('localStorage currentUser:', !!localStorage.getItem('currentUser'));
+            console.log('localStorage apex_po_currentUser:', !!localStorage.getItem('apex_po_currentUser'));
+            console.log('localStorage isAuthenticated:', localStorage.getItem('isAuthenticated'));
+            console.log('sessionStorage currentUser:', !!sessionStorage.getItem('currentUser'));
+            console.log('window.auth exists:', !!window.auth);
+            if (window.auth) {
+                console.log('window.auth.currentUser:', !!window.auth.currentUser);
+                console.log('window.auth.isAuthenticated():', window.auth.isAuthenticated());
+            }
+            
             // FIRST: Check if we have current user data (Microsoft OAuth or local auth)
             const storedUser = localStorage.getItem('currentUser');
             if (storedUser) {
                 try {
                     const user = JSON.parse(storedUser);
                     console.log('Found current user:', user);
+                    
+                    // Check if this is a valid OAuth session
+                    if (user.isOAuth && user.expiresAt) {
+                        const isExpired = new Date() > new Date(user.expiresAt);
+                        console.log('OAuth session expired?', isExpired);
+                        if (isExpired) {
+                            console.log('OAuth session expired, clearing data');
+                            localStorage.removeItem('currentUser');
+                            localStorage.removeItem('apex_po_currentUser');
+                            localStorage.removeItem('isAuthenticated');
+                            sessionStorage.removeItem('currentUser');
+                            if (window.auth) {
+                                window.auth.currentUser = null;
+                            }
+                            this.fallbackUserSetup();
+                            return;
+                        }
+                    }
                     
                     let firstName = '';
                     if (user.firstName) {
@@ -85,6 +114,13 @@ class TrackingDashboard {
                         const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
                         console.log('Using current user name:', capitalizedName);
                         document.getElementById('welcomeUser').textContent = `Welcome, ${capitalizedName}`;
+                        
+                        // Ensure auth system has the user data
+                        if (window.auth && !window.auth.currentUser) {
+                            console.log('Setting user data in auth system');
+                            window.auth.currentUser = user;
+                        }
+                        
                         return;
                     }
                 } catch (error) {
@@ -200,7 +236,6 @@ class TrackingDashboard {
         console.log('Capitalized first name:', capitalized);
         
         return capitalized;
-    }
     }
 
     bindEvents() {
