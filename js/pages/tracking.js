@@ -689,58 +689,19 @@ class TrackingDashboard {
                 return;
             }
 
-            const detailsHtml = `
-                <div class="po-details-modal">
-                    <h3>PO #${po.id} - ${po.meta?.projectName || 'N/A'}</h3>
-                    <div class="details-grid">
-                        <div class="detail-item">
-                            <strong>Status:</strong> ${po.status || 'Draft'}
-                        </div>
-                        <div class="detail-item">
-                            <strong>General Contractor:</strong> ${po.meta?.generalContractor || 'N/A'}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Contract Amount:</strong> $${parseFloat(po.meta?.contractAmount || 0).toLocaleString()}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Created:</strong> ${new Date(po.createdAt).toLocaleDateString()}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Project Manager:</strong> ${po.meta?.projectManager || 'N/A'}
-                        </div>
-                        <div class="detail-item">
-                            <strong>Contact:</strong> ${po.meta?.contactName || 'N/A'} (${po.meta?.email || 'N/A'})
-                        </div>
-                        <div class="detail-item">
-                            <strong>Submitted By:</strong> 
-                            <div class="submitter-info">
-                                👤 ${po.submittedBy?.username || 'Unknown'}
-                                ${po.submittedBy?.role === 'admin' ? '<span class="admin-badge">Admin</span>' : ''}
-                                <br>
-                                <small>📧 ${po.submittedBy?.email || 'No email'}</small>
-                                <br>
-                                <small>🏢 ${po.submittedBy?.company || 'No company'}</small>
-                                ${po.submittedBy?.submittedAt ? `<br><small>🕐 ${new Date(po.submittedBy.submittedAt).toLocaleDateString()} ${new Date(po.submittedBy.submittedAt).toLocaleTimeString()}</small>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            window.modal.show({
-                title: 'Purchase Order Details',
-                content: detailsHtml,
-                actions: [
-                    {
-                        text: 'Close',
-                        class: 'btn-secondary',
-                        action: () => window.modal.hide()
-                    }
-                ]
-            });
+            console.log('🖨️ Opening print page for PO:', po);
+            
+            // Store PO data in localStorage for the print page
+            localStorage.setItem('printPOData', JSON.stringify(po));
+            console.log('💾 Stored PO data for printing:', po);
+            
+            // Open print page in new tab
+            const printUrl = '/Print.html';
+            window.open(printUrl, '_blank');
+            
         } catch (error) {
-            console.error('Error viewing PO details:', error);
-            window.modal.showError('Failed to load PO details.');
+            console.error('Error opening PO details:', error);
+            window.modal.showError('Failed to open PO details. Please try again.');
         }
     }
 
