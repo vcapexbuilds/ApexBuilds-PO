@@ -1,6 +1,12 @@
 # 🌐 Online Deployment Setup Instructions
-go
+
 Your Apex PO System is now configured to work both locally and online! Here's what you need to do to complete the setup:
+
+**🎯 Your GitHub Pages Structure:**
+- **Main Site**: `https://vcapexbuilds.github.io/ApexBuilds-PO/`
+- **Form Page**: `https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html`
+- **Tracking Page**: `https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html`
+- **Print Page**: `https://vcapexbuilds.github.io/ApexBuilds-PO/Print.html`
 
 ## ✅ What I've Already Done For You
 
