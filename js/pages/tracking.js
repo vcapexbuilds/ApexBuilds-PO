@@ -334,6 +334,20 @@ class TrackingDashboard {
                     const element = document.getElementById(id);
                     if (element) {
                         console.log(`✅ Found ${id}, binding event`);
+                        
+                        // Add visual feedback for button clicks
+                        if (['refreshList', 'exportList', 'applyFilters', 'clearFilters'].includes(id)) {
+                            element.addEventListener('click', (e) => {
+                                console.log(`🖱️ Button ${id} clicked, adding visual feedback`);
+                                e.target.disabled = true;
+                                e.target.style.opacity = '0.6';
+                                setTimeout(() => {
+                                    e.target.disabled = false;
+                                    e.target.style.opacity = '1';
+                                }, 2000);
+                            });
+                        }
+                        
                         switch(id) {
                             case 'projectFilter':
                             case 'statusFilter':
@@ -352,12 +366,73 @@ class TrackingDashboard {
                                 console.log('🔧 TrackingDashboard: Setting up refresh button event listener');
                                 element.addEventListener('click', () => {
                                     console.log('🔄 TrackingDashboard: Refresh button clicked');
-                                    if (this.poDataManager) {
-                                        console.log('Using PO Data Manager for refresh');
-                                        this.poDataManager.fetchAndDisplayPOs(true); // Force refresh from Power Automate
+                                    console.log('🔍 PO Data Manager exists:', !!this.poDataManager);
+                                    
+                                    // Show user feedback
+                                    const originalText = element.textContent;
+                                    element.textContent = '🔄 Refreshing...';
+                                    element.disabled = true;
+                                    
+                                    // Reset button after 5 seconds regardless
+                                    const resetButton = () => {
+                                        element.textContent = originalText;
+                                        element.disabled = false;
+                                    };
+                                    setTimeout(resetButton, 5000);
+                                    
+                                    console.log('🔍 PO Data Manager methods:', this.poDataManager ? Object.getOwnPropertyNames(Object.getPrototypeOf(this.poDataManager)) : 'N/A');
+                                    
+                                    // Try to initialize PO Data Manager if it doesn't exist
+                                    if (!this.poDataManager && window.PODataManager) {
+                                        console.log('🔧 Initializing PO Data Manager for refresh...');
+                                        try {
+                                            this.poDataManager = new window.PODataManager();
+                                            window.poDataManager = this.poDataManager;
+                                            
+                                            // Override display methods
+                                            this.poDataManager.displayPOs = (pos) => {
+                                                console.log('📊 TrackingDashboard: Received POs from Power Automate (refresh):', pos);
+                                                console.log('📊 Type of pos:', typeof pos, 'Is array:', Array.isArray(pos));
+                                                
+                                                if (!Array.isArray(pos)) {
+                                                    console.warn('⚠️ Power Automate returned non-array data, converting to empty array');
+                                                    this.allPOs = [];
+                                                } else {
+                                                    this.allPOs = pos;
+                                                }
+                                                
+                                                this.filterPOs();
+                                                this.updateStats(this.filteredPOs);
+                                                resetButton(); // Reset button when done
+                                            };
+                                        } catch (error) {
+                                            console.error('❌ Failed to initialize PO Data Manager:', error);
+                                            resetButton();
+                                        }
+                                    }
+                                    
+                                    if (this.poDataManager && typeof this.poDataManager.fetchAndDisplayPOs === 'function') {
+                                        console.log('✅ Using PO Data Manager for refresh');
+                                        try {
+                                            // Clear cache first to ensure fresh data
+                                            if (typeof this.poDataManager.clearCache === 'function') {
+                                                console.log('🗑️ Clearing cache before refresh...');
+                                                this.poDataManager.clearCache();
+                                            }
+                                            
+                                            this.poDataManager.fetchAndDisplayPOs(true); // Force refresh from Power Automate
+                                            console.log('📡 Force refresh request sent to Power Automate');
+                                        } catch (error) {
+                                            console.error('❌ Error during PO Data Manager refresh:', error);
+                                            // Fallback to manual reload
+                                            this.loadPOs();
+                                            resetButton();
+                                        }
                                     } else {
-                                        console.log('Falling back to loadPOs for refresh');
+                                        console.log('⚠️ PO Data Manager not available, falling back to loadPOs for refresh');
+                                        console.log('💡 Note: This will only refresh test data, not Power Automate data');
                                         this.loadPOs();
+                                        resetButton();
                                     }
                                 });
                                 break;
