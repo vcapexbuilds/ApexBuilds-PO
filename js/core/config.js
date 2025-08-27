@@ -22,7 +22,7 @@ const AZURE_CONFIG = {
             return window.ENV_CONFIG.getAuthRedirectUri();
         }
         // Fallback for local development
-        return "http://localhost:8080/pages/tracking.html";
+        return "http:///pages/tracking.html";
     },
     
     // 📝 Microsoft Graph scopes (these are correct - don't change)

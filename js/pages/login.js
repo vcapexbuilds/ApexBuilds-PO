@@ -538,23 +538,7 @@ User Access: user/user123 (Role: User)`);
 // Initialize login page
 const loginPage = new LoginPage();
 
-// Add demo credentials button for development
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const loginForm = document.querySelector('.login-form');
-        if (loginForm) {
-            const demoButton = document.createElement('button');
-            demoButton.type = 'button';
-            demoButton.textContent = 'Show Demo Credentials';
-            demoButton.className = 'btn-secondary';
-            demoButton.style.width = '100%';
-            demoButton.style.marginTop = '10px';
-            demoButton.addEventListener('click', () => loginPage.showDemoCredentials());
-            
-            loginForm.appendChild(demoButton);
-        }
-    });
-}
+// Demo credentials removed for GitHub Pages production
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {

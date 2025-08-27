@@ -16,7 +16,7 @@ window.MICROSOFT_SPA_CONFIG = {
             return window.ENV_CONFIG.getAuthRedirectUri();
         }
         // Fallback for local development
-        return 'http://localhost:8080/pages/tracking.html';
+        return 'http:///pages/tracking.html';
     },
     
     // Scopes to request

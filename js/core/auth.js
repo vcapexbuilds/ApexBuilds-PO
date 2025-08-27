@@ -647,19 +647,15 @@ class AuthManager {
 
     // Redirect to login page
     redirectToLogin() {
-        const currentPath = window.location.pathname;
-        const isInPages = currentPath.includes('/pages/');
-        const loginPath = isInPages ? '../index.html' : 'index.html';
-        
-        window.location.href = loginPath;
+        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/index.html';
     }
 
     // Redirect to dashboard based on role
     redirectToDashboard() {
         if (this.isAdmin()) {
-            window.location.href = 'pages/admin.html';
+            window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
         } else {
-            window.location.href = 'pages/tracking.html';
+            window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
         }
     }
 
