@@ -30,7 +30,10 @@ window.POWER_AUTOMATE_CONFIG = {
         validateUser: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
         
         // GET user data and permissions
-        getUserData: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX'
+        getUserData: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
+        
+        // POST user activity tracking (page visits, actions, etc.)
+        userActivity: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX'
     },
     
     // Request settings

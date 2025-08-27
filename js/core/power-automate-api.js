@@ -317,6 +317,28 @@ class PowerAutomateAPI {
     }
 
     /**
+     * Track user activity (page visits, actions, etc.)
+     */
+    async trackUserActivity(activityData) {
+        try {
+            console.log('📊 Tracking user activity:', activityData);
+            
+            const response = await this.makeRequest(this.endpoints.userActivity, {
+                method: 'POST',
+                headers: this.config.headers,
+                body: JSON.stringify(activityData)
+            });
+            
+            console.log('✅ User activity tracked successfully:', response);
+            return response;
+        } catch (error) {
+            console.error('❌ Failed to track user activity:', error);
+            // Don't throw error - activity tracking shouldn't break the app
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
      * Fallback to test data if Power Automate is not available
      * Remove this in production or when PA is fully configured
      */

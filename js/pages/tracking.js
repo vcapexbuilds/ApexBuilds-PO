@@ -96,18 +96,29 @@ class TrackingDashboard {
                     }
                     
                     let firstName = '';
-                    if (user.firstName) {
+                    if (user.firstName && user.firstName !== 'User') {
                         firstName = user.firstName;
-                    } else if (user.givenName) {
+                    } else if (user.givenName && user.givenName !== 'User') {
                         firstName = user.givenName;
-                    } else if (user.displayName) {
+                    } else if (user.displayName && user.displayName !== 'Microsoft User') {
                         firstName = user.displayName.split(' ')[0];
-                    } else if (user.name) {
+                    } else if (user.name && user.name !== 'Microsoft User') {
                         firstName = user.name.split(' ')[0];
-                    } else if (user.username && user.username !== 'Microsoft User') {
+                    } else if (user.username && user.username !== 'Microsoft User' && !user.username.includes('@')) {
                         firstName = user.username.split(' ')[0];
                     } else if (user.userPrincipalName) {
-                        firstName = user.userPrincipalName.split('@')[0];
+                        // Extract name from email if available
+                        const emailPart = user.userPrincipalName.split('@')[0];
+                        firstName = emailPart.replace(/[^a-zA-Z]/g, '');
+                    } else if (user.email) {
+                        // Extract name from email as last resort
+                        const emailPart = user.email.split('@')[0];
+                        firstName = emailPart.replace(/[^a-zA-Z]/g, '');
+                    }
+                    
+                    // Fallback if no proper name found
+                    if (!firstName || firstName === 'User' || firstName === 'Microsoft' || firstName.length < 2) {
+                        firstName = 'User';
                     }
                     
                     if (firstName) {
@@ -120,6 +131,9 @@ class TrackingDashboard {
                             console.log('Setting user data in auth system');
                             window.auth.currentUser = user;
                         }
+                        
+                        // Track user activity - send to Power Automate
+                        this.trackUserPageVisit(user, 'tracking_page_load');
                         
                         return;
                     }
@@ -139,6 +153,10 @@ class TrackingDashboard {
                     if (firstName && firstName !== 'User') {
                         console.log('Using Microsoft OAuth name:', firstName);
                         document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
+                        
+                        // Track user activity for Microsoft OAuth user
+                        this.trackUserPageVisit(msUser, 'tracking_page_load_ms_oauth');
+                        
                         return;
                     }
                 } catch (error) {
@@ -166,6 +184,10 @@ class TrackingDashboard {
                             source: 'auth-system'
                         };
                         localStorage.setItem('currentUser', JSON.stringify(userData));
+                        
+                        // Track user activity for demo account
+                        this.trackUserPageVisit(userData, 'tracking_page_load_demo');
+                        
                         return;
                     }
                 }
@@ -236,6 +258,40 @@ class TrackingDashboard {
         console.log('Capitalized first name:', capitalized);
         
         return capitalized;
+    }
+
+    /**
+     * Track user activity and send to Power Automate
+     */
+    async trackUserPageVisit(user, action) {
+        try {
+            console.log('📊 Preparing user activity data for Power Automate...');
+            
+            // Prepare user activity data according to the requested schema
+            const activityData = {
+                action: action,
+                timestamp: new Date().toISOString(),
+                user: {
+                    username: user.username || user.name || 'Unknown',
+                    email: user.email || 'unknown@email.com',
+                    role: user.role || 'user',
+                    microsoftId: user.id || user.microsoftId || user.homeAccountId || null,
+                    source: user.provider || user.source || 'microsoft-oauth'
+                }
+            };
+            
+            console.log('📤 Sending user activity to Power Automate:', activityData);
+            
+            // Send to Power Automate if API is available
+            if (window.powerAutomateAPI) {
+                await window.powerAutomateAPI.trackUserActivity(activityData);
+            } else {
+                console.warn('⚠️ PowerAutomateAPI not available, skipping activity tracking');
+            }
+        } catch (error) {
+            console.error('❌ Error tracking user activity:', error);
+            // Don't break the app if tracking fails
+        }
     }
 
     bindEvents() {
