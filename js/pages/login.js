@@ -91,109 +91,32 @@ class LoginPage {
         event.preventDefault();
         
         try {
-            this.showLoadingModal('Connecting to Microsoft...');
+            this.showLoadingModal('Redirecting to Microsoft...');
             
             // Check if Microsoft Auth is available
             if (typeof window.MicrosoftAuth === 'undefined' || typeof window.MicrosoftAuth.login !== 'function') {
-                console.warn('Microsoft Auth not available, using demo login instead');
-                
-                // Simulate Microsoft login with demo data
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Get role selection
-                const roleSelect = document.getElementById('oauthRoleChoice');
-                const selectedRole = roleSelect ? roleSelect.value : 'auto';
-                
-                // Create demo Microsoft user
-                const demoUser = {
-                    id: 'demo-ms-user',
-                    username: 'demo.user@company.com',
-                    name: 'Demo User',
-                    role: selectedRole === 'auto' ? 'user' : selectedRole,
-                    provider: 'microsoft-demo',
-                    loginTime: new Date().toISOString()
-                };
-                
-                // Use auth system to complete login (with fallback)
-                let loginSuccess = false;
-                
-                if (typeof window.auth !== 'undefined' && window.auth.login) {
-                    loginSuccess = await window.auth.login(demoUser.username, 'demo-password', demoUser.role, demoUser);
-                } else {
-                    // Fallback: directly store user data and mark as authenticated
-                    console.warn('Auth system not available, using fallback authentication');
-                    
-                    // Store user data in localStorage
-                    localStorage.setItem('currentUser', JSON.stringify(demoUser));
-                    localStorage.setItem('isAuthenticated', 'true');
-                    localStorage.setItem('userRole', demoUser.role);
-                    
-                    loginSuccess = true;
-                }
-                
-                if (loginSuccess) {
-                    console.log('Demo Microsoft login completed successfully');
-                    this.hideLoadingModal();
-                    
-                    // Redirect based on role
-                    if (demoUser.role === 'admin') {
-                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
-                    } else {
-                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
-                    }
-                } else {
-                    throw new Error('Demo login process failed');
-                }
+                console.error('Microsoft Auth not properly configured');
+                this.hideLoadingModal();
+                this.showErrorModal('Configuration Error', 'Microsoft authentication is not properly configured. Please contact your administrator.');
                 return;
             }
             
-            // Real Microsoft Auth flow (if available)
+            // Get role selection
             const roleSelect = document.getElementById('oauthRoleChoice');
             const selectedRole = roleSelect ? roleSelect.value : 'auto';
             
             console.log('Selected role:', selectedRole);
             
-            // Attempt Microsoft OAuth login
-            const result = await window.MicrosoftAuth.login();
+            // Store the role selection for after redirect
+            sessionStorage.setItem('selected_role', selectedRole);
             
-            if (result && result.account) {
-                console.log('Microsoft login successful:', result.account);
-                
-                // Store authentication data
-                const userData = {
-                    id: result.account.homeAccountId,
-                    username: result.account.username,
-                    name: result.account.name,
-                    role: selectedRole === 'auto' ? this.determineRoleFromAccount(result.account) : selectedRole,
-                    provider: 'microsoft',
-                    accessToken: result.accessToken,
-                    loginTime: new Date().toISOString()
-                };
-                
-                // Use auth system to complete login
-                const loginSuccess = await auth.login(userData.username, null, userData.role, userData);
-                
-                if (loginSuccess) {
-                    console.log('Login completed successfully');
-                    this.hideLoadingModal();
-                    
-                    // Redirect based on role
-                    if (userData.role === 'admin') {
-                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
-                    } else {
-                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
-                    }
-                } else {
-                    throw new Error('Login process failed');
-                }
-            } else {
-                throw new Error('Microsoft authentication failed');
-            }
+            // Initiate Microsoft OAuth login (this will redirect)
+            await window.MicrosoftAuth.login();
             
         } catch (error) {
             console.error('Microsoft login error:', error);
             this.hideLoadingModal();
-            this.showErrorModal('Login Failed', error.message || 'Authentication failed. Please try again.');
+            this.showErrorModal('Login Failed', error.message || 'Failed to initiate Microsoft authentication.');
         }
     }
 

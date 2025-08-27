@@ -63,6 +63,10 @@ class EnvironmentConfig {
         return this.config.paths.formPage;
     }
     
+    getAuthRedirectUri() {
+        return this.config.auth.redirectUri;
+    }
+    
     getTrackingPagePath() {
         return this.config.paths.trackingPage;
     }

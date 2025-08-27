@@ -10,6 +10,84 @@
     
     <!-- Environment Configuration - Load first -->
     <script src="../js/core/environment-config.js"></script>
+    
+    <!-- Microsoft OAuth handling -->
+    <script src="../js/core/microsoft-auth-config.js"></script>
+    <script>
+        // Handle Microsoft OAuth callback if present
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (window.MicrosoftAuth && window.MicrosoftAuth.isCallback()) {
+                console.log('📥 Detected OAuth callback, processing...');
+                
+                try {
+                    // Show loading state
+                    document.body.innerHTML = `
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                            <div style="width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top: 4px solid #0078d4; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;"></div>
+                            <h3>Completing Microsoft Sign-in...</h3>
+                            <p>Please wait while we complete your authentication.</p>
+                        </div>
+                        <style>
+                            @keyframes spin { to { transform: rotate(360deg); } }
+                        </style>
+                    `;
+                    
+                    // Handle the OAuth callback
+                    const result = await window.MicrosoftAuth.handleCallback();
+                    
+                    if (result.success) {
+                        // Get stored role preference
+                        const selectedRole = sessionStorage.getItem('selected_role') || 'auto';
+                        sessionStorage.removeItem('selected_role');
+                        
+                        // Determine user role
+                        let userRole = selectedRole;
+                        if (selectedRole === 'auto') {
+                            // Auto-determine role based on account
+                            userRole = result.account.email && result.account.email.includes('admin') ? 'admin' : 'user';
+                        }
+                        
+                        // Store authentication data
+                        const userData = {
+                            id: result.account.homeAccountId,
+                            username: result.account.username,
+                            name: result.account.name,
+                            email: result.account.email,
+                            role: userRole,
+                            provider: 'microsoft',
+                            accessToken: result.accessToken,
+                            loginTime: new Date().toISOString()
+                        };
+                        
+                        // Store in localStorage for persistence
+                        localStorage.setItem('currentUser', JSON.stringify(userData));
+                        localStorage.setItem('isAuthenticated', 'true');
+                        localStorage.setItem('userRole', userRole);
+                        
+                        console.log('✅ Microsoft authentication completed successfully');
+                        
+                        // Clean URL and reload page
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('❌ OAuth callback error:', error);
+                    
+                    // Show error and redirect to login
+                    document.body.innerHTML = `
+                        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 2rem;">
+                            <h3 style="color: #dc3545;">Authentication Error</h3>
+                            <p>${error.message}</p>
+                            <button onclick="window.location.href='../index.html'" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #0078d4; color: white; border: none; border-radius: 6px; cursor: pointer;">Return to Login</button>
+                        </div>
+                    `;
+                }
+                
+                // Stop normal page execution
+                return;
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="header">

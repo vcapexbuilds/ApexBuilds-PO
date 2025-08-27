@@ -15,8 +15,8 @@ window.MICROSOFT_AUTH_CONFIG = {
         if (window.ENV_CONFIG) {
             return window.ENV_CONFIG.getAuthRedirectUri();
         }
-        // Fallback for local development
-        return 'http:///pages/tracking.html';
+        // Fallback for GitHub Pages
+        return 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
     },
     
     // Scopes to request
@@ -197,6 +197,91 @@ window.MicrosoftAuth = {
         return tokenResponse;
     },
     
+    /**
+     * Initiate Microsoft OAuth login
+     */
+    login: async function() {
+        console.log('🚀 Starting Microsoft OAuth login...');
+        try {
+            const authUrl = await this.buildAuthUrl();
+            console.log('🔗 Redirecting to:', authUrl);
+            
+            // Redirect to Microsoft login
+            window.location.href = authUrl;
+            
+            // Return a promise that will be resolved after redirect
+            return new Promise((resolve, reject) => {
+                // This won't execute since we're redirecting, but it's here for API consistency
+                setTimeout(() => {
+                    reject(new Error('Login redirect timeout'));
+                }, 5000);
+            });
+        } catch (error) {
+            console.error('❌ Microsoft login failed:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Handle OAuth callback (call this on the redirect page)
+     */
+    handleCallback: async function() {
+        console.log('🔄 Handling Microsoft OAuth callback...');
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+        
+        // Check for OAuth errors
+        if (error) {
+            const errorDescription = urlParams.get('error_description');
+            throw new Error(`OAuth Error: ${error} - ${errorDescription}`);
+        }
+        
+        // Validate state parameter
+        const storedState = sessionStorage.getItem('oauth_state');
+        if (state !== storedState) {
+            throw new Error('Invalid state parameter - possible CSRF attack');
+        }
+        
+        if (!code) {
+            throw new Error('No authorization code received');
+        }
+        
+        try {
+            // Exchange code for token
+            const tokenResponse = await this.exchangeCodeForToken(code);
+            
+            // Get user info
+            const userInfo = await this.getUserInfo();
+            
+            console.log('✅ Microsoft login successful:', userInfo);
+            
+            return {
+                success: true,
+                account: {
+                    homeAccountId: userInfo.id,
+                    username: userInfo.userPrincipalName,
+                    name: userInfo.displayName,
+                    email: userInfo.mail || userInfo.userPrincipalName
+                },
+                accessToken: tokenResponse.access_token,
+                userInfo: userInfo
+            };
+        } catch (error) {
+            console.error('❌ Token exchange failed:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Check if current page is OAuth callback
+     */
+    isCallback: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.has('code') || urlParams.has('error');
+    },
+
     /**
      * Get user info from Microsoft Graph
      */
