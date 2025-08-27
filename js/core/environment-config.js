@@ -1,74 +1,42 @@
 /**
- * Environment Configuration - Automatically detects and configures for local vs online deployment
+ * GitHub Pages Environment Configuration - Production only
  */
 
 class EnvironmentConfig {
     constructor() {
-        this.isLocal = this.detectLocalEnvironment();
-        this.baseUrl = this.getBaseUrl();
+        this.isLocal = false; // Always false for GitHub Pages
+        this.baseUrl = 'https://vcapexbuilds.github.io/ApexBuilds-PO';
         this.config = this.generateConfig();
         
-        console.log('🌍 Environment detected:', this.isLocal ? 'LOCAL' : 'PRODUCTION');
-        console.log('🌍 Current hostname:', window.location.hostname);
-        console.log('🌍 Current pathname:', window.location.pathname);
+        console.log('🌍 Environment: GITHUB PAGES PRODUCTION');
         console.log('🌍 Base URL:', this.baseUrl);
         console.log('🌍 Form page path:', this.getFormPagePath());
-        console.log('🌍 Expected form URL should be: https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html');
     }
     
     detectLocalEnvironment() {
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname === 'localhost' || 
-                           hostname === '127.0.0.1' || 
-                           hostname.includes('localhost') ||
-                           window.location.port !== '';
-        
-        console.log('🔍 Hostname detection:', {
-            hostname,
-            port: window.location.port,
-            isLocalhost,
-            fullUrl: window.location.href
-        });
-        
-        return isLocalhost;
+        return false; // Always production for GitHub Pages
     }
     
     getBaseUrl() {
-        if (this.isLocal) {
-            // For local development
-            return window.location.origin;
-        } else {
-            // For GitHub Pages - your actual site structure
-            if (window.location.hostname === 'vcapexbuilds.github.io') {
-                // Your GitHub Pages is published under /ApexBuilds-PO/
-                return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
-            }
-            // Fallback for other domains
-            return window.location.origin + '/ApexBuilds-PO';
-        }
+        return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
     }
     
     generateConfig() {
         return {
             baseUrl: this.baseUrl,
-            isLocal: this.isLocal,
+            isLocal: false,
             
             // Microsoft Auth Configuration
             auth: {
-                redirectUri: this.isLocal 
-                    ? `${this.baseUrl}/pages/tracking.html`
-                    : 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html', // Your actual GitHub Pages URL
-                    
-                // The actual production URL should be something like:
-                // : 'https://vcapexbuilds.github.io/apex-po-system-test/pages/tracking.html'
+                redirectUri: 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html'
             },
             
-            // Navigation paths
+            // Navigation paths - All GitHub Pages URLs
             paths: {
-                printPage: this.isLocal ? '../Print.html' : `${this.baseUrl}/Print.html`,
-                formPage: this.isLocal ? '/pages/form.html' : `${this.baseUrl}/pages/form.html`,
-                trackingPage: this.isLocal ? '/pages/tracking.html' : `${this.baseUrl}/pages/tracking.html`,
-                loginPage: this.isLocal ? '/index.html' : `${this.baseUrl}/index.html`
+                printPage: `${this.baseUrl}/Print.html`,
+                formPage: `${this.baseUrl}/pages/form.html`,
+                trackingPage: `${this.baseUrl}/pages/tracking.html`,
+                loginPage: `${this.baseUrl}/index.html`
             },
             
             // Debug info

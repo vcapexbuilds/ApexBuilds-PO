@@ -108,12 +108,12 @@ class POForm {
             
             if (fromLogin) {
                 if (currentUser.role === 'admin') {
-                    window.location.href = '/pages/admin.html';
+                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
                     return;
                 } else {
                     // For regular users, stay on form page or go to tracking
                     // You can change this to redirect to tracking page if preferred
-                    // window.location.href = '/pages/tracking.html';
+                    // window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                 }
             }
         }
@@ -847,7 +847,7 @@ class POForm {
                                             label: 'Go to Dashboard',
                                             class: 'btn-primary',
                                             handler: () => {
-                                                window.location.href = '/pages/tracking.html';
+                                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                                             }
                                         }]
                                     });
@@ -1024,9 +1024,9 @@ class POForm {
                                             handler: () => {
                                                 const currentUser = window.auth?.getCurrentUser();
                                                 if (currentUser?.role === 'admin') {
-                                                    window.location.href = '/pages/admin.html';
+                                                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
                                                 } else {
-                                                    window.location.href = '/pages/tracking.html';
+                                                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                                                 }
                                             }
                                         }]
