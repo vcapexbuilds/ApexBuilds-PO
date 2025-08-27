@@ -694,10 +694,21 @@ class TrackingDashboard {
             // Store PO data in localStorage for the print page
             localStorage.setItem('printPOData', JSON.stringify(po));
             console.log('💾 Stored PO data for printing:', po);
+            console.log('💾 localStorage printPOData set to:', localStorage.getItem('printPOData'));
             
-            // Open print page in new tab
-            const printUrl = '/Print.html';
-            window.open(printUrl, '_blank');
+            // Try different URL patterns for GitHub Pages compatibility
+            const baseUrl = window.location.origin + window.location.pathname.replace('/pages/tracking.html', '');
+            const printUrl = baseUrl + '/Print.html';
+            console.log('🌐 Base URL:', baseUrl);
+            console.log('🌐 Print URL:', printUrl);
+            
+            const newWindow = window.open(printUrl, '_blank');
+            if (!newWindow) {
+                console.error('❌ Failed to open new window - popup blocked?');
+                alert('Please allow popups for this site to view PO details.');
+            } else {
+                console.log('✅ New window opened successfully');
+            }
             
         } catch (error) {
             console.error('Error opening PO details:', error);

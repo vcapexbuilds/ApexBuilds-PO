@@ -895,7 +895,6 @@
                 `;
             }
         }
-        }
         
         function updateScopeTable(scopeData) {
             // Find the scope table (second table)
@@ -1007,7 +1006,28 @@
             console.log('🔍 URL parameters:', urlParams.toString());
             console.log('🔍 PO parameter:', urlParams.get('po'));
             
-            populatePOData();
+            // Try to populate data, with retries in case of timing issues
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            function tryPopulateData() {
+                const poDataStr = localStorage.getItem('printPOData');
+                if (poDataStr) {
+                    console.log('✅ Found PO data, populating...');
+                    populatePOData();
+                } else {
+                    retryCount++;
+                    console.log(`⚠️ No PO data found, retry ${retryCount}/${maxRetries}`);
+                    if (retryCount < maxRetries) {
+                        setTimeout(tryPopulateData, 500); // Wait 500ms and retry
+                    } else {
+                        console.warn('❌ Failed to find PO data after retries, showing empty template');
+                        displayEmptyTemplate();
+                    }
+                }
+            }
+            
+            tryPopulateData();
         });
         
         // Handle print action
