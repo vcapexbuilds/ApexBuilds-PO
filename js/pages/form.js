@@ -51,15 +51,18 @@ class POForm {
         console.log('window.api available:', !!window.api);
         console.log('window.storage available:', !!window.storage);
         
-        // Wait for global objects to be available
+        // Always bind events immediately - don't wait for globals
+        console.log('🚀 Binding events immediately...');
+        this.bindEvents();
+        this.scheduleItemTemplate = this.createScheduleItemTemplate();
+        this.scopeItemTemplate = this.createScopeItemTemplate();
+        
+        // Wait for global objects to be available for other features
         const checkGlobals = () => {
             if (window.auth && window.modal && window.api && window.storage) {
-                console.log('✅ All globals are available, initializing...');
+                console.log('✅ All globals are available, initializing auth and loading...');
                 this.initializeAuth();
-                this.bindEvents();
                 this.loadDraft();
-                this.scheduleItemTemplate = this.createScheduleItemTemplate();
-                this.scopeItemTemplate = this.createScopeItemTemplate();
             } else {
                 console.log('⏳ Waiting for globals...', {
                     auth: !!window.auth, 
