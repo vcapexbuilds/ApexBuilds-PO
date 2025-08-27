@@ -367,76 +367,33 @@ class POForm {
 
     createScheduleItemTemplate() {
         return `
-            <div class="schedule-item">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Prime Line *</label>
-                        <input type="text" name="primeLine" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Budget Code *</label>
-                        <input type="text" name="budgetCode" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Description *</label>
-                        <textarea name="description" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Quantity *</label>
-                        <input type="number" name="qty" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Unit *</label>
-                        <input type="number" name="unit" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Total Cost *</label>
-                        <input type="number" name="totalCost" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Scheduled *</label>
-                        <input type="number" name="scheduled" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Apex Contract Value *</label>
-                        <input type="number" name="apexContractValue" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Profit *</label>
-                        <input type="number" name="profit" required>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-danger remove-item">Remove</button>
-            </div>
+            <tr class="schedule-item">
+                <td><input type="text" name="primeLine" required placeholder="16000"></td>
+                <td><input type="text" name="budgetCode" required placeholder="EC-001"></td>
+                <td><textarea name="description" required placeholder="Work description"></textarea></td>
+                <td><input type="number" name="qty" required step="1" min="0" placeholder="1"></td>
+                <td><input type="number" name="unit" required step="1" min="0" placeholder="1"></td>
+                <td><input type="number" name="totalCost" required step="0.01" min="0" placeholder="0.00"></td>
+                <td><input type="number" name="scheduled" required step="0.01" min="0" placeholder="0.00"></td>
+                <td><input type="number" name="apexContractValue" required step="0.01" min="0" placeholder="0.00"></td>
+                <td><input type="number" name="profit" required step="0.01" min="0" placeholder="0.00"></td>
+                <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+            </tr>
         `;
     }
 
     createScopeItemTemplate() {
+        const uniqueId = Date.now() + Math.random(); // Create unique ID for radio buttons
         return `
-            <div class="scope-item">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Item Number *</label>
-                        <input type="text" name="item" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Description *</label>
-                        <textarea name="description" required></textarea>
-                    </div>
-                    <div class="form-group scope-status">
-                        <label>Status *</label>
-                        <div>
-                            <label>
-                                <input type="radio" name="status" value="included" checked> Included
-                            </label>
-                            <label>
-                                <input type="radio" name="status" value="excluded"> Excluded
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-danger remove-item">Remove</button>
-            </div>
+            <tr class="scope-item">
+                <td><input type="text" name="item" required placeholder="Item #1"></td>
+                <td><textarea name="description" required placeholder="Describe the scope of work"></textarea></td>
+                <td>
+                    <label><input type="radio" name="status_${uniqueId}" value="included" checked> Included</label>
+                    <label><input type="radio" name="status_${uniqueId}" value="excluded"> Excluded</label>
+                </td>
+                <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
+            </tr>
         `;
     }
 
@@ -537,8 +494,14 @@ class POForm {
         if (data) {
             Object.entries(data).forEach(([key, value]) => {
                 if (key === 'included' || key === 'excluded') {
-                    const radio = item.querySelector(`[name="status"][value="${key === 'included' ? 'included' : 'excluded'}"]`);
-                    if (radio) radio.checked = value;
+                    // Find the radio button with the right value in this specific row
+                    const radios = item.querySelectorAll('input[type="radio"]');
+                    radios.forEach(radio => {
+                        if ((key === 'included' && radio.value === 'included' && value) || 
+                            (key === 'excluded' && radio.value === 'excluded' && value)) {
+                            radio.checked = true;
+                        }
+                    });
                 } else {
                     const input = item.querySelector(`[name="${key}"]`);
                     if (input) input.value = value;
@@ -573,8 +536,6 @@ class POForm {
         }
         
         console.log('✅ addScopeItem completed successfully');
-    }
-        });
     }
 
     collectFormData() {
