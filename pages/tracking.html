@@ -59,35 +59,59 @@
                             userRole = result.account.email && result.account.email.includes('admin') ? 'admin' : 'user';
                         }
                         
-                        // Store authentication data
+                        // Store authentication data in the format expected by the existing auth system
+                        const expiresAt = new Date();
+                        expiresAt.setHours(expiresAt.getHours() + 24); // 24-hour session
+                        
                         const userData = {
                             id: result.account.homeAccountId,
                             username: result.account.username,
                             name: result.account.name,
+                            displayName: result.account.name,
                             email: result.account.email,
+                            firstName: result.account.name ? result.account.name.split(' ')[0] : 'User',
+                            lastName: result.account.name ? result.account.name.split(' ')[1] || '' : '',
                             role: userRole,
                             provider: 'microsoft',
                             accessToken: result.accessToken,
-                            loginTime: new Date().toISOString()
+                            loginTime: new Date().toISOString(),
+                            expiresAt: expiresAt.toISOString(),
+                            isAuthenticated: true,
+                            isOAuth: true  // Critical flag for the auth system to recognize OAuth sessions
                         };
                         
-                        console.log('👤 User data to store:', userData);
+                        console.log('👤 Storing user data:', userData);
                         
-                        // Store in localStorage for persistence
+                        // Store in all the places the app expects to find it
                         localStorage.setItem('currentUser', JSON.stringify(userData));
                         localStorage.setItem('isAuthenticated', 'true');
                         localStorage.setItem('userRole', userRole);
+                        localStorage.setItem('authenticatedUser', JSON.stringify(userData));
                         
-                        console.log('✅ Microsoft authentication completed successfully');
-                        console.log('🔄 Cleaning URL and reloading...');
+                        // Also store for Microsoft-specific checks
+                        localStorage.setItem('microsoftUser', JSON.stringify(userData));
                         
-                        // Clean URL and reload page
-                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // Set session storage as well
+                        sessionStorage.setItem('currentUser', JSON.stringify(userData));
+                        sessionStorage.setItem('isAuthenticated', 'true');
                         
-                        // Wait a moment then reload
+                        // Initialize the global auth object if it exists
+                        if (window.auth) {
+                            console.log('🔐 Setting current user in auth system...');
+                            window.auth.currentUser = userData;
+                            if (window.auth.storage && typeof window.auth.storage.setCurrentUser === 'function') {
+                                window.auth.storage.setCurrentUser(userData);
+                            }
+                        }
+                        
+                        console.log('✅ Microsoft authentication completed - user authenticated');
+                        console.log('🔄 Cleaning URL and reloading after short delay...');
+                        
+                        // Clean URL and reload page after a longer delay to ensure all auth systems are updated
                         setTimeout(() => {
+                            window.history.replaceState({}, document.title, window.location.pathname);
                             window.location.reload();
-                        }, 500);
+                        }, 1000);
                     }
                 } catch (error) {
                     console.error('❌ OAuth callback error:', error);
