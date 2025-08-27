@@ -883,7 +883,7 @@ class TrackingDashboard {
 // Initialize the tracking dashboard
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded event fired, creating TrackingDashboard');
-    new TrackingDashboard();
+    window.trackingDashboard = new TrackingDashboard();
 });
 
 // Backup initialization in case DOMContentLoaded already fired
@@ -891,5 +891,5 @@ if (document.readyState === 'loading') {
     console.log('Document still loading, waiting for DOMContentLoaded');
 } else {
     console.log('Document already loaded, initializing immediately');
-    new TrackingDashboard();
+    window.trackingDashboard = new TrackingDashboard();
 }

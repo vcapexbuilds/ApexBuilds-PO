@@ -451,7 +451,10 @@ class PODataManager {
             <td title="Submitted by: ${username}">${username}</td>
             <td>
                 <div class="action-buttons">
-                    <button onclick="viewPO('${po.poNumber}')" class="btn-action" title="View Details">👁️</button>
+                    <form method="get" action="../Print.html" target="_blank" style="display:inline;" onsubmit="return preparePrintData('${po.poNumber}')">
+                        <input type="hidden" name="po" value="${po.poNumber}">
+                        <button type="submit" class="btn-action" title="View Details">👁️</button>
+                    </form>
                     <button onclick="editPO('${po.poNumber}')" class="btn-action" title="Edit PO">✏️</button>
                     <button onclick="downloadPO('${po.poNumber}')" class="btn-action" title="Download PDF">📥</button>
                 </div>
@@ -811,12 +814,79 @@ class PODataManager {
             timestamp: new Date().toISOString()
         };
     }
+
+    /**
+     * Prepare PO data for print page by storing it in localStorage
+     * @param {string} poNumber - The PO number to find and store
+     * @returns {boolean} - Returns true to allow form submission to continue
+     */
+    preparePrintData(poNumber) {
+        console.log('📋 Preparing print data for PO:', poNumber);
+        
+        try {
+            // First, try to find PO in the displayed data
+            let poData = null;
+            
+            // Check if we have a reference to the tracking dashboard to get filtered data
+            if (window.trackingDashboard && window.trackingDashboard.filteredPOs) {
+                poData = window.trackingDashboard.filteredPOs.find(po => po.poNumber === poNumber);
+                console.log('🔍 Found PO in filtered data:', !!poData);
+            }
+            
+            // If not found in filtered data, check the cached data
+            if (!poData && this.cachedData && this.cachedData.pos) {
+                poData = this.cachedData.pos.find(po => po.poNumber === poNumber);
+                console.log('🔍 Found PO in cached data:', !!poData);
+            }
+            
+            // If still not found, check demo data
+            if (!poData) {
+                const demoData = this.getDemoData();
+                poData = demoData.pos.find(po => po.poNumber === poNumber);
+                console.log('🔍 Found PO in demo data:', !!poData);
+            }
+            
+            if (poData) {
+                // Store the PO data in localStorage for the print page
+                localStorage.setItem('printPOData', JSON.stringify(poData));
+                console.log('✅ PO data stored in localStorage for print page');
+                console.log('📄 Stored data:', poData);
+            } else {
+                console.warn('⚠️ PO not found:', poNumber);
+                // Clear any old data and let print page show empty template
+                localStorage.removeItem('printPOData');
+            }
+            
+            return true; // Allow form submission to continue
+            
+        } catch (error) {
+            console.error('❌ Error preparing print data:', error);
+            localStorage.removeItem('printPOData');
+            return true; // Still allow form submission
+        }
+    }
 }
 
 // Global functions for table actions
+window.preparePrintData = function(poNumber) {
+    console.log('🌍 Global preparePrintData called for:', poNumber);
+    
+    // Try to get the PODataManager instance
+    if (window.poDataManager && typeof window.poDataManager.preparePrintData === 'function') {
+        return window.poDataManager.preparePrintData(poNumber);
+    } else {
+        console.warn('⚠️ PODataManager instance not found, storing empty data');
+        localStorage.removeItem('printPOData');
+        return true;
+    }
+};
+
 window.viewPO = function(poNumber) {
-    // Test: completely minimal function
-    window.open('../Print.html', '_blank');
+    // TOTALLY DIFFERENT MESSAGE - if you see this, then THIS function is being called
+    alert('🚨 MY CUSTOM VIEWPO FUNCTION EXECUTED! PO NUMBER: ' + poNumber);
+    
+    // Navigate directly without any complex logic
+    window.location.href = '/Print.html?po=' + poNumber;
 };
 
 window.editPO = function(poNumber) {
