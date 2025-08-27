@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Table Visibility</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .form-table th {
+            background: #f0f0f0;
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+            font-weight: 600;
+        }
+        .form-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+        }
+        .form-table tbody tr {
+            background: white;
+        }
+        .form-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 10px 5px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .debug-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .status-buttons {
+            white-space: nowrap;
+        }
+        .status-buttons label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug: Table Row Visibility Test</h1>
+        
+        <div class="debug-info">
+            <strong>Purpose:</strong> Test if table rows are being added and are visible
+        </div>
+
+        <!-- Schedule Section -->
+        <div class="debug-section">
+            <h2>📋 Schedule Table Test</h2>
+            <button type="button" id="addScheduleItem">Add Schedule Item</button>
+            <button type="button" onclick="testScheduleManually()">Manual Test Add</button>
+            <button type="button" onclick="inspectScheduleTable()">Inspect Table</button>
+            
+            <table id="scheduleTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Prime Line</th>
+                        <th>Budget Code</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Unit</th>
+                        <th>Total Cost</th>
+                        <th>Scheduled</th>
+                        <th>Apex Contract Value</th>
+                        <th>Profit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleItems">
+                    <!-- Dynamic schedule items will be added here -->
+                </tbody>
+            </table>
+            
+            <div id="scheduleInfo" class="debug-info">Schedule info will appear here...</div>
+        </div>
+
+        <!-- Scope Section -->
+        <div class="debug-section">
+            <h2>🎯 Scope Table Test</h2>
+            <button type="button" id="addScopeItem">Add Scope Item</button>
+            <button type="button" onclick="testScopeManually()">Manual Test Add</button>
+            <button type="button" onclick="inspectScopeTable()">Inspect Table</button>
+            
+            <table id="scopeTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Item Number</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scopeItems">
+                    <!-- Dynamic scope items will be added here -->
+                </tbody>
+            </table>
+            
+            <div id="scopeInfo" class="debug-info">Scope info will appear here...</div>
+        </div>
+
+        <!-- Console Output -->
+        <div class="debug-section">
+            <h2>🖥️ Console Output</h2>
+            <div id="consoleOutput" class="console-output">Console output will appear here...\n</div>
+            <button onclick="clearConsole()">Clear Console</button>
+        </div>
+    </div>
+
+    <!-- Load the emergency button fix -->
+    <script src="emergency-button-fix.js"></script>
+
+    <script>
+        // Override console.log to show in our debug console
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'warn' ? '#ffaa00' : '#00ff00';
+            consoleOutput.innerHTML += `<span style="color: ${color}">[${timestamp}] ${message}</span>\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole('ERROR: ' + args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToConsole('WARN: ' + args.join(' '), 'warn');
+        };
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = 'Console cleared...\n';
+        }
+        
+        function testScheduleManually() {
+            console.log('🧪 Manual schedule test started');
+            const tbody = document.getElementById('scheduleItems');
+            console.log('Found tbody:', !!tbody);
+            
+            if (tbody) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="TEST" style="background: yellow;"></td>
+                    <td><input type="text" value="MANUAL"></td>
+                    <td><textarea>Manual test row</textarea></td>
+                    <td><input type="number" value="1"></td>
+                    <td><input type="text" value="EA"></td>
+                    <td><input type="number" value="100"></td>
+                    <td><input type="number" value="1"></td>
+                    <td><input type="number" value="100"></td>
+                    <td><input type="number" value="10"></td>
+                    <td><button onclick="this.closest('tr').remove()">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+                console.log('✅ Manual row added');
+                inspectScheduleTable();
+            } else {
+                console.error('❌ Schedule tbody not found');
+            }
+        }
+        
+        function testScopeManually() {
+            console.log('🧪 Manual scope test started');
+            const tbody = document.getElementById('scopeItems');
+            console.log('Found tbody:', !!tbody);
+            
+            if (tbody) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="1" readonly style="background: yellow;"></td>
+                    <td><textarea>Manual test scope item</textarea></td>
+                    <td class="status-buttons">
+                        <label><input type="radio" name="manual_test" value="included"> Included</label>
+                        <label><input type="radio" name="manual_test" value="excluded"> Excluded</label>
+                    </td>
+                    <td><button onclick="this.closest('tr').remove()">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+                console.log('✅ Manual scope row added');
+                inspectScopeTable();
+            } else {
+                console.error('❌ Scope tbody not found');
+            }
+        }
+        
+        function inspectScheduleTable() {
+            const tbody = document.getElementById('scheduleItems');
+            const table = document.getElementById('scheduleTable');
+            const info = document.getElementById('scheduleInfo');
+            
+            const stats = {
+                tbody_exists: !!tbody,
+                table_exists: !!table,
+                row_count: tbody ? tbody.children.length : 0,
+                table_visible: table ? getComputedStyle(table).display !== 'none' : false,
+                tbody_visible: tbody ? getComputedStyle(tbody).display !== 'none' : false,
+                table_height: table ? table.offsetHeight : 0,
+                tbody_height: tbody ? tbody.offsetHeight : 0,
+                table_width: table ? table.offsetWidth : 0
+            };
+            
+            info.innerHTML = `
+                <strong>Schedule Table Stats:</strong><br>
+                Table exists: ${stats.table_exists}<br>
+                TBody exists: ${stats.tbody_exists}<br>
+                Row count: ${stats.row_count}<br>
+                Table visible: ${stats.table_visible}<br>
+                TBody visible: ${stats.tbody_visible}<br>
+                Table dimensions: ${stats.table_width} x ${stats.table_height}<br>
+                TBody height: ${stats.tbody_height}<br>
+            `;
+            
+            console.log('📊 Schedule table stats:', stats);
+        }
+        
+        function inspectScopeTable() {
+            const tbody = document.getElementById('scopeItems');
+            const table = document.getElementById('scopeTable');
+            const info = document.getElementById('scopeInfo');
+            
+            const stats = {
+                tbody_exists: !!tbody,
+                table_exists: !!table,
+                row_count: tbody ? tbody.children.length : 0,
+                table_visible: table ? getComputedStyle(table).display !== 'none' : false,
+                tbody_visible: tbody ? getComputedStyle(tbody).display !== 'none' : false,
+                table_height: table ? table.offsetHeight : 0,
+                tbody_height: tbody ? tbody.offsetHeight : 0,
+                table_width: table ? table.offsetWidth : 0
+            };
+            
+            info.innerHTML = `
+                <strong>Scope Table Stats:</strong><br>
+                Table exists: ${stats.table_exists}<br>
+                TBody exists: ${stats.tbody_exists}<br>
+                Row count: ${stats.row_count}<br>
+                Table visible: ${stats.table_visible}<br>
+                TBody visible: ${stats.tbody_visible}<br>
+                Table dimensions: ${stats.table_width} x ${stats.table_height}<br>
+                TBody height: ${stats.tbody_height}<br>
+            `;
+            
+            console.log('📊 Scope table stats:', stats);
+        }
+        
+        // Auto-inspect on page load
+        window.addEventListener('load', function() {
+            console.log('🚀 Page loaded, running initial inspection...');
+            setTimeout(() => {
+                inspectScheduleTable();
+                inspectScopeTable();
+            }, 1000);
+        });
+        
+        console.log('🔧 Debug page initialized');
+    </script>
+</body>
+</html>

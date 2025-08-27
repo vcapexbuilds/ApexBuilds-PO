@@ -16,16 +16,8 @@ function forceBindButtons() {
     if (scheduleBtn) {
         console.log('📝 Binding schedule button...');
         
-        // Clear any existing handlers and dataset
-        scheduleBtn.onclick = null;
-        scheduleBtn.removeAttribute('data-bound');
-        
-        // Remove any existing event listeners
-        const newBtn = scheduleBtn.cloneNode(true);
-        scheduleBtn.parentNode.replaceChild(newBtn, scheduleBtn);
-        
-        // Add single handler only
-        newBtn.onclick = function(e) {
+        // Clear existing handler and bind new one
+        scheduleBtn.onclick = function(e) {
             console.log('🎯 SCHEDULE BUTTON CLICKED!');
             e.preventDefault();
             e.stopPropagation();
@@ -46,16 +38,8 @@ function forceBindButtons() {
     if (scopeBtn) {
         console.log('📝 Binding scope button...');
         
-        // Clear any existing handlers and dataset
-        scopeBtn.onclick = null;
-        scopeBtn.removeAttribute('data-bound');
-        
-        // Remove any existing event listeners
-        const newBtn = scopeBtn.cloneNode(true);
-        scopeBtn.parentNode.replaceChild(newBtn, scopeBtn);
-        
-        // Add single handler only
-        newBtn.onclick = function(e) {
+        // Clear existing handler and bind new one
+        scopeBtn.onclick = function(e) {
             console.log('🎯 SCOPE BUTTON CLICKED!');
             e.preventDefault();
             e.stopPropagation();
@@ -112,6 +96,11 @@ function addScheduleItemDirect() {
     
     console.log('📝 Setting row innerHTML...');
     row.innerHTML = rowHTML;
+    
+    // Ensure row is visible with explicit styling
+    row.style.height = 'auto';
+    row.style.minHeight = '40px';
+    row.style.display = 'table-row';
     
     console.log('📝 Appending row to tbody...');
     tbody.appendChild(row);
@@ -175,6 +164,11 @@ function addScopeItemDirect() {
     
     console.log('📝 Setting scope row innerHTML...');
     row.innerHTML = rowHTML;
+    
+    // Ensure row is visible with explicit styling
+    row.style.height = 'auto';
+    row.style.minHeight = '40px';
+    row.style.display = 'table-row';
     
     console.log('📝 Appending scope row to tbody...');
     tbody.appendChild(row);

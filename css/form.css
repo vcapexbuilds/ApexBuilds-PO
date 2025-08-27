@@ -558,7 +558,8 @@
 
 .form-table tbody tr {
     background: white;
-    height: 22px; /* Excel-like row height - very compact */
+    height: auto; /* Allow flexible height */
+    min-height: 40px; /* Minimum height for visibility */
     border: none;
 }
 
@@ -571,13 +572,14 @@
 }
 
 .form-table td {
-    padding: 0; /* Zero padding - spreadsheet style */
+    padding: 4px; /* Add some padding for visibility */
     margin: 0;
     border: 1px solid #c0c0c0; /* Excel-like cell borders */
     background: white;
-    height: 22px; /* Match row height exactly */
+    height: auto; /* Allow flexible height */
+    min-height: 35px; /* Minimum height for inputs */
     vertical-align: middle;
-    overflow: hidden;
+    overflow: visible; /* Allow content to show */
     position: relative;
 }
 
