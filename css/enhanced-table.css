@@ -115,7 +115,46 @@
     word-break: break-word;
 }
 
-/* Better table responsiveness */
+/* Better table responsiveness and wide display optimization */
+.table-container {
+    overflow-x: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.table-container table {
+    width: 100%;
+    min-width: 900px; /* Ensure table uses full width */
+    border-collapse: collapse;
+}
+
+.table-container th,
+.table-container td {
+    padding: 8px 12px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-container th {
+    background: rgba(102, 126, 234, 0.1);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Optimize column widths for better space usage */
+.table-container th:nth-child(1) { width: 8%; }  /* ID */
+.table-container th:nth-child(2) { width: 20%; } /* Project Name */
+.table-container th:nth-child(3) { width: 15%; } /* Company */
+.table-container th:nth-child(4) { width: 10%; } /* Status */
+.table-container th:nth-child(5) { width: 12%; } /* Date */
+.table-container th:nth-child(6) { width: 12%; } /* Amount */
+.table-container th:nth-child(7) { width: 15%; } /* Submitted By */
+.table-container th:nth-child(8) { width: 8%; }  /* Actions */
+
 @media (max-width: 768px) {
     .action-buttons {
         flex-direction: column;
@@ -129,5 +168,9 @@
     
     .amount-cell {
         text-align: left;
+    }
+    
+    .table-container {
+        font-size: 12px;
     }
 }

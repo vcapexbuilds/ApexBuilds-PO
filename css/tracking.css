@@ -1,13 +1,14 @@
-/* Tracking Page Styles */
-
+/* Tracking Page Container - Optimized for Content */
 .container {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    margin-top: 20px;
-    padding: 20px;
+    margin-top: 15px;
+    padding: 15px;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 /* Status Badges */
@@ -97,34 +98,37 @@
     background: #1565c0;
 }
 
-/* Compact Dashboard Layout */
+/* Compact Dashboard Layout - Optimized for Wide Tables */
 .dashboard-layout {
     display: flex;
     gap: 15px;
-    min-height: calc(100vh - 200px);
+    min-height: calc(100vh - 180px);
 }
 
-/* Left Sidebar - Ultra Compact */
+/* Left Sidebar - More Compact */
 .sidebar {
-    width: 200px;
+    width: 180px;
     flex-shrink: 0;
     background: rgba(248, 249, 250, 0.8);
     border-radius: 8px;
-    padding: 15px;
+    padding: 12px;
     border: 2px solid #667eea;
     box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
 }
 
-/* Filters in Sidebar - Collapsible */
+/* Filters in Sidebar - More Compact */
 .filters-sidebar {
-    margin-bottom: 15px;
-    padding-bottom: 15px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .filters-sidebar h3 {
-    margin: 0 0 10px 0;
-    font-size: 14px;
+    margin: 0 0 8px 0;
+    font-size: 13px;
     font-weight: 600;
     color: #333;
     cursor: pointer;
@@ -132,8 +136,8 @@
     align-items: center;
     justify-content: space-between;
     background: rgba(102, 126, 234, 0.1);
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 6px 10px;
+    border-radius: 5px;
     transition: all 0.2s ease;
 }
 
@@ -144,7 +148,7 @@
 
 .filters-sidebar h3::after {
     content: '▼';
-    font-size: 10px;
+    font-size: 9px;
     transition: transform 0.2s;
 }
 
@@ -162,24 +166,24 @@
 }
 
 .filter-group {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .filter-group label {
     display: block;
     font-weight: 500;
     color: #555;
-    font-size: 11px;
-    margin-bottom: 3px;
+    font-size: 10px;
+    margin-bottom: 2px;
 }
 
 .filter-group input,
 .filter-group select {
     width: 100%;
-    padding: 6px 8px;
+    padding: 4px 6px;
     border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 4px;
-    font-size: 12px;
+    border-radius: 3px;
+    font-size: 11px;
     background: white;
     transition: border-color 0.2s ease;
 }
@@ -188,13 +192,13 @@
 .filter-group select:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 2px rgba(27, 54, 93, 0.1);
+    box-shadow: 0 0 0 1px rgba(27, 54, 93, 0.1);
 }
 
 .filter-actions {
     display: flex;
-    gap: 6px;
-    margin-top: 10px;
+    gap: 4px;
+    margin-top: 8px;
 }
 
 .btn-small {
@@ -210,16 +214,16 @@
     letter-spacing: 0.5px;
 }
 
-/* Stats in Sidebar - Ultra Compact */
+/* Stats in Sidebar - More Compact */
 .stats-sidebar {
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 6px;
-    padding: 10px;
+    border-radius: 5px;
+    padding: 8px;
 }
 
 .stats-sidebar h3 {
-    margin: 0 0 8px 0;
-    font-size: 12px;
+    margin: 0 0 6px 0;
+    font-size: 11px;
     font-weight: 600;
     color: #333;
     cursor: pointer;
@@ -230,7 +234,7 @@
 
 .stats-sidebar h3::after {
     content: '▼';
-    font-size: 8px;
+    font-size: 7px;
     transition: transform 0.2s;
 }
 
@@ -250,27 +254,27 @@
 .stats-vertical {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 8px;
+    padding: 3px 6px;
     background: rgba(27, 54, 93, 0.05);
-    border-radius: 4px;
+    border-radius: 3px;
     border-left: 2px solid var(--apex-primary);
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: 9px;
     color: #666;
     font-weight: 500;
 }
 
 .stat-value {
-    font-size: 11px;
+    font-size: 10px;
     color: #333;
     font-weight: 600;
 }
@@ -279,6 +283,22 @@
 .main-content {
     flex: 1;
     min-width: 0; /* Prevents flex item from overflowing */
+}
+
+/* Responsive optimizations for wide screens */
+@media (min-width: 1200px) {
+    .dashboard-layout {
+        gap: 20px;
+    }
+    
+    .sidebar {
+        width: 200px;
+    }
+    
+    .container {
+        padding: 20px;
+        margin-top: 20px;
+    }
 }
 
 /* Legacy Filters Section - Hidden by default in new layout */
@@ -350,21 +370,22 @@
     margin-bottom: 30px;
 }
 
-/* PO List */
+/* PO List - Optimized for Wide Display */
 .po-list {
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
     border: 2px solid #4CAF50;
     flex: 1;
     min-width: 0;
+    margin: 0;
 }
 
 .list-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
-    padding: 20px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -722,16 +743,21 @@ input[type="checkbox"] {
     margin: 0 auto 20px;
 }
 
-/* Empty State */
+/* Empty State - Compact Design */
 .empty-state {
     text-align: center;
-    padding: 60px 20px;
+    padding: 30px 20px;
     color: #6c757d;
+    background: rgba(248, 249, 250, 0.5);
+    border-radius: 12px;
+    border: 2px dashed #dee2e6;
+    margin: 20px;
 }
 
 .empty-state p {
-    font-size: 1.1rem;
-    margin-bottom: 25px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    line-height: 1.5;
 }
 
 /* PO Details Modal Content */
