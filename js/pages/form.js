@@ -57,6 +57,35 @@ class POForm {
         this.scheduleItemTemplate = this.createScheduleItemTemplate();
         this.scopeItemTemplate = this.createScopeItemTemplate();
         
+        // Also add a backup direct button binding just in case
+        setTimeout(() => {
+            console.log('🔧 BACKUP BUTTON BINDING...');
+            const scheduleBtn = document.getElementById('addScheduleItem');
+            const scopeBtn = document.getElementById('addScopeItem');
+            
+            if (scheduleBtn) {
+                scheduleBtn.onclick = (e) => {
+                    console.log('🎯 BACKUP SCHEDULE BUTTON CLICKED!');
+                    e.preventDefault();
+                    this.addScheduleItem();
+                };
+                console.log('✅ Backup schedule button binding added');
+            } else {
+                console.error('❌ Schedule button not found for backup binding');
+            }
+            
+            if (scopeBtn) {
+                scopeBtn.onclick = (e) => {
+                    console.log('🎯 BACKUP SCOPE BUTTON CLICKED!');
+                    e.preventDefault();
+                    this.addScopeItem();
+                };
+                console.log('✅ Backup scope button binding added');
+            } else {
+                console.error('❌ Scope button not found for backup binding');
+            }
+        }, 500);
+        
         // Wait for global objects to be available for other features
         const checkGlobals = () => {
             if (window.auth && window.modal && window.api && window.storage) {

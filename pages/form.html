@@ -492,8 +492,9 @@
         });
     </script>
     <script src="../js/Module/modal.js"></script>
-    <script src="../js/Module/dynamic-form.js"></script>
+    <!-- REMOVED: <script src="../js/Module/dynamic-form.js"></script> - CONFLICTS WITH form.js -->
     <script src="../js/pages/form.js"></script>
+    <script src="../emergency-button-fix.js"></script>
     
     <!-- HYBRID FORM SUBMISSION - MS Auth + Google Drive Storage -->
     <script>
@@ -546,53 +547,6 @@
                             // Reset form and redirect
                             form.reset();
                             const currentUser = window.auth?.getCurrentUser() || JSON.parse(localStorage.getItem('currentUser') || '{}');
-                            if (currentUser?.role === 'admin') {
-                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
-                            } else {
-                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
-                            }
-                        } else {
-                            alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
-                        }
-
-                    } catch (error) {
-                        console.error('Form submission error:', error);
-                        alert(`Error submitting form: ${error.message}`);
-                    } finally {
-                        // Reset button state
-                        submitBtn.textContent = 'Submit Purchase Order';
-                        submitBtn.disabled = false;
-                    }
-                });
-
-                        if (result && result.success) {
-                            let message = `SUCCESS! Purchase Order submitted successfully!\n\n🎯 PO Number: ${result.poNumber}`;
-                            
-                            if (result.primaryStorage) {
-                                message += `\n� Primary Storage: ${result.primaryStorage}`;
-                            }
-                            
-                            if (result.storage) {
-                                if (result.storage.googleDrive && result.storage.googleDrive.success) {
-                                    message += `\n☁️ Google Drive: ✅ Saved successfully`;
-                                }
-                                if (result.storage.local && result.storage.local.success) {
-                                    message += `\n💾 Local File: ✅ Downloaded to Downloads`;
-                                }
-                                if (result.storage.localBackup && result.storage.localBackup.success) {
-                                    message += `\n� Backup: ✅ Local backup created`;
-                                }
-                            }
-                            
-                            if (result.folderStructure) {
-                                message += `\n\n📁 Folder Structure: ${result.folderStructure}`;
-                            }
-                            
-                            alert(message);
-                            
-                            // Reset form and redirect
-                            form.reset();
-                            const currentUser = window.auth?.getCurrentUser();
                             if (currentUser?.role === 'admin') {
                                 window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
                             } else {

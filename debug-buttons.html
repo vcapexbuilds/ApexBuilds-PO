@@ -3,82 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Buttons Test</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        button { padding: 10px 15px; margin: 10px; cursor: pointer; }
-        .btn-secondary { background: #6c757d; color: white; border: none; border-radius: 4px; }
-        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; }
-    </style>
+    <title>Button Debug Test</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/form.css">
 </head>
 <body>
-    <h1>Debug Form Buttons Test</h1>
-    
-    <div>
-        <h3>Test Add Buttons</h3>
-        <button type="button" id="addScheduleItem" class="btn-secondary">Add Schedule Item</button>
-        <button type="button" id="addScopeItem" class="btn-secondary">Add Scope Item</button>
-    </div>
-
-    <div>
-        <h3>Container Elements</h3>
-        <div id="scheduleItems" style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
-            <p>Schedule items will appear here</p>
-        </div>
+    <div style="padding: 20px;">
+        <h1>🔍 Deep Button Audit Test</h1>
         
-        <div id="scopeItems" style="border: 1px solid #ddd; padding: 10px; margin: 10px 0;">
-            <p>Scope items will appear here</p>
+        <div class="form-section">
+            <h2>Schedule</h2>
+            <div class="table-controls">
+                <button type="button" id="addScheduleItem" class="btn-secondary">Add Schedule Item</button>
+            </div>
+            <table id="scheduleTable" class="form-table">
+                <thead>
+                    <tr><th>Test</th></tr>
+                </thead>
+                <tbody id="scheduleItems">
+                    <!-- Items will go here -->
+                </tbody>
+            </table>
         </div>
-    </div>
 
-    <div>
-        <h3>Debug Log</h3>
-        <div id="debugLog" class="log">Waiting for tests...</div>
+        <div class="form-section">
+            <h2>Scope of Work</h2>
+            <div class="table-controls">
+                <button type="button" id="addScopeItem" class="btn-secondary">Add Scope Item</button>
+            </div>
+            <table id="scopeTable" class="form-table">
+                <thead>
+                    <tr><th>Test</th></tr>
+                </thead>
+                <tbody id="scopeItems">
+                    <!-- Items will go here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="debugOutput" style="margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; font-family: monospace;"></div>
     </div>
 
     <script>
-        const log = (msg) => {
-            console.log(msg);
-            const debugLog = document.getElementById('debugLog');
-            debugLog.innerHTML += '<div>' + msg + '</div>';
-        };
-
-        // Test basic button clicking
-        document.addEventListener('DOMContentLoaded', () => {
-            log('DOM loaded, testing buttons...');
+        console.log('=== DEEP BUTTON AUDIT START ===');
+        
+        function logDebug(message) {
+            console.log(message);
+            const debugOutput = document.getElementById('debugOutput');
+            if (debugOutput) {
+                debugOutput.textContent += message + '\n';
+            }
+        }
+        
+        // Test 1: Check if buttons exist immediately
+        logDebug('TEST 1: Immediate button check');
+        const scheduleBtn = document.getElementById('addScheduleItem');
+        const scopeBtn = document.getElementById('addScopeItem');
+        logDebug(`Schedule button exists: ${!!scheduleBtn}`);
+        logDebug(`Scope button exists: ${!!scopeBtn}`);
+        
+        // Test 2: Try immediate binding
+        if (scheduleBtn) {
+            logDebug('TEST 2: Immediate binding attempt');
+            scheduleBtn.onclick = function() {
+                logDebug('🎯 IMMEDIATE ONCLICK - Schedule button clicked!');
+                alert('Schedule button clicked via immediate onclick!');
+            };
+            logDebug('Immediate onclick handler set');
+        }
+        
+        if (scopeBtn) {
+            scopeBtn.onclick = function() {
+                logDebug('🎯 IMMEDIATE ONCLICK - Scope button clicked!');
+                alert('Scope button clicked via immediate onclick!');
+            };
+            logDebug('Immediate onclick handler set');
+        }
+        
+        // Test 3: DOMContentLoaded binding
+        document.addEventListener('DOMContentLoaded', function() {
+            logDebug('TEST 3: DOMContentLoaded binding');
             
-            const addScheduleBtn = document.getElementById('addScheduleItem');
-            const addScopeBtn = document.getElementById('addScopeItem');
+            const scheduleBtn2 = document.getElementById('addScheduleItem');
+            const scopeBtn2 = document.getElementById('addScopeItem');
             
-            log('Schedule button found: ' + (!!addScheduleBtn));
-            log('Scope button found: ' + (!!addScopeBtn));
+            logDebug(`Schedule button exists after DOMContentLoaded: ${!!scheduleBtn2}`);
+            logDebug(`Scope button exists after DOMContentLoaded: ${!!scopeBtn2}`);
             
-            if (addScheduleBtn) {
-                addScheduleBtn.addEventListener('click', () => {
-                    log('✅ Schedule button clicked!');
-                    const container = document.getElementById('scheduleItems');
-                    const newItem = document.createElement('div');
-                    newItem.innerHTML = '<p>New schedule item added at ' + new Date().toLocaleTimeString() + '</p>';
-                    container.appendChild(newItem);
+            if (scheduleBtn2) {
+                scheduleBtn2.addEventListener('click', function() {
+                    logDebug('🎯 DOMCONTENTLOADED - Schedule button clicked!');
+                    alert('Schedule button clicked via DOMContentLoaded!');
                 });
-                log('✅ Schedule button event listener added');
-            } else {
-                log('❌ Schedule button not found');
+                logDebug('DOMContentLoaded addEventListener added');
             }
             
-            if (addScopeBtn) {
-                addScopeBtn.addEventListener('click', () => {
-                    log('✅ Scope button clicked!');
-                    const container = document.getElementById('scopeItems');
-                    const newItem = document.createElement('div');
-                    newItem.innerHTML = '<p>New scope item added at ' + new Date().toLocaleTimeString() + '</p>';
-                    container.appendChild(newItem);
+            if (scopeBtn2) {
+                scopeBtn2.addEventListener('click', function() {
+                    logDebug('🎯 DOMCONTENTLOADED - Scope button clicked!');
+                    alert('Scope button clicked via DOMContentLoaded!');
                 });
-                log('✅ Scope button event listener added');
-            } else {
-                log('❌ Scope button not found');
+                logDebug('DOMContentLoaded addEventListener added');
             }
         });
+        
+        // Test 4: Window load binding  
+        window.addEventListener('load', function() {
+            logDebug('TEST 4: Window load binding');
+            
+            const scheduleBtn3 = document.getElementById('addScheduleItem');
+            const scopeBtn3 = document.getElementById('addScopeItem');
+            
+            logDebug(`Schedule button exists after window load: ${!!scheduleBtn3}`);
+            logDebug(`Scope button exists after window load: ${!!scopeBtn3}`);
+            
+            // Check button properties
+            if (scheduleBtn3) {
+                logDebug('Schedule button properties:');
+                logDebug(`  - disabled: ${scheduleBtn3.disabled}`);
+                logDebug(`  - style.pointerEvents: ${scheduleBtn3.style.pointerEvents || 'default'}`);
+                logDebug(`  - style.display: ${scheduleBtn3.style.display || 'default'}`);
+                logDebug(`  - computed display: ${window.getComputedStyle(scheduleBtn3).display}`);
+                logDebug(`  - computed pointerEvents: ${window.getComputedStyle(scheduleBtn3).pointerEvents}`);
+                logDebug(`  - computed visibility: ${window.getComputedStyle(scheduleBtn3).visibility}`);
+                logDebug(`  - offsetWidth: ${scheduleBtn3.offsetWidth}`);
+                logDebug(`  - offsetHeight: ${scheduleBtn3.offsetHeight}`);
+                logDebug(`  - clientWidth: ${scheduleBtn3.clientWidth}`);
+                logDebug(`  - clientHeight: ${scheduleBtn3.clientHeight}`);
+            }
+        });
+        
+        logDebug('=== DEEP BUTTON AUDIT SETUP COMPLETE ===');
     </script>
 </body>
 </html>

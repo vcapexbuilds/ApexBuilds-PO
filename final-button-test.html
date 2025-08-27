@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Button Test</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/form.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h1>🎯 FINAL BUTTON FUNCTIONALITY TEST</h1>
+        <p>This test ensures the buttons work without any class dependencies.</p>
+        
+        <div class="form-section">
+            <h2>Schedule</h2>
+            <div class="table-controls">
+                <button type="button" id="addScheduleItem" class="btn-secondary">Add Schedule Item</button>
+            </div>
+            <table id="scheduleTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Start Date *</th>
+                        <th>End Date *</th>
+                        <th>Expected Completion *</th>
+                        <th>Scheduled *</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleItems">
+                    <!-- Dynamic schedule items will be added here -->
+                </tbody>
+            </table>
+            <div id="noScheduleItems" class="empty-state">
+                <p>No schedule items added yet. Click "Add Schedule Item" to begin.</p>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Scope of Work</h2>
+            <div class="table-controls">
+                <button type="button" id="addScopeItem" class="btn-secondary">Add Scope Item</button>
+            </div>
+            <table id="scopeTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Item Number *</th>
+                        <th>Description *</th>
+                        <th>Status *</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scopeItems">
+                    <!-- Dynamic scope items will be added here -->
+                </tbody>
+            </table>
+            <div id="noScopeItems" class="empty-state">
+                <p>No scope items added yet. Click "Add Scope Item" to begin.</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; padding: 10px; background: #e8f5e8; border-radius: 4px;">
+            <h3>Test Results:</h3>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script src="../emergency-button-fix.js"></script>
+    <script>
+        // Additional testing to confirm everything works
+        document.addEventListener('DOMContentLoaded', function() {
+            const results = document.getElementById('testResults');
+            
+            function logResult(message) {
+                console.log(message);
+                results.innerHTML += `<p>${message}</p>`;
+            }
+            
+            logResult('✅ DOM Content Loaded');
+            logResult(`✅ Schedule button found: ${!!document.getElementById('addScheduleItem')}`);
+            logResult(`✅ Scope button found: ${!!document.getElementById('addScopeItem')}`);
+            logResult('✅ Emergency button fix loaded');
+            logResult('🎯 <strong>Try clicking the buttons above!</strong>');
+        });
+    </script>
+</body>
+</html>
