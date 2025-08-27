@@ -22,7 +22,32 @@ class TrackingDashboard {
         console.log('Initializing tracking dashboard...');
         this.initializeAuth();
         this.bindEvents();
-        this.loadPOs();
+        
+        // Initialize PO Data Manager for Power Automate integration
+        if (window.PODataManager) {
+            console.log('🔗 TrackingDashboard: Initializing PO Data Manager for Power Automate integration...');
+            this.poDataManager = new window.PODataManager();
+            
+            // Override the PO Data Manager's display method to use our existing rendering
+            this.poDataManager.displayPOs = (pos) => {
+                console.log('📊 TrackingDashboard: Received POs from Power Automate:', pos);
+                this.allPOs = pos || [];
+                this.filterPOs();
+                this.updateStats(this.filteredPOs);
+            };
+            
+            // Override the error display to use our existing error handling
+            this.poDataManager.showErrorState = (errorMessage) => {
+                console.error('❌ TrackingDashboard: Power Automate error:', errorMessage);
+                alert('Failed to load purchase orders: ' + errorMessage);
+                this.allPOs = [];
+                this.filteredPOs = [];
+                this.renderPOs();
+            };
+        } else {
+            console.warn('⚠️ TrackingDashboard: PODataManager not available, falling back to test data');
+            this.loadPOs();
+        }
     }
 
     initializeAuth() {
@@ -30,28 +55,50 @@ class TrackingDashboard {
         
         // Give auth system time to fully initialize
         setTimeout(() => {
-            // FIRST: Check if we have Microsoft OAuth user data stored
+            // FIRST: Check if we have current user data (Microsoft OAuth or local auth)
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                try {
+                    const user = JSON.parse(storedUser);
+                    console.log('Found current user:', user);
+                    
+                    let firstName = '';
+                    if (user.firstName) {
+                        firstName = user.firstName;
+                    } else if (user.givenName) {
+                        firstName = user.givenName;
+                    } else if (user.displayName) {
+                        firstName = user.displayName.split(' ')[0];
+                    } else if (user.name) {
+                        firstName = user.name.split(' ')[0];
+                    } else if (user.username && user.username !== 'Microsoft User') {
+                        firstName = user.username.split(' ')[0];
+                    } else if (user.userPrincipalName) {
+                        firstName = user.userPrincipalName.split('@')[0];
+                    }
+                    
+                    if (firstName) {
+                        const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+                        console.log('Using current user name:', capitalizedName);
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${capitalizedName}`;
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error parsing current user:', error);
+                }
+            }
+            
+            // SECOND: Check legacy Microsoft user storage
             const storedMSUser = localStorage.getItem('microsoftUser');
             if (storedMSUser) {
                 try {
                     const msUser = JSON.parse(storedMSUser);
                     console.log('Found Microsoft OAuth user:', msUser);
                     
-                    let firstName = '';
-                    if (msUser.givenName) {
-                        firstName = msUser.givenName;
-                    } else if (msUser.displayName) {
-                        firstName = msUser.displayName.split(' ')[0];
-                    } else if (msUser.name) {
-                        firstName = msUser.name.split(' ')[0];
-                    } else if (msUser.userPrincipalName) {
-                        firstName = msUser.userPrincipalName.split('@')[0];
-                    }
-                    
-                    if (firstName) {
-                        const capitalizedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-                        console.log('Using Microsoft OAuth name:', capitalizedName);
-                        document.getElementById('welcomeUser').textContent = `Welcome, ${capitalizedName}`;
+                    let firstName = this.extractFirstName(msUser);
+                    if (firstName && firstName !== 'User') {
+                        console.log('Using Microsoft OAuth name:', firstName);
+                        document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
                         return;
                     }
                 } catch (error) {
@@ -59,7 +106,7 @@ class TrackingDashboard {
                 }
             }
             
-            // SECOND: Check local auth system (demo accounts)
+            // THIRD: Check local auth system (demo accounts)
             if (window.auth && window.auth.isAuthenticated()) {
                 const currentUser = window.auth.getCurrentUser();
                 console.log('Current user from auth system:', currentUser);
@@ -188,7 +235,17 @@ class TrackingDashboard {
                                 element.addEventListener('click', () => this.clearFilters());
                                 break;
                             case 'refreshList':
-                                element.addEventListener('click', () => this.loadPOs());
+                                console.log('🔧 TrackingDashboard: Setting up refresh button event listener');
+                                element.addEventListener('click', () => {
+                                    console.log('🔄 TrackingDashboard: Refresh button clicked');
+                                    if (this.poDataManager) {
+                                        console.log('Using PO Data Manager for refresh');
+                                        this.poDataManager.fetchAndDisplayPOs(true); // Force refresh from Power Automate
+                                    } else {
+                                        console.log('Falling back to loadPOs for refresh');
+                                        this.loadPOs();
+                                    }
+                                });
                                 break;
                             case 'exportList':
                                 element.addEventListener('click', () => this.exportPOs());
@@ -214,7 +271,6 @@ class TrackingDashboard {
 
     async loadPOs() {
         console.log('=== LOADING POs (SIMPLIFIED) ===');
-        this.showLoading(true);
         
         try {
             // Directly load test data - bypass PO Manager complexity
@@ -241,17 +297,7 @@ class TrackingDashboard {
             this.allPOs = [];
             this.filteredPOs = [];
             this.renderPOs();
-        } finally {
-            this.showLoading(false);
         }
-    }
-
-    showLoading(show) {
-        const loadingEl = document.querySelector('.loading-spinner, .loading, #loading');
-        if (loadingEl) {
-            loadingEl.style.display = show ? 'block' : 'none';
-        }
-        console.log(`Loading state: ${show ? 'shown' : 'hidden'}`);
     }
 
     renderPOs() {
@@ -804,6 +850,33 @@ class TrackingDashboard {
         return [headers, ...rows]
             .map(row => row.map(field => `"${field}"`).join(','))
             .join('\n');
+    }
+
+    /**
+     * Get PO data by PO number for detailed view
+     */
+    getPOData(poNumber) {
+        console.log('🔍 Searching for PO data:', poNumber);
+        
+        // Search in filteredPOs first, then fallback to allPOs
+        let foundPO = this.filteredPOs.find(po => po.poNumber === poNumber);
+        
+        if (!foundPO) {
+            foundPO = this.allPOs.find(po => po.poNumber === poNumber);
+        }
+        
+        // If still not found, try to get from PODataManager cache
+        if (!foundPO && this.poDataManager?.cachedData?.pos) {
+            foundPO = this.poDataManager.cachedData.pos.find(po => po.poNumber === poNumber);
+        }
+        
+        if (foundPO) {
+            console.log('✅ Found PO data:', foundPO);
+            return foundPO;
+        }
+        
+        console.warn('⚠️ PO not found:', poNumber);
+        return null;
     }
 }
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Test - Apex PO System</title>
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/tracking.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-brand">
+            <h1>Layout Test Page</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="dashboard-layout">
+            <!-- Left Sidebar -->
+            <div class="sidebar" style="border: 3px solid red;">
+                <div class="filters-sidebar">
+                    <h3 onclick="toggleSection('filters')">Filters (Click Me!)</h3>
+                    <div class="filter-content" id="filters-content">
+                        <p>This sidebar should be 200px wide with a red border</p>
+                        <p>Click the header above to test collapse functionality</p>
+                    </div>
+                </div>
+
+                <div class="stats-sidebar">
+                    <h3 onclick="toggleSection('stats')">Stats (Click Me!)</h3>
+                    <div class="stats-content" id="stats-content">
+                        <p>This section should also be collapsible</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="po-list" style="border: 3px solid green;">
+                <div class="list-header">
+                    <h2>PO Display Area</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p>This area should take up most of the width</p>
+                    <p>The sidebar should be much narrower (200px)</p>
+                    <p>Green border should be visible on this section</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionType) {
+            const element = document.querySelector(`.${sectionType}-sidebar`);
+            if (element) {
+                element.classList.toggle('collapsed');
+                console.log(`Toggled ${sectionType} section`);
+            }
+        }
+    </script>
+</body>
+</html>

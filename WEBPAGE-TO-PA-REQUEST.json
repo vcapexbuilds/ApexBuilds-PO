@@ -1,0 +1,15 @@
+{
+  "action": "fetch_pos",
+  "timestamp": "2025-08-26T16:30:15.234Z",
+  "user": {
+    "username": "John Smith",
+    "email": "john.smith@apexbuilding.com",
+    "firstName": "John",
+    "role": "user",
+    "microsoftId": "abc123-def456-ghi789",
+    "source": "microsoft-oauth-tracking",
+    "isOAuth": true,
+    "expiresAt": "2025-08-27T00:30:15.234Z",
+    "loginTime": "2025-08-26T16:00:00.000Z"
+  }
+}

@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Purchase Orders - Apex PO System</title>
-    <link rel="stylesheet" href="../css/global.css">
-    <link rel="stylesheet" href="../css/tracking.css">
+    <link rel="stylesheet" href="../css/global.css?v=20250827001">
+    <link rel="stylesheet" href="../css/tracking.css?v=20250827001">
+    <link rel="stylesheet" href="../css/enhanced-table.css?v=20250827001">>
 </head>
 <body>
     <div class="header">
@@ -30,72 +31,76 @@
             <div class="sidebar">
                 <!-- Filter Section -->
                 <div class="filters-sidebar">
-                    <h3>Filters</h3>
-                    <div class="filter-group">
-                        <label for="myPOsOnly" style="display:flex; align-items:center; gap:8px;">
-                            <input type="checkbox" id="myPOsOnly" checked>
-                            <span>My POs only</span>
-                        </label>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="statusFilter">Status:</label>
-                        <select id="statusFilter">
-                            <option value="">All</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Submitted">Submitted</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="dateFrom">Date From:</label>
-                        <input type="date" id="dateFrom">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="dateTo">Date To:</label>
-                        <input type="date" id="dateTo">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label for="projectFilter">Project:</label>
-                        <input type="text" id="projectFilter" placeholder="Search project">
-                    </div>
-                    
-                    <div class="filter-actions">
-                        <button id="applyFilters" class="btn-primary btn-small">Apply</button>
-                        <button id="clearFilters" class="btn-secondary btn-small">Clear</button>
+                    <h3 onclick="toggleSection('filters')">Filters</h3>
+                    <div class="filter-content" id="filters-content">
+                        <div class="filter-group">
+                            <label for="myPOsOnly" style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" id="myPOsOnly" checked>
+                                <span>My POs only</span>
+                            </label>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="statusFilter">Status:</label>
+                            <select id="statusFilter">
+                                <option value="">All</option>
+                                <option value="Draft">Draft</option>
+                                <option value="Submitted">Submitted</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="dateFrom">From:</label>
+                            <input type="date" id="dateFrom">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="dateTo">To:</label>
+                            <input type="date" id="dateTo">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="projectFilter">Project:</label>
+                            <input type="text" id="projectFilter" placeholder="Search">
+                        </div>
+                        
+                        <div class="filter-actions">
+                            <button id="applyFilters" class="btn-primary btn-small">Apply</button>
+                            <button id="clearFilters" class="btn-secondary btn-small">Clear</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Stats Section -->
                 <div class="stats-sidebar">
-                    <h3>Statistics</h3>
-                    <div class="stats-vertical">
-                        <div class="stat-item">
-                            <span class="stat-label">Total POs:</span>
-                            <span class="stat-value" id="totalPOs">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Submitted:</span>
-                            <span class="stat-value" id="submittedPOs">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Approved:</span>
-                            <span class="stat-value" id="approvedPOs">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label">Total Value:</span>
-                            <span class="stat-value" id="totalValue">$0</span>
+                    <h3 onclick="toggleSection('stats')">Stats</h3>
+                    <div class="stats-content" id="stats-content">
+                        <div class="stats-vertical">
+                            <div class="stat-item">
+                                <span class="stat-label">Total:</span>
+                                <span class="stat-value" id="totalPOs">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Submitted:</span>
+                                <span class="stat-value" id="submittedPOs">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Approved:</span>
+                                <span class="stat-value" id="approvedPOs">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Value:</span>
+                                <span class="stat-value" id="totalValue">$0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Main Content Area -->
-            <div class="main-content">
+            <div class="main-content">>
 
         <!-- PO List -->
         <div class="po-list">
@@ -106,11 +111,6 @@
                     <button id="refreshList" class="btn btn-secondary">🔄 Refresh</button>
                     <button id="exportList" class="btn btn-secondary">📥 Export</button>
                 </div>
-            </div>
-
-            <div id="loadingSpinner" class="loading-state">
-                <div class="spinner"></div>
-                <p>Loading purchase orders...</p>
             </div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
@@ -190,13 +190,30 @@
     </div>
 
         <!-- Scripts: Power Automate Integration -->
+        <!-- Microsoft Authentication Scripts -->
+    <script src="../js/core/microsoft-auth-config.js"></script>
+    <script src="../js/core/microsoft-auth-spa.js"></script>
+    
+    <!-- Core Scripts -->
     <script src="../js/core/power-automate-config.js"></script>
     <script src="../js/core/power-automate-api.js"></script>
     <script src="../js/core/storage.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/Module/modal.js"></script>
+    
+    <!-- PO Data Management -->
+    <script src="../js/core/po-data-config.js"></script>
+    <script src="../js/core/po-data-manager.js"></script>
     <script src="../js/pages/tracking.js"></script>
     <script>
+        // Collapsible sections functionality
+        function toggleSection(sectionType) {
+            const element = document.querySelector(`.${sectionType}-sidebar`);
+            if (element) {
+                element.classList.toggle('collapsed');
+            }
+        }
+        
         // Simple user display handler - checks for real user data
         setTimeout(() => {
             const welcomeElement = document.getElementById('welcomeUser');
@@ -256,11 +273,112 @@
             }
         })();
         
-        // Initialize TrackingDashboard when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, initializing TrackingDashboard...');
+        // Handle Microsoft OAuth callback when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                console.log('🔍 Checking for OAuth callback on tracking page...');
+                
+                // Check if this page load is from Microsoft OAuth redirect
+                const hasAuthCode = window.location.search.includes('code=');
+                const hasAccessToken = window.location.hash.includes('access_token');
+                const isOAuthCallback = hasAuthCode || hasAccessToken;
+                
+                if (isOAuthCallback) {
+                    console.log('🔄 OAuth callback detected, processing...', { hasAuthCode, hasAccessToken });
+                    
+                    let userInfo = null;
+                    let tokenData = null;
+                    
+                    // Try SPA flow first (hash fragment)
+                    if (hasAccessToken && window.MicrosoftSPA) {
+                        console.log('📱 Processing SPA OAuth callback...');
+                        try {
+                            tokenData = window.MicrosoftSPA.handleCallback();
+                            if (tokenData) {
+                                userInfo = await window.MicrosoftSPA.getUserInfo();
+                                console.log('✅ SPA OAuth successful:', userInfo);
+                            }
+                        } catch (error) {
+                            console.error('❌ SPA OAuth failed:', error);
+                        }
+                    }
+                    
+                    // Try Web flow if SPA failed (query parameter)
+                    if (!userInfo && hasAuthCode) {
+                        console.log('🌐 Processing Web OAuth callback...');
+                        if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.handleCallback) {
+                            try {
+                                tokenData = await window.MicrosoftAuthConfig.handleCallback();
+                                if (tokenData && window.MicrosoftAuthConfig.getUserInfo) {
+                                    userInfo = await window.MicrosoftAuthConfig.getUserInfo();
+                                    console.log('✅ Web OAuth successful:', userInfo);
+                                }
+                            } catch (error) {
+                                console.error('❌ Web OAuth failed:', error);
+                            }
+                        }
+                    }
+                    
+                    if (userInfo) {
+                        console.log('✅ OAuth login successful! Processing user info...');
+                        
+                        // Store user data for tracking dashboard
+                        const userForTracking = {
+                            username: userInfo.displayName || userInfo.name || userInfo.userPrincipalName || 'Microsoft User',
+                            email: userInfo.userPrincipalName || userInfo.mail || userInfo.email || 'user@company.com',
+                            firstName: userInfo.givenName || (userInfo.displayName ? userInfo.displayName.split(' ')[0] : 'User'),
+                            role: 'user',
+                            microsoftId: userInfo.id,
+                            source: 'microsoft-oauth-tracking',
+                            isOAuth: true, // Mark as OAuth user for auth system
+                            expiresAt: new Date(Date.now() + 8*60*60*1000).toISOString(), // 8 hours from now
+                            loginTime: new Date().toISOString()
+                        };
+                        localStorage.setItem('currentUser', JSON.stringify(userForTracking));
+                        console.log('✅ User stored for tracking dashboard:', userForTracking);
+                        
+                        // Clean up URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        
+                        // Refresh the page to initialize with clean state
+                        console.log('🔄 Refreshing page with clean URL...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                        return; // Exit early to avoid double initialization
+                    } else {
+                        console.error('❌ OAuth callback failed - no user info received');
+                        alert('Authentication failed. Please try again or contact support.');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error handling OAuth callback:', error);
+                alert('Authentication failed: ' + error.message);
+            }
+            
+            // Initialize TrackingDashboard after OAuth handling (or if no OAuth)
+            console.log('🚀 Initializing TrackingDashboard...');
             window.trackingDashboard = new TrackingDashboard();
         });
+        
+        // Global functions for PO actions are now handled in PODataManager
+        // window.viewPO is defined in js/core/po-data-manager.js
+        
+        window.editPO = function(poNumber) {
+            console.log('✏️ Editing PO:', poNumber);
+            // Navigate to form page with PO data for editing
+            window.location.href = `form.html?edit=${encodeURIComponent(poNumber)}`;
+        };
+        
+        window.downloadPO = function(poNumber) {
+            console.log('📥 Downloading PO:', poNumber);
+            // Open print page with download intent
+            const printUrl = `../Print.html?po=${encodeURIComponent(poNumber)}&action=download`;
+            window.open(printUrl, '_blank');
+        };
+        
+        // Initialize TrackingDashboard when DOM is loaded
+        // Note: This is now handled in the OAuth callback section above
     </script>
 </body>
 </html>

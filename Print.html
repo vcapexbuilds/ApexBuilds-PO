@@ -726,5 +726,373 @@
             </div>
         </div>
     </div>
+    <script>
+        // Function to populate the page with PO data
+        function populatePOData() {
+            try {
+                // Get PO data from localStorage
+                const poDataStr = localStorage.getItem('printPOData');
+                if (!poDataStr) {
+                    console.warn('⚠️ No PO data found in localStorage - displaying empty template');
+                    displayEmptyTemplate();
+                    return;
+                }
+                
+                const poData = JSON.parse(poDataStr);
+                console.log('📋 Loading PO data for print page:', poData);
+                
+                // Update POR Number and Date
+                updateElementText('.por-number', poData.poNumber || 'PO-DRAFT-001');
+                updateElementText('.por-date', `Created: ${formatDate(poData.createdAt) || formatDate(new Date())}`);
+                
+                // Update Project Information
+                updateElementText('.project-name', poData.meta?.projectName || '[Project Name Not Specified]');
+                
+                // Update Project Meta
+                const projectMeta = document.querySelector('.project-meta');
+                if (projectMeta) {
+                    const address = poData.meta?.address || '[Project Address]';
+                    const pm = poData.meta?.projectManager || '[Project Manager]';
+                    const typeStatus = poData.meta?.typeStatus || '[Project Type]';
+                    
+                    projectMeta.innerHTML = `
+                        <span>📍 ${address}</span>
+                        <span>👤 PM: ${pm}</span>
+                        <span>📊 Type: ${typeStatus}</span>
+                    `;
+                }
+                
+                // Update info cards in project section
+                updateInfoCard('General Contractor', poData.meta?.generalContractor || '[General Contractor]');
+                updateInfoCard('Owner/Developer', poData.meta?.owner || '[Owner/Developer]');
+                updateInfoCard('Apex Owner', poData.meta?.apexOwner || '[Apex Owner]');
+                updateInfoCard('Project Manager', poData.meta?.projectManager || '[Project Manager]');
+                updateInfoCard('Requested By', poData.meta?.requestedBy || '[Requested By]');
+                updateInfoCard('Status', poData.meta?.typeStatus || '[Status]');
+                
+                // Update financial information
+                updateInfoCard('Contract Amount', formatCurrency(poData.meta?.contractAmount) || '$0.00');
+                updateInfoCard('Add/Alt Amount', formatCurrency(poData.meta?.addAltAmount) || '$0.00');
+                updateInfoCard('Retainage %', poData.meta?.retainagePct ? `${poData.meta.retainagePct}%` : '0%');
+                updateInfoCard('Add/Alt Details', poData.meta?.addAltDetails || '[No additional details]');
+                
+                // Update vendor information
+                updateVendorInfo(poData);
+                
+                // Update important dates
+                updateImportantDates(poData);
+                
+                // Update schedule and scope tables
+                updateScheduleTable(poData.schedule || []);
+                updateScopeTable(poData.scope || []);
+                
+                // Update financial summary
+                updateFinancialSummary(poData);
+                
+                console.log('✅ PO data populated successfully');
+                
+            } catch (error) {
+                console.error('❌ Error populating PO data:', error);
+            }
+        }
+        
+        // Function to display empty template when no PO data is available
+        function displayEmptyTemplate() {
+            console.log('📄 Displaying empty PO template');
+            
+            // Set default values for empty template
+            updateElementText('.por-number', 'PO-DRAFT-001');
+            updateElementText('.por-date', `Created: ${formatDate(new Date())}`);
+            updateElementText('.project-name', '[Project Name - To Be Determined]');
+            
+            // Update Project Meta with placeholders
+            const projectMeta = document.querySelector('.project-meta');
+            if (projectMeta) {
+                projectMeta.innerHTML = `
+                    <span>📍 [Project Address - To Be Specified]</span>
+                    <span>👤 PM: [Project Manager - To Be Assigned]</span>
+                    <span>📊 Type: [Project Type - To Be Determined]</span>
+                `;
+            }
+            
+            // Set empty schedule table
+            const scheduleTableBody = document.querySelector('.schedule-section tbody');
+            if (scheduleTableBody) {
+                scheduleTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 20px; color: #6b7280; font-style: italic;">
+                            No schedule items available. Please add line items to complete this PO.
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            // Set empty scope table
+            const scopeTableBody = document.querySelector('.section:has(thead) tbody');
+            if (scopeTableBody) {
+                scopeTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #6b7280; font-style: italic;">
+                            No scope of work items defined. Please specify work scope details.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Helper functions
+        function updateElementText(selector, text) {
+            const element = document.querySelector(selector);
+            if (element && text !== undefined && text !== null) {
+                element.textContent = text;
+            }
+        }
+        
+        function updateInfoCard(label, value) {
+            const cards = document.querySelectorAll('.info-card');
+            cards.forEach(card => {
+                const labelElement = card.querySelector('.info-label');
+                if (labelElement && labelElement.textContent.toLowerCase().includes(label.toLowerCase())) {
+                    const valueElement = card.querySelector('.info-value');
+                    if (valueElement) {
+                        valueElement.textContent = value || '[To Be Specified]';
+                    }
+                }
+            });
+        }
+        
+        function updateVendorInfo(poData) {
+            const vendorTitle = document.querySelector('.vendor-title');
+            const vendorDetails = document.querySelector('.vendor-details');
+            
+            if (vendorTitle) {
+                vendorTitle.textContent = poData.meta?.companyName || '[Vendor Company Name]';
+            }
+            
+            if (vendorDetails) {
+                vendorDetails.innerHTML = `
+                    <div><strong>Contact:</strong> ${poData.meta?.contactName || '[Contact Name]'}</div>
+                    <div><strong>Email:</strong> ${poData.meta?.email || '[Email Address]'}</div>
+                    <div><strong>Cell:</strong> ${poData.meta?.cellNumber || '[Cell Phone]'}</div>
+                    <div><strong>Office:</strong> ${poData.meta?.officeNumber || '[Office Phone]'}</div>
+                    <div style="grid-column: 1 / -1;"><strong>Work Type:</strong> ${poData.meta?.workType || '[Work Type Description]'}</div>
+                `;
+            }
+        }
+        
+        function updateImportantDates(poData) {
+            const dates = poData.meta?.importantDates || {};
+            const dateElements = [
+                { selector: 'Notice to Proceed', value: dates.noticeToProceed },
+                { selector: 'Anticipated Start', value: dates.anticipatedStart },
+                { selector: 'Substantial Completion', value: dates.substantialCompletion },
+                { selector: '100% Complete', value: dates.hundredPercent }
+            ];
+            
+            dateElements.forEach(({ selector, value }) => {
+                const element = Array.from(document.querySelectorAll('div')).find(el => 
+                    el.textContent && el.textContent.includes(selector)
+                );
+                if (element && value) {
+                    const parentDiv = element.closest('div[style*="text-align: center"]');
+                    if (parentDiv) {
+                        const dateDiv = parentDiv.querySelector('div:last-child');
+                        if (dateDiv) {
+                            dateDiv.textContent = formatDate(value) || 'N/A';
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateScheduleTable(scheduleData) {
+            const tbody = document.querySelector('table tbody');
+            if (!tbody) return;
+            
+            if (!scheduleData || scheduleData.length === 0) {
+                // Clear existing rows and show empty message
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 20px; color: #6b7280; font-style: italic;">
+                            No schedule items available. Please add line items to complete this PO.
+                        </td>
+                    </tr>
+                    <tr style="background: #f1f5f9; border-top: 2px solid #cbd5e1; font-weight: 700;">
+                        <td colspan="5" style="text-align: right; padding-right: 10px; font-size: 12px; color: #1e40af;">SUBTOTAL</td>
+                        <td class="text-right" style="color: #1e40af; font-size: 12px;">$0.00</td>
+                        <td class="text-right" style="color: #1e40af; font-size: 12px;">$0.00</td>
+                        <td class="text-right" style="color: #059669; font-size: 12px;">$0.00</td>
+                        <td class="text-right" style="color: #059669; font-size: 12px;">$0.00</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Clear existing rows except last row (subtotal)
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                if (index < rows.length - 1) { // Keep the last row (subtotal)
+                    row.remove();
+                }
+            });
+            
+            // Add schedule data rows
+            let totalCost = 0;
+            let totalScheduled = 0;
+            let totalApexValue = 0;
+            let totalProfit = 0;
+            
+            scheduleData.forEach(item => {
+                const row = document.createElement('tr');
+                const cost = parseFloat(item.totalCost) || 0;
+                const scheduled = parseFloat(item.scheduled) || 0;
+                const apexValue = parseFloat(item.apexContractValue) || 0;
+                const profit = parseFloat(item.profit) || 0;
+                
+                totalCost += cost;
+                totalScheduled += scheduled;
+                totalApexValue += apexValue;
+                totalProfit += profit;
+                
+                row.innerHTML = `
+                    <td style="color: #1e40af; font-weight: 700;">${item.primeLine || '[Line]'}</td>
+                    <td><span style="background: #f0f9ff; color: #1e40af; padding: 1px 4px; border-radius: 3px; font-size: 9px;">${item.budgetCode || '[Code]'}</span></td>
+                    <td>${item.description || '[Item Description]'}</td>
+                    <td class="text-center">${item.qty || 0}</td>
+                    <td class="text-center">${item.unit || 'EA'}</td>
+                    <td class="text-right" style="color: #059669; font-weight: 600;">${formatCurrency(cost)}</td>
+                    <td class="text-right">${formatCurrency(scheduled)}</td>
+                    <td class="text-right" style="color: #059669; font-weight: 600;">${formatCurrency(apexValue)}</td>
+                    <td class="text-right" style="color: #059669; font-weight: 700;">${formatCurrency(profit)}</td>
+                `;
+                tbody.insertBefore(row, tbody.lastElementChild);
+            });
+            
+            // Update subtotal row
+            const subtotalRow = tbody.querySelector('tr:last-child');
+            if (subtotalRow) {
+                subtotalRow.innerHTML = `
+                    <td colspan="5" style="text-align: right; padding-right: 10px; font-size: 12px; color: #1e40af; font-weight: 700;">SUBTOTAL</td>
+                    <td class="text-right" style="color: #1e40af; font-size: 12px;">${formatCurrency(totalCost)}</td>
+                    <td class="text-right" style="color: #1e40af; font-size: 12px;">${formatCurrency(totalScheduled)}</td>
+                    <td class="text-right" style="color: #059669; font-size: 12px;">${formatCurrency(totalApexValue)}</td>
+                    <td class="text-right" style="color: #059669; font-size: 12px;">${formatCurrency(totalProfit)}</td>
+                `;
+            }
+        }
+        }
+        
+        function updateScopeTable(scopeData) {
+            // Find the scope table (second table)
+            const tables = document.querySelectorAll('table');
+            if (tables.length < 2) return;
+            
+            const scopeTbody = tables[1].querySelector('tbody');
+            if (!scopeTbody) return;
+            
+            if (!scopeData || scopeData.length === 0) {
+                // Clear existing rows and show empty message
+                scopeTbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #6b7280; font-style: italic;">
+                            No scope of work items defined. Please specify work scope details.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Clear existing rows
+            scopeTbody.innerHTML = '';
+            
+            // Add scope data rows
+            scopeData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 600;">${item.category || '[Category]'}</td>
+                    <td>${item.description || '[Description]'}</td>
+                    <td class="text-center"><span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">✓</span></td>
+                    <td class="text-center">${item.notes || '—'}</td>
+                `;
+                scopeTbody.appendChild(row);
+            });
+        }
+        
+        function updateFinancialSummary(poData) {
+            const summaryDiv = document.querySelector('.financial-summary');
+            if (!summaryDiv) return;
+            
+            const contractAmount = parseFloat(poData.meta?.contractAmount || 0);
+            const addAltAmount = parseFloat(poData.meta?.addAltAmount || 0);
+            
+            // Calculate totals (you may need to adjust this logic)
+            const currentPOR = scheduleData?.reduce((sum, item) => sum + (parseFloat(item.apexContractValue || 0)), 0) || contractAmount;
+            const total = contractAmount + addAltAmount;
+            
+            const summaryContent = summaryDiv.querySelector('div[style*="display: flex"]');
+            if (summaryContent) {
+                summaryContent.innerHTML = `
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Base:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">${formatCurrency(contractAmount)}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Add/Alt:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">${formatCurrency(addAltAmount)}</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 10px; color: #64748b;">Current POR:</span>
+                        <span style="font-size: 13px; font-weight: 700; color: #0f172a; margin-left: 4px;">${formatCurrency(currentPOR)}</span>
+                    </div>
+                    <div style="padding: 6px 12px; background: #10b981; border-radius: 6px;">
+                        <span style="font-size: 10px; color: white;">TOTAL:</span>
+                        <span style="font-size: 14px; font-weight: 700; color: white; margin-left: 4px;">${formatCurrency(total)}</span>
+                    </div>
+                `;
+            }
+        }
+        
+        function formatCurrency(amount) {
+            if (!amount || isNaN(amount)) return '$0.00';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(parseFloat(amount));
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'TBD';
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return 'TBD';
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: '2-digit'
+                });
+            } catch (error) {
+                console.warn('Date parsing error:', error);
+                return 'TBD'; // Return TBD if parsing fails
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🖨️ Print page loaded, populating PO data...');
+            populatePOData();
+        });
+        
+        // Handle print action
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'download') {
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    window.print();
+                }, 1000); // Wait for data to populate
+            });
+        }
+    </script>
 </body>
 </html>

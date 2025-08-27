@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="U        function clearUser() {
+            localStorage.removeItem('currentUser');
+            log('🗑️ User data cleared from localStorage');
+        }
+
+        function checkCurrentUser() {
+            try {
+                const userStr = localStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    log('👤 Current user found: ' + JSON.stringify(user, null, 2), 'success');
+                    return user;
+                } else {
+                    log('❌ No user found in localStorage', 'error');
+                    return null;
+                }
+            } catch (error) {
+                log('❌ Error parsing user data: ' + error.message, 'error');
+                return null;
+            }
+        }a name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Power Automate</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #007cba; }
+        .error { border-left-color: #d73027; }
+        .success { border-left-color: #1a9850; }
+    </style>
+</head>
+<body>
+    <h1>Power Automate Integration Test</h1>
+    
+    <button onclick="testPowerAutomate()">Test Power Automate Call</button>
+    <button onclick="checkCurrentUser()">Check Current User</button>
+    <button onclick="clearUser()">Clear User</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div style="margin: 20px 0; padding: 10px; background: #e3f2fd; border-left: 4px solid #2196f3;">
+        <strong>🔐 To get real user info:</strong><br>
+        1. Go to <a href="/pages/form.html" target="_blank">Login Page</a><br>
+        2. Click "Login with Microsoft"<br>
+        3. Complete Microsoft OAuth login<br>
+        4. Return here and click "Check Current User"
+    </div>
+    
+    <div id="logs"></div>
+
+    <script>
+        const PA_ENDPOINT = 'https://defaulta543e2f6ae4b4d1db263a38786ce68.44.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/61439310bdc243fc86369acaafe55125/triggers/manual/paths/invoke/?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vUQgXsDVJ6r1s4my2mzZP_opej1KCtJiJx-sM9TqySo';
+
+        function log(message, type = 'info') {
+            const logDiv = document.createElement('div');
+            logDiv.className = `log ${type}`;
+            logDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            document.getElementById('logs').appendChild(logDiv);
+            console.log(message);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        function setTestUser() {
+            const testUser = {
+                username: 'Virgilio Cabrillos Jr.',
+                email: 'vcabrillos@apexbuilding.com',
+                firstName: 'Virgilio',
+                role: 'user',
+                microsoftId: 'test-microsoft-id-123',
+                source: 'test-setup',
+                isOAuth: true,
+                expiresAt: new Date(Date.now() + 8*60*60*1000).toISOString(),
+                loginTime: new Date().toISOString()
+            };
+            localStorage.setItem('currentUser', JSON.stringify(testUser));
+            log('✅ Test user set in localStorage: ' + JSON.stringify(testUser, null, 2), 'success');
+        }
+
+        function checkCurrentUser() {
+            try {
+                const userStr = localStorage.getItem('currentUser');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    log('� Current user found: ' + JSON.stringify(user, null, 2), 'success');
+                    return user;
+                } else {
+                    log('❌ No user found in localStorage', 'error');
+                    return null;
+                }
+            } catch (error) {
+                log('❌ Error parsing user data: ' + error.message, 'error');
+                return null;
+            }
+        }
+
+        async function testPowerAutomate() {
+            log('🚀 Starting Power Automate test...');
+            
+            // Get current user from localStorage (same as the real system)
+            let currentUser = null;
+            try {
+                const userStr = localStorage.getItem('currentUser');
+                currentUser = userStr ? JSON.parse(userStr) : null;
+                log('👤 Current user from localStorage: ' + JSON.stringify(currentUser, null, 2));
+            } catch (error) {
+                log('❌ Error getting current user: ' + error.message, 'error');
+            }
+            
+            // Require real user - no fallback
+            if (!currentUser) {
+                log('❌ No real user found! Please login with Microsoft first.', 'error');
+                log('🔗 Go to the login page and complete Microsoft OAuth login', 'error');
+                return;
+            }
+            
+            if (currentUser.source === 'test-fallback' || currentUser.source === 'test-setup') {
+                log('❌ Test user detected! Please login with Microsoft for real user data.', 'error');
+                return;
+            }
+            
+            const testPayload = {
+                action: 'fetch_pos',
+                timestamp: new Date().toISOString(),
+                user: currentUser
+            };
+
+            log('📤 Sending request to: ' + PA_ENDPOINT);
+            log('📦 Request payload: ' + JSON.stringify(testPayload, null, 2));
+
+            try {
+                log('⏳ Making fetch request...');
+                
+                const response = await fetch(PA_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testPayload)
+                });
+
+                log('📥 Response received - Status: ' + response.status + ' ' + response.statusText);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                log('✅ Success! Response data: ' + JSON.stringify(data, null, 2), 'success');
+
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+                log('❌ Error details: ' + error.stack, 'error');
+            }
+        }
+
+        log('🔧 Test page loaded - ready to test Power Automate integration');
+    </script>
+</body>
+</html>

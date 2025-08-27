@@ -614,6 +614,16 @@ class AuthManager {
 
         // Check if current page requires authentication
         if (protectedPages[filename]) {
+            // IMPORTANT: Don't redirect if this is an OAuth callback
+            const hasAuthCode = window.location.search.includes('code=');
+            const hasAccessToken = window.location.hash.includes('access_token');
+            const isOAuthCallback = hasAuthCode || hasAccessToken;
+            
+            if (isOAuthCallback) {
+                console.log('🔄 OAuth callback detected - skipping auth redirect to allow callback processing');
+                return; // Let OAuth callback handle authentication
+            }
+            
             if (!this.isAuthenticated()) {
                 this.redirectToLogin();
                 return;

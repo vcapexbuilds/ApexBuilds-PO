@@ -243,6 +243,54 @@ class POForm {
             console.log('ℹ️ Save button not found (may be optional)');
         }
 
+        // Add Schedule Item button
+        const addScheduleBtn = document.getElementById('addScheduleItem');
+        if (addScheduleBtn) {
+            console.log('✅ Add Schedule Item button found, binding...');
+            addScheduleBtn.addEventListener('click', (e) => {
+                console.log('🎯 Add Schedule Item clicked!', e);
+                e.preventDefault();
+                try {
+                    this.addScheduleItem();
+                    console.log('✅ addScheduleItem() completed successfully');
+                } catch (error) {
+                    console.error('❌ Error in addScheduleItem():', error);
+                }
+            });
+            console.log('✅ Add Schedule Item event bound');
+        } else {
+            console.error('❌ Add Schedule Item button not found!');
+            console.log('Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({
+                id: b.id || 'no-id',
+                text: b.textContent.trim(),
+                type: b.type
+            })));
+        }
+
+        // Add Scope Item button
+        const addScopeBtn = document.getElementById('addScopeItem');
+        if (addScopeBtn) {
+            console.log('✅ Add Scope Item button found, binding...');
+            addScopeBtn.addEventListener('click', (e) => {
+                console.log('🎯 Add Scope Item clicked!', e);
+                e.preventDefault();
+                try {
+                    this.addScopeItem();
+                    console.log('✅ addScopeItem() completed successfully');
+                } catch (error) {
+                    console.error('❌ Error in addScopeItem():', error);
+                }
+            });
+            console.log('✅ Add Scope Item event bound');
+        } else {
+            console.error('❌ Add Scope Item button not found!');
+            console.log('Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({
+                id: b.id || 'no-id',
+                text: b.textContent.trim(),
+                type: b.type
+            })));
+        }
+
         // Auto-save draft every minute
         console.log('Setting up auto-save interval...');
         setInterval(() => this.saveDraft(true), 60000);
@@ -393,10 +441,32 @@ class POForm {
     }
 
     addScheduleItem(data = null) {
+        console.log('🔧 addScheduleItem called with data:', data);
+        
         const container = document.getElementById('scheduleItems');
+        if (!container) {
+            console.error('❌ scheduleItems container not found!');
+            return;
+        }
+        console.log('✅ scheduleItems container found');
+        
+        if (!this.scheduleItemTemplate) {
+            console.error('❌ scheduleItemTemplate not available!');
+            return;
+        }
+        console.log('✅ scheduleItemTemplate available');
+        
         const div = document.createElement('div');
         div.innerHTML = this.scheduleItemTemplate;
-        container.appendChild(div.firstElementChild);
+        const newItem = div.firstElementChild;
+        
+        if (!newItem) {
+            console.error('❌ Failed to create schedule item from template');
+            return;
+        }
+        
+        container.appendChild(newItem);
+        console.log('✅ Schedule item added to container');
 
         const item = container.lastElementChild;
         if (data) {
@@ -406,20 +476,62 @@ class POForm {
             });
         }
 
-        item.querySelector('.remove-item').addEventListener('click', () => {
-            window.modal.showConfirm(
-                'Are you sure you want to remove this schedule item?',
-                () => item.remove(),
-                null
-            );
-        });
+        const removeBtn = item.querySelector('.remove-item');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                if (window.modal && window.modal.showConfirm) {
+                    window.modal.showConfirm(
+                        'Are you sure you want to remove this schedule item?',
+                        () => item.remove(),
+                        null
+                    );
+                } else {
+                    if (confirm('Are you sure you want to remove this schedule item?')) {
+                        item.remove();
+                    }
+                }
+            });
+            console.log('✅ Remove button event bound');
+        } else {
+            console.warn('⚠️ Remove button not found in schedule item');
+        }
+        
+        // Hide empty state if it exists
+        const emptyState = document.getElementById('noScheduleItems');
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        
+        console.log('✅ addScheduleItem completed successfully');
     }
 
     addScopeItem(data = null) {
+        console.log('🔧 addScopeItem called with data:', data);
+        
         const container = document.getElementById('scopeItems');
+        if (!container) {
+            console.error('❌ scopeItems container not found!');
+            return;
+        }
+        console.log('✅ scopeItems container found');
+        
+        if (!this.scopeItemTemplate) {
+            console.error('❌ scopeItemTemplate not available!');
+            return;
+        }
+        console.log('✅ scopeItemTemplate available');
+        
         const div = document.createElement('div');
         div.innerHTML = this.scopeItemTemplate;
-        container.appendChild(div.firstElementChild);
+        const newItem = div.firstElementChild;
+        
+        if (!newItem) {
+            console.error('❌ Failed to create scope item from template');
+            return;
+        }
+        
+        container.appendChild(newItem);
+        console.log('✅ Scope item added to container');
 
         const item = container.lastElementChild;
         if (data) {
@@ -434,12 +546,34 @@ class POForm {
             });
         }
 
-        item.querySelector('.remove-item').addEventListener('click', () => {
-            window.modal.showConfirm(
-                'Are you sure you want to remove this scope item?',
-                () => item.remove(),
-                null
-            );
+        const removeBtn = item.querySelector('.remove-item');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', () => {
+                if (window.modal && window.modal.showConfirm) {
+                    window.modal.showConfirm(
+                        'Are you sure you want to remove this scope item?',
+                        () => item.remove(),
+                        null
+                    );
+                } else {
+                    if (confirm('Are you sure you want to remove this scope item?')) {
+                        item.remove();
+                    }
+                }
+            });
+            console.log('✅ Remove button event bound');
+        } else {
+            console.warn('⚠️ Remove button not found in scope item');
+        }
+        
+        // Hide empty state if it exists
+        const emptyState = document.getElementById('noScopeItems');
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        
+        console.log('✅ addScopeItem completed successfully');
+    }
         });
     }
 

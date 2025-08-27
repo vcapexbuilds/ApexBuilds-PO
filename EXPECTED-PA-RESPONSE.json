@@ -1,0 +1,246 @@
+{
+  "success": true,
+  "pos": [
+    {
+      "id": "1724684215234",
+      "poNumber": "APEX-250826-1430-001",
+      "status": "submitted",
+      "createdAt": "2025-08-26T14:30:15.234Z",
+      "sentAt": "2025-08-26T14:30:15.234Z",
+      "meta": {
+        "projectName": "Downtown Office Complex Phase 2",
+        "generalContractor": "ABC Construction LLC",
+        "address": "123 Main Street, Downtown City, State 12345",
+        "owner": "Downtown Development Corp",
+        "apexOwner": "Yes",
+        "typeStatus": "Construction",
+        "projectManager": "Sarah Johnson",
+        "contractAmount": 2500000,
+        "addAltAmount": 150000,
+        "addAltDetails": "Additional HVAC upgrades and premium finishes",
+        "retainagePct": 5,
+        "requestedBy": "Mike Chen",
+        "companyName": "Premier Subcontractors Inc",
+        "contactName": "Mike Chen",
+        "email": "mike.chen@premiercontractors.com",
+        "cellNumber": "(555) 123-4567",
+        "officeNumber": "(555) 987-6543",
+        "vendorType": "Sub Contractor",
+        "workType": "General Requirements",
+        "importantDates": {
+          "noticeToProceed": "2025-09-01",
+          "anticipatedStart": "2025-09-15",
+          "substantialCompletion": "2025-12-15",
+          "hundredPercent": "2025-12-30"
+        }
+      },
+      "schedule": [
+        {
+          "primeLine": "16000",
+          "budgetCode": "EC-001",
+          "description": "Electrical rough-in - floors 1-5",
+          "qty": 5,
+          "unit": "floors",
+          "totalCost": 125000,
+          "scheduled": 125000,
+          "apexContractValue": 150000,
+          "profit": 25000
+        },
+        {
+          "primeLine": "16100",
+          "budgetCode": "EC-002",
+          "description": "Electrical fixtures and finish work",
+          "qty": 200,
+          "unit": "fixtures",
+          "totalCost": 85000,
+          "scheduled": 85000,
+          "apexContractValue": 105000,
+          "profit": 20000
+        }
+      ],
+      "scope": [
+        {
+          "item": "Electrical Rough-In",
+          "description": "Complete electrical rough-in including conduit, wiring, and panel installation for all floors",
+          "included": true,
+          "excluded": false
+        },
+        {
+          "item": "Lighting Fixtures",
+          "description": "Supply and installation of all interior and exterior lighting fixtures per specifications",
+          "included": true,
+          "excluded": false
+        },
+        {
+          "item": "Data/Communications Wiring",
+          "description": "Low voltage wiring for data, phone, and security systems",
+          "included": false,
+          "excluded": true
+        }
+      ],
+      "importance": "normal",
+      "submittedBy": {
+        "username": "John Smith",
+        "email": "john.smith@apexbuilding.com",
+        "firstName": "John",
+        "role": "user",
+        "microsoftId": "abc123-def456-ghi789",
+        "source": "microsoft-oauth-tracking",
+        "isOAuth": true,
+        "submittedAt": "2025-08-26T14:30:15.234Z"
+      },
+      "timestamp": 1724684215234,
+      "sent": true
+    },
+    {
+      "id": "1724684215235",
+      "poNumber": "APEX-250826-1431-002",
+      "status": "approved",
+      "createdAt": "2025-08-26T15:45:30.567Z",
+      "sentAt": "2025-08-26T15:45:30.567Z",
+      "meta": {
+        "projectName": "Retail Plaza Construction",
+        "generalContractor": "XYZ Construction Corp",
+        "address": "456 Commerce Street, Business District, State 54321",
+        "owner": "Retail Development Group",
+        "apexOwner": "No",
+        "typeStatus": "PreConstruction",
+        "projectManager": "Lisa Anderson",
+        "contractAmount": 1750000,
+        "addAltAmount": 75000,
+        "addAltDetails": "Additional security systems and upgraded materials",
+        "retainagePct": 8,
+        "requestedBy": "Sarah Johnson",
+        "companyName": "ABC Contractors LLC",
+        "contactName": "Sarah Johnson",
+        "email": "sarah.johnson@abccontractors.com",
+        "cellNumber": "(555) 987-6543",
+        "officeNumber": "(555) 234-5678",
+        "vendorType": "Supplier",
+        "workType": "Existing Conditions",
+        "importantDates": {
+          "noticeToProceed": "2025-09-15",
+          "anticipatedStart": "2025-10-01",
+          "substantialCompletion": "2025-12-01",
+          "hundredPercent": "2025-12-15"
+        }
+      },
+      "schedule": [
+        {
+          "primeLine": "03000",
+          "budgetCode": "CC-001",
+          "description": "Concrete foundation work",
+          "qty": 1000,
+          "unit": "sq ft",
+          "totalCost": 95000,
+          "scheduled": 95000,
+          "apexContractValue": 110000,
+          "profit": 15000
+        }
+      ],
+      "scope": [
+        {
+          "item": "Foundation Work",
+          "description": "Complete concrete foundation including footings and slab",
+          "included": true,
+          "excluded": false
+        },
+        {
+          "item": "Site Preparation",
+          "description": "Excavation and site preparation work",
+          "included": false,
+          "excluded": true
+        }
+      ],
+      "importance": "urgent",
+      "submittedBy": {
+        "username": "Sarah Johnson",
+        "email": "sarah.johnson@apexbuilding.com",
+        "firstName": "Sarah",
+        "role": "user",
+        "microsoftId": "def456-ghi789-jkl012",
+        "source": "microsoft-oauth-tracking",
+        "isOAuth": true,
+        "submittedAt": "2025-08-26T15:45:30.567Z"
+      },
+      "timestamp": 1724688330567,
+      "sent": true
+    },
+    {
+      "id": "1724684215236",
+      "poNumber": "APEX-250826-1432-003",
+      "status": "draft",
+      "createdAt": "2025-08-26T16:20:45.890Z",
+      "sentAt": null,
+      "meta": {
+        "projectName": "Industrial Warehouse Renovation",
+        "generalContractor": "Industrial Builders Inc",
+        "address": "789 Industrial Blvd, Manufacturing Zone, State 98765",
+        "owner": "Warehouse Solutions LLC",
+        "apexOwner": "Yes",
+        "typeStatus": "Construction",
+        "projectManager": "Michael Brown",
+        "contractAmount": 950000,
+        "addAltAmount": 0,
+        "addAltDetails": "",
+        "retainagePct": 5,
+        "requestedBy": "Mike Chen",
+        "companyName": "XYZ Building Solutions",
+        "contactName": "Mike Chen",
+        "email": "mike.chen@xyzbuilding.com",
+        "cellNumber": "(555) 345-6789",
+        "officeNumber": "(555) 876-5432",
+        "vendorType": "Consultant",
+        "workType": "General Requirements",
+        "importantDates": {
+          "noticeToProceed": "2025-10-01",
+          "anticipatedStart": "2025-10-15",
+          "substantialCompletion": "2026-01-15",
+          "hundredPercent": "2026-02-01"
+        }
+      },
+      "schedule": [
+        {
+          "primeLine": "08000",
+          "budgetCode": "DR-001",
+          "description": "Door and window installation",
+          "qty": 25,
+          "unit": "units",
+          "totalCost": 45000,
+          "scheduled": 45000,
+          "apexContractValue": 52000,
+          "profit": 7000
+        }
+      ],
+      "scope": [
+        {
+          "item": "Door Installation",
+          "description": "Commercial grade door installation throughout facility",
+          "included": true,
+          "excluded": false
+        },
+        {
+          "item": "Window Replacement",
+          "description": "Energy efficient window replacement",
+          "included": true,
+          "excluded": false
+        }
+      ],
+      "importance": "low",
+      "submittedBy": {
+        "username": "Mike Chen",
+        "email": "mike.chen@apexbuilding.com",
+        "firstName": "Mike",
+        "role": "user",
+        "microsoftId": "ghi789-jkl012-mno345",
+        "source": "microsoft-oauth-tracking",
+        "isOAuth": true,
+        "submittedAt": "2025-08-26T16:20:45.890Z"
+      },
+      "timestamp": 1724690445890,
+      "sent": false
+    }
+  ],
+  "total": 3,
+  "timestamp": "2025-08-26T16:25:00.000Z"
+}

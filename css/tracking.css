@@ -10,56 +10,176 @@
     padding: 20px;
 }
 
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-draft { background: #f5f5f5; color: #666; }
+.status-submitted { background: #e3f2fd; color: #1976d2; }
+.status-approved { background: #e8f5e8; color: #2e7d32; }
+.status-rejected { background: #ffebee; color: #d32f2f; }
+.status-completed { background: #f3e5f5; color: #7b1fa2; }
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-action:hover {
+    background: #f0f0f0;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #1976d2;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Filter Info Display */
+.filter-info {
+    margin: 10px 0;
+}
+
+.filter-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.clear-filters-btn {
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.clear-filters-btn:hover {
+    background: #1565c0;
+}
+
 /* Compact Dashboard Layout */
 .dashboard-layout {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     min-height: calc(100vh - 200px);
 }
 
-/* Left Sidebar - Compact */
+/* Left Sidebar - Ultra Compact */
 .sidebar {
-    width: 280px;
+    width: 200px;
     flex-shrink: 0;
     background: rgba(248, 249, 250, 0.8);
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 15px;
+    border: 2px solid #667eea;
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
 }
 
-/* Filters in Sidebar */
+/* Filters in Sidebar - Collapsible */
 .filters-sidebar {
-    margin-bottom: 25px;
-    padding-bottom: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .filters-sidebar h3 {
-    margin: 0 0 15px 0;
-    font-size: 16px;
+    margin: 0 0 10px 0;
+    font-size: 14px;
     font-weight: 600;
     color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.filters-sidebar h3:hover {
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateX(2px);
+}
+
+.filters-sidebar h3::after {
+    content: '▼';
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.filters-sidebar.collapsed h3::after {
+    transform: rotate(-90deg);
+}
+
+.filter-content {
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+}
+
+.filters-sidebar.collapsed .filter-content {
+    max-height: 0;
 }
 
 .filter-group {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .filter-group label {
     display: block;
     font-weight: 500;
     color: #555;
-    font-size: 13px;
-    margin-bottom: 4px;
+    font-size: 11px;
+    margin-bottom: 3px;
 }
 
 .filter-group input,
 .filter-group select {
     width: 100%;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 12px;
     background: white;
     transition: border-color 0.2s ease;
 }
@@ -73,59 +193,84 @@
 
 .filter-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 15px;
+    gap: 6px;
+    margin-top: 10px;
 }
 
 .btn-small {
-    padding: 6px 12px;
-    font-size: 12px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 10px;
+    border-radius: 3px;
     border: none;
     cursor: pointer;
     font-weight: 500;
     transition: all 0.2s ease;
     flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Stats in Sidebar */
+/* Stats in Sidebar - Ultra Compact */
 .stats-sidebar {
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 8px;
-    padding: 15px;
+    border-radius: 6px;
+    padding: 10px;
 }
 
 .stats-sidebar h3 {
-    margin: 0 0 12px 0;
-    font-size: 16px;
+    margin: 0 0 8px 0;
+    font-size: 12px;
     font-weight: 600;
     color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stats-sidebar h3::after {
+    content: '▼';
+    font-size: 8px;
+    transition: transform 0.2s;
+}
+
+.stats-sidebar.collapsed h3::after {
+    transform: rotate(-90deg);
+}
+
+.stats-content {
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+}
+
+.stats-sidebar.collapsed .stats-content {
+    max-height: 0;
 }
 
 .stats-vertical {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 .stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
+    padding: 4px 8px;
     background: rgba(27, 54, 93, 0.05);
-    border-radius: 6px;
-    border-left: 3px solid var(--apex-primary);
+    border-radius: 4px;
+    border-left: 2px solid var(--apex-primary);
 }
 
 .stat-label {
-    font-size: 13px;
+    font-size: 10px;
     color: #666;
     font-weight: 500;
 }
 
 .stat-value {
-    font-size: 14px;
+    font-size: 11px;
     color: #333;
     font-weight: 600;
 }
@@ -207,11 +352,13 @@
 
 /* PO List */
 .po-list {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 2px solid #4CAF50;
+    flex: 1;
+    min-width: 0;
 }
 
 .list-header {
@@ -273,10 +420,11 @@
     transform: translateY(-1px);
 }
 
-/* Table Styles */
+/* Table Styles - Optimized for more display space */
 .table-container {
     overflow-x: auto;
-    max-height: 600px;
+    max-height: calc(100vh - 300px);
+    min-height: 500px;
 }
 
 table {

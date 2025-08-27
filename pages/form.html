@@ -629,25 +629,13 @@
     <script src="../js/core/simple-po-handler.js"></script>
     
     <script>
-    // Handle Microsoft OAuth callback when page loads
+    // Regular form page initialization (no OAuth callback handling)
     document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            // Check if this page load is from Microsoft OAuth redirect
-            if (window.location.search.includes('code=') && window.MicrosoftAuthConfig) {
-                console.log('🔄 Handling Microsoft OAuth callback...');
-                const tokenData = await window.MicrosoftAuthConfig.handleCallback();
-                if (tokenData) {
-                    console.log('✅ Microsoft OAuth login successful!');
-                    // Clear URL parameters to clean up the address bar
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    // Refresh user info
-                    await setupUserForCentralizedSubmission();
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error handling OAuth callback:', error);
-            alert('Authentication failed: ' + error.message);
-        }
+        console.log('Form page loaded - initializing...');
+        
+        // Skip OAuth handling - this is now handled by tracking.html
+        // Just do regular form setup
+        await setupUserForCentralizedSubmission();
     });
 
     // Debug and setup user info for centralized processing
