@@ -64,13 +64,14 @@ class TrackingDashboard {
                 this.renderPOs();
             };
         } else {
-            console.warn('⚠️ TrackingDashboard: PODataManager not available, falling back to test data');
+            console.warn('⚠️ TrackingDashboard: PODataManager not available');
+            console.log('💡 This page requires Power Automate integration to display live data');
             
-            // Load test data immediately when PO Data Manager isn't available
-            setTimeout(() => {
-                console.log('🔄 Loading test data as fallback...');
-                this.loadPOs();
-            }, 500);
+            // Show empty state - no fallback data for live environment
+            this.allPOs = [];
+            this.filteredPOs = [];
+            this.renderPOs();
+            this.updateStats([]);
         }
     }
 
@@ -430,14 +431,13 @@ class TrackingDashboard {
                                             console.log('📡 Force refresh request sent to Power Automate');
                                         } catch (error) {
                                             console.error('❌ Error during PO Data Manager refresh:', error);
-                                            // Fallback to manual reload
-                                            this.loadPOs();
+                                            // No fallback - this is a live system that requires Power Automate
+                                            console.error('💥 Refresh failed - Power Automate is required for live data');
                                             resetButton();
                                         }
                                     } else {
-                                        console.log('⚠️ PO Data Manager not available, falling back to loadPOs for refresh');
-                                        console.log('💡 Note: This will only refresh test data, not Power Automate data');
-                                        this.loadPOs();
+                                        console.error('⚠️ PO Data Manager not available - cannot refresh live data');
+                                        console.error('� Power Automate integration is required for this live system');
                                         resetButton();
                                     }
                                 });
@@ -456,37 +456,6 @@ class TrackingDashboard {
                 console.error('❌ Error binding events:', error);
             }
         }, 100); // Small delay to ensure DOM is fully rendered
-    }
-
-    async loadPOs() {
-        console.log('=== LOADING POs (SIMPLIFIED) ===');
-        
-        try {
-            // Directly load test data - bypass PO Manager complexity
-            console.log('Loading test data directly...');
-            const response = await fetch('../asset/data/test-data.json');
-            
-            if (!response.ok) {
-                throw new Error(`Failed to load test data: ${response.status} ${response.statusText}`);
-            }
-            
-            const testData = await response.json();
-            console.log(`✅ Loaded ${testData.length} test purchase orders`);
-            console.log('Raw test data:', testData);
-            
-            this.allPOs = this.convertTestDataToPOs(testData);
-            console.log('✅ Converted to PO objects:', this.allPOs);
-            
-            this.filterPOs();
-            this.updateStats(this.filteredPOs);
-            
-        } catch (error) {
-            console.error('❌ Error loading POs:', error);
-            alert('Failed to load purchase orders: ' + error.message);
-            this.allPOs = [];
-            this.filteredPOs = [];
-            this.renderPOs();
-        }
     }
 
     renderPOs() {
@@ -622,37 +591,6 @@ class TrackingDashboard {
     extractPONumberFromFileName(filename) {
         const match = filename.match(/PO[^-]*-?(\d+)/i);
         return match ? match[0] : `PO-${Date.now()}`;
-    }
-
-    /**
-     * Convert test data to PO objects for tracking display
-     */
-    convertTestDataToPOs(testData) {
-        console.log('Converting test data to POs:', testData);
-        
-        // Safety check: ensure testData is an array
-        if (!Array.isArray(testData)) {
-            console.warn('⚠️ testData is not an array:', testData);
-            return [];
-        }
-        
-        return testData.map(po => {
-            return {
-                id: po.id,
-                poNumber: po.id,
-                project: po.meta.projectName,
-                contractor: po.meta.companyName,
-                status: po.status || 'Draft',
-                submittedAt: po.createdAt || new Date().toISOString(),
-                submittedBy: {
-                    name: po.meta.requestedBy,
-                    email: po.meta.requestedByEmail || po.meta.requestedBy
-                },
-                totalAmount: po.meta.contractAmount || 0,
-                workType: po.meta.workType || 'General',
-                source: 'Test Data'
-            };
-        });
     }
 
     updateDataSourceIndicator(response) {
