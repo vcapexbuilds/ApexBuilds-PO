@@ -49,8 +49,12 @@ class TrackingDashboard {
                 this.renderPOs();
             };
         } else {
-            console.warn('⚠️ TrackingDashboard: PODataManager not available, falling back to test data');
-            this.loadPOs();
+            console.warn('⚠️ TrackingDashboard: PODataManager not available');
+            console.log('🏭 Production mode: No fallback data available');
+            this.allPOs = [];
+            this.filteredPOs = [];
+            this.renderPOs();
+            this.updateStats([]);
         }
     }
 
@@ -370,33 +374,24 @@ class TrackingDashboard {
     }
 
     async loadPOs() {
-        console.log('=== LOADING POs (SIMPLIFIED) ===');
+        console.log('=== LOADING POs (PRODUCTION MODE) ===');
         
-        try {
-            // Directly load test data - bypass PO Manager complexity
-            console.log('Loading test data directly...');
-            const response = await fetch('../asset/data/test-data.json');
+        // In production, POs should be loaded via PODataManager
+        if (this.poDataManager) {
+            console.log('🔄 Using PODataManager to fetch POs');
+            await this.poDataManager.fetchAndDisplayPOs(true);
+        } else {
+            console.warn('⚠️ PODataManager not available in loadPOs()');
+            console.log('🏭 Production mode: No data source available');
             
-            if (!response.ok) {
-                throw new Error(`Failed to load test data: ${response.status} ${response.statusText}`);
-            }
-            
-            const testData = await response.json();
-            console.log(`✅ Loaded ${testData.length} test purchase orders`);
-            console.log('Raw test data:', testData);
-            
-            this.allPOs = this.convertTestDataToPOs(testData);
-            console.log('✅ Converted to PO objects:', this.allPOs);
-            
-            this.filterPOs();
-            this.updateStats(this.filteredPOs);
-            
-        } catch (error) {
-            console.error('❌ Error loading POs:', error);
-            alert('Failed to load purchase orders: ' + error.message);
+            // Set empty state
             this.allPOs = [];
             this.filteredPOs = [];
             this.renderPOs();
+            this.updateStats([]);
+            
+            // Show user-friendly message
+            alert('Purchase Order data is temporarily unavailable. Please contact support if this persists.');
         }
     }
 
