@@ -375,12 +375,12 @@ class PODataManager {
                         <p>Showing 0 of ${data.originalTotal} total POs</p>
                         <button onclick="window.poDataManager.clearFilters(); window.poDataManager.applyClientFiltersAndDisplay();" 
                                 class="btn-secondary">Clear Filters</button>
-                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : '/pages/form.html'}" class="btn-primary" style="margin-left: 10px;" onclick="console.log('🔗 Navigating to:', this.href)">Create New PO</a>
+                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html'}" class="btn-primary" style="margin-left: 10px;" onclick="console.log('🔗 Navigating to:', this.href)">Create New PO</a>
                     `;
                 } else {
                     emptyState.innerHTML = `
                         <p>No purchase orders found.</p>
-                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : '/pages/form.html'}" class="btn-primary" onclick="console.log('🔗 Navigating to:', this.href)">Create Your First PO</a>
+                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html'}" class="btn-primary" onclick="console.log('🔗 Navigating to:', this.href)">Create Your First PO</a>
                     `;
                 }
             }
