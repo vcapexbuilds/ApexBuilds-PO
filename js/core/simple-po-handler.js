@@ -8,6 +8,25 @@
 window.SimplePOHandler = {
     
     /**
+     * Safe parsing functions for data type conversion
+     */
+    safeParseInt(value) {
+        if (!value || value === '' || value === null || value === undefined) {
+            return 0;
+        }
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
+    },
+    
+    safeParseFloat(value) {
+        if (!value || value === '' || value === null || value === undefined) {
+            return 0;
+        }
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+    },
+    
+    /**
      * Submit PO form data
      */
     async submitPO(formData) {
@@ -65,10 +84,10 @@ window.SimplePOHandler = {
                     apexOwner: formData.apexOwner || '',
                     typeStatus: formData.typeStatus || '',
                     projectManager: formData.projectManager || '',
-                    contractAmount: parseInt(formData.contractAmount) || 0,
-                    addAltAmount: parseInt(formData.addAltAmount) || 0,
+                    contractAmount: this.safeParseFloat(formData.contractAmount),
+                    addAltAmount: this.safeParseFloat(formData.addAltAmount),
                     addAltDetails: formData.addAltDetails || '',
-                    retainagePct: parseInt(formData.retainagePct) || 0,
+                    retainagePct: this.safeParseFloat(formData.retainagePct),
                     requestedBy: formData.requestedBy || '',
                     companyName: formData.companyName || '',
                     contactName: formData.contactName || '',
@@ -90,14 +109,29 @@ window.SimplePOHandler = {
                 sent: true,
                 status: 'submitted',
                 importance: formData.importance || 'normal',
-                timestamp: now.getTime(),
-                id: now.getTime(), // Simple ID generation
+                timestamp: Math.floor(now.getTime() / 1000), // Convert to seconds (integer)
+                id: Math.floor(now.getTime() / 1000), // Simple ID generation as integer
                 sentAt: now.toISOString(),
                 submittedBy: submittedByUser
             };
             
             console.log('💾 Submission data prepared:', submissionData);
             console.log('👤 submittedBy section specifically:', submissionData.submittedBy);
+            console.log('🔍 Data types check:', {
+                contractAmount: typeof submissionData.meta.contractAmount,
+                addAltAmount: typeof submissionData.meta.addAltAmount,
+                retainagePct: typeof submissionData.meta.retainagePct,
+                timestamp: typeof submissionData.timestamp,
+                id: typeof submissionData.id,
+                scheduleItemsCount: submissionData.schedule.length,
+                firstScheduleItem: submissionData.schedule[0] ? {
+                    qty: typeof submissionData.schedule[0].qty,
+                    totalCost: typeof submissionData.schedule[0].totalCost,
+                    scheduled: typeof submissionData.schedule[0].scheduled,
+                    apexContractValue: typeof submissionData.schedule[0].apexContractValue,
+                    profit: typeof submissionData.schedule[0].profit
+                } : 'No schedule items'
+            });
             
             // STRICT Power Automate submission only - no local storage fallback
             if (!window.POWER_AUTOMATE_CONFIG) {
@@ -436,12 +470,12 @@ window.SimplePOHandler = {
                     primeLine: primeLine || '',
                     budgetCode: budgetCode || '',
                     description: description || '',
-                    qty: parseInt(quantity) || 0,
-                    unit: unit || '', // Changed to string to match schema
-                    totalCost: parseInt(totalCost) || 0,
-                    scheduled: parseInt(scheduled) || 0,
-                    apexContractValue: parseInt(apexContractValue) || 0,
-                    profit: parseInt(profit) || 0
+                    qty: this.safeParseFloat(quantity),
+                    unit: unit || '',
+                    totalCost: this.safeParseFloat(totalCost),
+                    scheduled: this.safeParseInt(scheduled),
+                    apexContractValue: this.safeParseFloat(apexContractValue),
+                    profit: this.safeParseFloat(profit)
                 };
                 
                 console.log(`Schedule item ${index + 1}:`, item);
@@ -483,7 +517,7 @@ window.SimplePOHandler = {
             // Only add if there's some meaningful data
             if (itemNumber || description) {
                 const item = {
-                    item: itemNumber || '',
+                    item: this.safeParseInt(itemNumber), // Convert to integer
                     description: description || '',
                     included: Boolean(included),
                     excluded: Boolean(excluded)
