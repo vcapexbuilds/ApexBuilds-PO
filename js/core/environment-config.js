@@ -9,15 +9,27 @@ class EnvironmentConfig {
         this.config = this.generateConfig();
         
         console.log('🌍 Environment detected:', this.isLocal ? 'LOCAL' : 'PRODUCTION');
+        console.log('🌍 Current hostname:', window.location.hostname);
+        console.log('🌍 Current pathname:', window.location.pathname);
         console.log('🌍 Base URL:', this.baseUrl);
+        console.log('🌍 Form page path:', this.getFormPagePath());
     }
     
     detectLocalEnvironment() {
         const hostname = window.location.hostname;
-        return hostname === 'localhost' || 
-               hostname === '127.0.0.1' || 
-               hostname.includes('localhost') ||
-               window.location.port !== '';
+        const isLocalhost = hostname === 'localhost' || 
+                           hostname === '127.0.0.1' || 
+                           hostname.includes('localhost') ||
+                           window.location.port !== '';
+        
+        console.log('🔍 Hostname detection:', {
+            hostname,
+            port: window.location.port,
+            isLocalhost,
+            fullUrl: window.location.href
+        });
+        
+        return isLocalhost;
     }
     
     getBaseUrl() {
@@ -26,7 +38,12 @@ class EnvironmentConfig {
             return window.location.origin;
         } else {
             // For GitHub Pages - your actual site
-            return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
+            // Detect if we're on vcapexbuilds.github.io and add the correct repo path
+            if (window.location.hostname === 'vcapexbuilds.github.io') {
+                return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
+            }
+            // Fallback for other domains
+            return window.location.origin;
         }
     }
     
@@ -51,6 +68,15 @@ class EnvironmentConfig {
                 formPage: this.isLocal ? '/pages/form.html' : `${this.baseUrl}/pages/form.html`,
                 trackingPage: this.isLocal ? '/pages/tracking.html' : `${this.baseUrl}/pages/tracking.html`,
                 loginPage: this.isLocal ? '/index.html' : `${this.baseUrl}/index.html`
+            },
+            
+            // Debug info
+            debug: {
+                hostname: window.location.hostname,
+                pathname: window.location.pathname,
+                origin: window.location.origin,
+                isLocal: this.isLocal,
+                baseUrl: this.baseUrl
             }
         };
     }
