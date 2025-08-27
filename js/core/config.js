@@ -16,8 +16,14 @@ const AZURE_CONFIG = {
     // 📝 Your Directory (Tenant) ID from the screenshot  
     authority: "https://login.microsoftonline.com/a543e2f6-ae4b-4d1d-b263-a38786ce6844",
     
-    // 📝 STEP 3: Add your production domain when ready (keep localhost for testing)
-    redirectUri: "http://localhost:8080",
+    // 📝 Dynamic redirect URI based on environment
+    get redirectUri() {
+        if (window.ENV_CONFIG) {
+            return window.ENV_CONFIG.getAuthRedirectUri();
+        }
+        // Fallback for local development
+        return "http://localhost:8080/pages/tracking.html";
+    },
     
     // 📝 Microsoft Graph scopes (these are correct - don't change)
     scopes: ["openid", "profile", "User.Read", "email"],
