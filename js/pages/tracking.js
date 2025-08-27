@@ -57,14 +57,20 @@ class TrackingDashboard {
             // Override the error display to use our existing error handling
             this.poDataManager.showErrorState = (errorMessage) => {
                 console.error('❌ TrackingDashboard: Power Automate error:', errorMessage);
-                alert('Failed to load purchase orders: ' + errorMessage);
+                // Remove annoying alert popup - just log the error
+                console.warn('⚠️ Power Automate request failed, but this may be normal if using test data or demo mode');
                 this.allPOs = [];
                 this.filteredPOs = [];
                 this.renderPOs();
             };
         } else {
             console.warn('⚠️ TrackingDashboard: PODataManager not available, falling back to test data');
-            this.loadPOs();
+            
+            // Load test data immediately when PO Data Manager isn't available
+            setTimeout(() => {
+                console.log('🔄 Loading test data as fallback...');
+                this.loadPOs();
+            }, 500);
         }
     }
 
