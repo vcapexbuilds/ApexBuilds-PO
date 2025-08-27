@@ -386,6 +386,13 @@ window.addEventListener('load', () => {
         safeBindButtons();
         fixFormSubmissionConflicts(); // Fix form submission conflicts too
     }, 2000); // Wait 2 seconds for other scripts
+    
+    // Additional aggressive binding after 5 seconds
+    setTimeout(() => {
+        console.log('🔥🔥 SUPER AGGRESSIVE BUTTON BINDING...');
+        buttonsAlreadyBound = false; // Reset flag again
+        safeBindButtons();
+    }, 5000); // Extra aggressive binding
 });
 
 // Backup binding attempts
@@ -395,13 +402,66 @@ if (document.readyState === 'loading') {
     safeBindButtons();
 }
 
-// Additional backup
+// Multiple backup attempts with different delays
 setTimeout(() => {
     if (!buttonsAlreadyBound) {
-        console.log('🔄 Final backup binding attempt...');
+        console.log('🔄 Backup binding attempt 1...');
         safeBindButtons();
     }
+}, 1000);
+
+setTimeout(() => {
+    console.log('🔄 Backup binding attempt 2 (forced)...');
+    buttonsAlreadyBound = false;
+    safeBindButtons();
 }, 3000);
 
+setTimeout(() => {
+    console.log('🔄 Final backup binding attempt...');
+    buttonsAlreadyBound = false;
+    safeBindButtons();
+}, 7000);
+
 console.log('🚨 EMERGENCY BUTTON FIX LOADED');
+
+// Test function to manually check button responsiveness
+window.testButtonBinding = function() {
+    console.log('🧪 Testing button binding...');
+    const scheduleBtn = document.getElementById('addScheduleItem');
+    const scopeBtn = document.getElementById('addScopeItem');
+    
+    console.log('Schedule button:', scheduleBtn);
+    console.log('Schedule button onclick:', scheduleBtn ? scheduleBtn.onclick : 'N/A');
+    console.log('Scope button:', scopeBtn);
+    console.log('Scope button onclick:', scopeBtn ? scopeBtn.onclick : 'N/A');
+    
+    if (scheduleBtn) {
+        console.log('🔥 FORCE BINDING SCHEDULE BUTTON RIGHT NOW!');
+        scheduleBtn.onclick = function(e) {
+            console.log('🎯💥 MANUAL TEST SCHEDULE BUTTON CLICKED!');
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            addScheduleItemDirect();
+        };
+    }
+    
+    if (scopeBtn) {
+        console.log('🔥 FORCE BINDING SCOPE BUTTON RIGHT NOW!');
+        scopeBtn.onclick = function(e) {
+            console.log('🎯💥 MANUAL TEST SCOPE BUTTON CLICKED!');
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            addScopeItemDirect();
+        };
+    }
+    
+    console.log('✅ Manual binding test completed');
+};
+
+// Auto-run test function after a delay
+setTimeout(() => {
+    console.log('🧪 Running automatic button test...');
+    window.testButtonBinding();
+}, 8000); // Run test after 8 seconds
+
 // Force update - Wed Aug 27 17:10:45 UTC 2025
