@@ -948,10 +948,29 @@
     border: none;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    display: inline-block;
+    user-select: none;
+    vertical-align: middle;
+    text-decoration: none;
+    outline: none;
+    position: relative;
+    z-index: 1;
+    pointer-events: auto;
 }
 
 .table-controls .btn-secondary:hover {
     background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.table-controls .btn-secondary:active {
+    background: #4e555b;
+    transform: translateY(0);
+}
+
+.table-controls .btn-secondary:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
 }
 
 /* Table-specific mobile responsive styles */

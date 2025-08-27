@@ -245,49 +245,107 @@ class POForm {
 
         // Add Schedule Item button
         const addScheduleBtn = document.getElementById('addScheduleItem');
+        console.log('🔍 Looking for Add Schedule Item button...');
+        console.log('Button element:', addScheduleBtn);
+        console.log('Button computed style:', addScheduleBtn ? window.getComputedStyle(addScheduleBtn) : 'N/A');
+        
         if (addScheduleBtn) {
             console.log('✅ Add Schedule Item button found, binding...');
-            addScheduleBtn.addEventListener('click', (e) => {
-                console.log('🎯 Add Schedule Item clicked!', e);
+            
+            // Remove any existing event listeners
+            addScheduleBtn.replaceWith(addScheduleBtn.cloneNode(true));
+            const newAddScheduleBtn = document.getElementById('addScheduleItem');
+            
+            newAddScheduleBtn.addEventListener('click', (e) => {
+                console.log('🎯🎯🎯 Add Schedule Item CLICKED!', e);
+                console.log('Event target:', e.target);
+                console.log('Event currentTarget:', e.currentTarget);
+                console.log('Button disabled?', e.target.disabled);
+                console.log('Event propagation stopped?', e.defaultPrevented);
+                
                 e.preventDefault();
+                e.stopPropagation();
+                
                 try {
+                    console.log('Calling addScheduleItem()...');
                     this.addScheduleItem();
                     console.log('✅ addScheduleItem() completed successfully');
                 } catch (error) {
                     console.error('❌ Error in addScheduleItem():', error);
+                    alert('Error adding schedule item: ' + error.message);
                 }
             });
-            console.log('✅ Add Schedule Item event bound');
+            
+            // Also add a direct click handler as backup
+            newAddScheduleBtn.onclick = (e) => {
+                console.log('🎯 BACKUP: Add Schedule Item onclick triggered!', e);
+                if (!e.defaultPrevented) {
+                    this.addScheduleItem();
+                }
+            };
+            
+            console.log('✅ Add Schedule Item event bound with backup');
         } else {
             console.error('❌ Add Schedule Item button not found!');
             console.log('Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({
                 id: b.id || 'no-id',
                 text: b.textContent.trim(),
-                type: b.type
+                type: b.type,
+                disabled: b.disabled,
+                style: b.getAttribute('style')
             })));
         }
 
         // Add Scope Item button
         const addScopeBtn = document.getElementById('addScopeItem');
+        console.log('🔍 Looking for Add Scope Item button...');
+        console.log('Button element:', addScopeBtn);
+        console.log('Button computed style:', addScopeBtn ? window.getComputedStyle(addScopeBtn) : 'N/A');
+        
         if (addScopeBtn) {
             console.log('✅ Add Scope Item button found, binding...');
-            addScopeBtn.addEventListener('click', (e) => {
-                console.log('🎯 Add Scope Item clicked!', e);
+            
+            // Remove any existing event listeners
+            addScopeBtn.replaceWith(addScopeBtn.cloneNode(true));
+            const newAddScopeBtn = document.getElementById('addScopeItem');
+            
+            newAddScopeBtn.addEventListener('click', (e) => {
+                console.log('🎯🎯🎯 Add Scope Item CLICKED!', e);
+                console.log('Event target:', e.target);
+                console.log('Event currentTarget:', e.currentTarget);
+                console.log('Button disabled?', e.target.disabled);
+                console.log('Event propagation stopped?', e.defaultPrevented);
+                
                 e.preventDefault();
+                e.stopPropagation();
+                
                 try {
+                    console.log('Calling addScopeItem()...');
                     this.addScopeItem();
                     console.log('✅ addScopeItem() completed successfully');
                 } catch (error) {
                     console.error('❌ Error in addScopeItem():', error);
+                    alert('Error adding scope item: ' + error.message);
                 }
             });
-            console.log('✅ Add Scope Item event bound');
+            
+            // Also add a direct click handler as backup
+            newAddScopeBtn.onclick = (e) => {
+                console.log('🎯 BACKUP: Add Scope Item onclick triggered!', e);
+                if (!e.defaultPrevented) {
+                    this.addScopeItem();
+                }
+            };
+            
+            console.log('✅ Add Scope Item event bound with backup');
         } else {
             console.error('❌ Add Scope Item button not found!');
             console.log('Available buttons:', Array.from(document.querySelectorAll('button')).map(b => ({
                 id: b.id || 'no-id',
                 text: b.textContent.trim(),
-                type: b.type
+                type: b.type,
+                disabled: b.disabled,
+                style: b.getAttribute('style')
             })));
         }
 
