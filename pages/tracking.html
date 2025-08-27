@@ -112,6 +112,19 @@
                             window.history.replaceState({}, document.title, window.location.pathname);
                             window.location.reload();
                         }, 1000);
+                    } else {
+                        console.error('❌ Microsoft authentication failed:', result.error || 'Unknown error');
+                        
+                        // Show error and redirect to login
+                        document.body.innerHTML = `
+                            <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 2rem;">
+                                <h3 style="color: #dc3545;">Authentication Failed</h3>
+                                <p style="margin: 1rem 0;">Microsoft authentication was not successful.</p>
+                                <p style="color: #666; font-size: 0.9em; margin-bottom: 2rem;">${result.error || 'Please try signing in again.'}</p>
+                                <button onclick="window.location.href='https://vcapexbuilds.github.io/ApexBuilds-PO/'" style="padding: 0.75rem 1.5rem; background: #0078d4; color: white; border: none; border-radius: 6px; cursor: pointer;">Return to Login</button>
+                            </div>
+                        `;
+                        return;
                     }
                 } catch (error) {
                     console.error('❌ OAuth callback error:', error);
@@ -135,9 +148,13 @@
                     `;
                 }
                 
-                // Stop normal page execution
+                // Stop normal page execution during OAuth callback
                 return;
             }
+            
+            // Initialize TrackingDashboard if no OAuth callback processing
+            console.log('🚀 No OAuth callback detected, initializing TrackingDashboard...');
+            window.trackingDashboard = new TrackingDashboard();
         });
     </script>
 </head>
@@ -406,90 +423,9 @@
             }
         })();
         
-        // Handle Microsoft OAuth callback when page loads
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                console.log('🔍 Checking for OAuth callback on tracking page...');
-                
-                // Check if this page load is from Microsoft OAuth redirect
-                const hasAuthCode = window.location.search.includes('code=');
-                const hasAccessToken = window.location.hash.includes('access_token');
-                const isOAuthCallback = hasAuthCode || hasAccessToken;
-                
-                if (isOAuthCallback) {
-                    console.log('🔄 OAuth callback detected, processing...', { hasAuthCode, hasAccessToken });
-                    
-                    let userInfo = null;
-                    let tokenData = null;
-                    
-                    // Try SPA flow first (hash fragment)
-                    if (hasAccessToken && window.MicrosoftSPA) {
-                        console.log('📱 Processing SPA OAuth callback...');
-                        try {
-                            tokenData = window.MicrosoftSPA.handleCallback();
-                            if (tokenData) {
-                                userInfo = await window.MicrosoftSPA.getUserInfo();
-                                console.log('✅ SPA OAuth successful:', userInfo);
-                            }
-                        } catch (error) {
-                            console.error('❌ SPA OAuth failed:', error);
-                        }
-                    }
-                    
-                    // Try Web flow if SPA failed (query parameter)
-                    if (!userInfo && hasAuthCode) {
-                        console.log('🌐 Processing Web OAuth callback...');
-                        if (window.MicrosoftAuthConfig && window.MicrosoftAuthConfig.handleCallback) {
-                            try {
-                                tokenData = await window.MicrosoftAuthConfig.handleCallback();
-                                if (tokenData && window.MicrosoftAuthConfig.getUserInfo) {
-                                    userInfo = await window.MicrosoftAuthConfig.getUserInfo();
-                                    console.log('✅ Web OAuth successful:', userInfo);
-                                }
-                            } catch (error) {
-                                console.error('❌ Web OAuth failed:', error);
-                            }
-                        }
-                    }
-                    
-                    if (userInfo) {
-                        console.log('✅ OAuth login successful! Processing user info...');
-                        
-                        // Store user data for tracking dashboard
-                        const userForTracking = {
-                            username: userInfo.displayName || userInfo.name || userInfo.userPrincipalName || 'Microsoft User',
-                            email: userInfo.userPrincipalName || userInfo.mail || userInfo.email || 'user@company.com',
-                            firstName: userInfo.givenName || (userInfo.displayName ? userInfo.displayName.split(' ')[0] : 'User'),
-                            role: 'user',
-                            microsoftId: userInfo.id,
-                            source: 'microsoft-oauth-tracking',
-                            isOAuth: true, // Mark as OAuth user for auth system
-                            expiresAt: new Date(Date.now() + 8*60*60*1000).toISOString(), // 8 hours from now
-                            loginTime: new Date().toISOString()
-                        };
-                        localStorage.setItem('currentUser', JSON.stringify(userForTracking));
-                        console.log('✅ User stored for tracking dashboard:', userForTracking);
-                        
-                        // Clean up URL
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                        
-                        // Refresh the page to initialize with clean state
-                        console.log('🔄 Refreshing page with clean URL...');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                        return; // Exit early to avoid double initialization
-                    } else {
-                        console.error('❌ OAuth callback failed - no user info received');
-                        alert('Authentication failed. Please try again or contact support.');
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error handling OAuth callback:', error);
-                alert('Authentication failed: ' + error.message);
-            }
-            
-            // Initialize TrackingDashboard after OAuth handling (or if no OAuth)
+        // Initialize TrackingDashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // OAuth callback processing is handled in the main script above
             console.log('🚀 Initializing TrackingDashboard...');
             window.trackingDashboard = new TrackingDashboard();
         });
