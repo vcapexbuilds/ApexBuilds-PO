@@ -322,7 +322,7 @@ window.MicrosoftAuth = {
                             success: true,
                             account: {
                                 homeAccountId: realUserInfo.id,
-                                username: realUserInfo.userPrincipalName,
+                                username: realUserInfo.displayName, // Use display name instead of email
                                 name: realUserInfo.displayName,
                                 email: realUserInfo.mail || realUserInfo.userPrincipalName
                             },
@@ -354,7 +354,7 @@ window.MicrosoftAuth = {
                     success: true,
                     account: {
                         homeAccountId: userInfo.id,
-                        username: userInfo.userPrincipalName,
+                        username: userInfo.displayName, // Use display name instead of email
                         name: userInfo.displayName,
                         email: userInfo.mail
                     },
