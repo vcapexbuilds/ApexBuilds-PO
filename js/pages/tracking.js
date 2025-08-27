@@ -3,8 +3,13 @@
 class TrackingDashboard {
     constructor() {
         console.log('=== TrackingDashboard constructor called ===');
+        
+        // Initialize arrays with proper safety checks
         this.allPOs = [];
         this.filteredPOs = [];
+        
+        // Verify initialization
+        console.log('Constructor - this.allPOs:', this.allPOs, 'Type:', typeof this.allPOs, 'Is array:', Array.isArray(this.allPOs));
         
         // Ensure DOM is ready before binding events
         if (document.readyState === 'loading') {
@@ -35,7 +40,16 @@ class TrackingDashboard {
             // Override the PO Data Manager's display method to use our existing rendering
             this.poDataManager.displayPOs = (pos) => {
                 console.log('📊 TrackingDashboard: Received POs from Power Automate:', pos);
-                this.allPOs = pos || [];
+                console.log('📊 Type of pos:', typeof pos, 'Is array:', Array.isArray(pos));
+                
+                // Safety check: ensure pos is always an array
+                if (!Array.isArray(pos)) {
+                    console.warn('⚠️ Power Automate returned non-array data, converting to empty array');
+                    this.allPOs = [];
+                } else {
+                    this.allPOs = pos;
+                }
+                
                 this.filterPOs();
                 this.updateStats(this.filteredPOs);
             };
@@ -439,6 +453,12 @@ class TrackingDashboard {
             }
         }
 
+        // Safety check: ensure this.filteredPOs is an array
+        if (!Array.isArray(this.filteredPOs)) {
+            console.warn('⚠️ this.filteredPOs is not an array in renderPOs, resetting to empty array');
+            this.filteredPOs = [];
+        }
+
         if (this.filteredPOs.length === 0) {
             cardsContainer.innerHTML = '<div class="no-pos">No purchase orders found.</div>';
             return;
@@ -534,6 +554,13 @@ class TrackingDashboard {
      */
     convertTestDataToPOs(testData) {
         console.log('Converting test data to POs:', testData);
+        
+        // Safety check: ensure testData is an array
+        if (!Array.isArray(testData)) {
+            console.warn('⚠️ testData is not an array:', testData);
+            return [];
+        }
+        
         return testData.map(po => {
             return {
                 id: po.id,
@@ -661,6 +688,13 @@ class TrackingDashboard {
     updateStats(pos) {
         console.log('=== UPDATE STATS ===');
         console.log('Stats for POs:', pos);
+        console.log('Type of pos:', typeof pos, 'Is array:', Array.isArray(pos));
+        
+        // Safety check: ensure pos is an array
+        if (!Array.isArray(pos)) {
+            console.warn('⚠️ pos is not an array in updateStats, using empty array');
+            pos = [];
+        }
         
         const total = pos.length;
         const submitted = pos.filter(po => po.status === 'Submitted').length;
@@ -782,6 +816,15 @@ class TrackingDashboard {
     filterPOs() {
         console.log('=== FILTER POs START ===');
         console.log('All POs:', this.allPOs);
+        console.log('Type of this.allPOs:', typeof this.allPOs);
+        console.log('Is array:', Array.isArray(this.allPOs));
+        
+        // Safety check: Ensure this.allPOs is always an array
+        if (!Array.isArray(this.allPOs)) {
+            console.warn('⚠️ this.allPOs is not an array, resetting to empty array');
+            this.allPOs = [];
+        }
+        
         let tempPOs = [...this.allPOs];
         console.log('Initial tempPOs length:', tempPOs.length);
         
@@ -903,6 +946,12 @@ class TrackingDashboard {
         document.getElementById('statusFilter').value = '';
         document.getElementById('dateFrom').value = '';
         document.getElementById('dateTo').value = '';
+        
+        // Safety check: ensure this.allPOs is an array
+        if (!Array.isArray(this.allPOs)) {
+            console.warn('⚠️ this.allPOs is not an array in clearFilters, resetting to empty array');
+            this.allPOs = [];
+        }
         
         this.filteredPOs = [...this.allPOs];
         this.displayPOs(this.filteredPOs);
