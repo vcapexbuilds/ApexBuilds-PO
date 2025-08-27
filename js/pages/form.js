@@ -456,37 +456,36 @@ class POForm {
     }
 
     createScheduleItemTemplate() {
-        const radioGroupId = Date.now() + Math.random();
         return `
             <tr class="schedule-item">
-                <td><input type="text" name="primeLine[]" required placeholder="16000"></td>
-                <td><input type="text" name="budgetCode[]" required placeholder="EC-001"></td>
-                <td><textarea name="description[]" required placeholder="Work description"></textarea></td>
-                <td><input type="number" name="quantity[]" required step="0.01" min="0" placeholder="1"></td>
-                <td><input type="text" name="unit[]" required placeholder="EA"></td>
+                <td><input type="text" name="primeLine[]" required></td>
+                <td><input type="text" name="budgetCode[]" required></td>
+                <td><textarea name="description[]" required></textarea></td>
+                <td><input type="number" name="quantity[]" required step="0.01" min="0"></td>
+                <td><input type="text" name="unit[]" required></td>
                 <td><input type="number" name="totalCost[]" required step="0.01" min="0" placeholder="0.00"></td>
-                <td>
-                    <label><input type="radio" name="scheduled_${radioGroupId}" value="yes" required> Yes</label>
-                    <label><input type="radio" name="scheduled_${radioGroupId}" value="no" required> No</label>
-                </td>
-                <td><input type="number" name="apexContractValue[]" required step="0.01" min="0" placeholder="0.00"></td>
-                <td><input type="number" name="profit[]" required step="0.01" min="0" placeholder="0.00"></td>
+                <td><input type="number" name="scheduled[]" required step="1" min="0"></td>
+                <td><input type="number" name="apexContractValue[]" required step="0.01" min="0"></td>
+                <td><input type="number" name="profit[]" required step="0.01" min="0"></td>
                 <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
             </tr>
         `;
     }
 
     createScopeItemTemplate() {
+        // Calculate the next item number based on existing rows
+        const tbody = document.getElementById('scopeItems');
+        const existingRows = tbody ? tbody.querySelectorAll('tr').length : 0;
+        const nextItemNumber = existingRows + 1;
+        const radioGroupId = Date.now() + Math.random();
+        
         return `
             <tr class="scope-item">
-                <td><input type="text" name="scopeItemNumber[]" required placeholder="Item #1"></td>
+                <td><input type="text" name="scopeItemNumber[]" required value="${nextItemNumber}" readonly></td>
                 <td><textarea name="scopeDescription[]" required placeholder="Describe the scope of work"></textarea></td>
                 <td>
-                    <select name="scopeStatus[]" required>
-                        <option value="">Select Status</option>
-                        <option value="included">Included</option>
-                        <option value="excluded">Excluded</option>
-                    </select>
+                    <label><input type="radio" name="scopeStatus_${radioGroupId}" value="included" required> Included</label>
+                    <label><input type="radio" name="scopeStatus_${radioGroupId}" value="excluded" required> Excluded</label>
                 </td>
                 <td><button type="button" class="btn btn-danger btn-small remove-item">Remove</button></td>
             </tr>
