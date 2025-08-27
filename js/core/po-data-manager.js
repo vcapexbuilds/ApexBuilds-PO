@@ -148,34 +148,15 @@ class PODataManager {
             // Get current user info for Power Automate request
             const currentUser = this.getCurrentUser();
             
-            // Detect if this is a page refresh or initial visit
-            const isPageRefresh = performance.navigation && performance.navigation.type === performance.navigation.TYPE_RELOAD;
-            const userActivity = isPageRefresh ? 'tracking_page_refresh' : 'tracking_page_visit';
-            
-            // Prepare comprehensive request payload - PO fetching + user activity tracking
+            // Prepare request payload - ONLY send user info, no filters
             const requestPayload = {
-                // Primary purpose: PO data fetching
                 action: 'fetch_pos',
                 timestamp: new Date().toISOString(),
-                user: currentUser,
-                
-                // Additional: User activity tracking data (as requested)
-                userActivity: {
-                    action: userActivity,
-                    timestamp: new Date().toISOString(),
-                    user: {
-                        username: currentUser.username || currentUser.name || 'Unknown',
-                        email: currentUser.email || 'unknown@email.com',
-                        role: currentUser.role || 'user',
-                        microsoftId: currentUser.id || currentUser.microsoftId || currentUser.homeAccountId || null,
-                        source: currentUser.provider || currentUser.source || 'microsoft-oauth'
-                    }
-                }
+                user: currentUser
             };
             
-            console.log('📤 Sending combined PO fetch + activity tracking to Power Automate:', requestPayload);
-            console.log('� Activity type:', userActivity);
-            console.log('�🔗 Power Automate URL:', this.FETCH_PO_ENDPOINT);
+            console.log('📤 Sending request to Power Automate (user info only):', requestPayload);
+            console.log('🔗 Power Automate URL:', this.FETCH_PO_ENDPOINT);
             
             // Make request to Power Automate
             const response = await fetch(this.FETCH_PO_ENDPOINT, {

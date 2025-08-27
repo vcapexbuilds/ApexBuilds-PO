@@ -137,8 +137,8 @@ class TrackingDashboard {
                             window.auth.currentUser = user;
                         }
                         
-                        // Track user activity - now handled by PO Data Manager
-                        // this.trackUserPageVisit(user, activityAction);
+                        // Track user activity - send to Power Automate
+                        this.trackUserPageVisit(user, activityAction);
                         
                         return;
                     }
@@ -159,8 +159,8 @@ class TrackingDashboard {
                         console.log('Using Microsoft OAuth name:', firstName);
                         document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
                         
-                        // Track user activity - now handled by PO Data Manager
-                        // this.trackUserPageVisit(msUser, activityAction);
+                        // Track user activity for Microsoft OAuth user
+                        this.trackUserPageVisit(msUser, activityAction);
                         
                         return;
                     }
@@ -190,8 +190,8 @@ class TrackingDashboard {
                         };
                         localStorage.setItem('currentUser', JSON.stringify(userData));
                         
-                        // Track user activity - now handled by PO Data Manager
-                        // this.trackUserPageVisit(userData, activityAction);
+                        // Track user activity for demo account
+                        this.trackUserPageVisit(userData, activityAction);
                         
                         return;
                     }
