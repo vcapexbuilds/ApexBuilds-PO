@@ -70,6 +70,11 @@ class TrackingDashboard {
                 console.log('window.auth.isAuthenticated():', window.auth.isAuthenticated());
             }
             
+            // Track page refresh/visit activity regardless of auth source
+            const isPageRefresh = performance.navigation && performance.navigation.type === performance.navigation.TYPE_RELOAD;
+            const activityAction = isPageRefresh ? 'tracking_page_refresh' : 'tracking_page_visit';
+            console.log(`📊 Page ${isPageRefresh ? 'refresh' : 'visit'} detected`);
+            
             // FIRST: Check if we have current user data (Microsoft OAuth or local auth)
             const storedUser = localStorage.getItem('currentUser');
             if (storedUser) {
@@ -133,7 +138,7 @@ class TrackingDashboard {
                         }
                         
                         // Track user activity - send to Power Automate
-                        this.trackUserPageVisit(user, 'tracking_page_load');
+                        this.trackUserPageVisit(user, activityAction);
                         
                         return;
                     }
@@ -155,7 +160,7 @@ class TrackingDashboard {
                         document.getElementById('welcomeUser').textContent = `Welcome, ${firstName}`;
                         
                         // Track user activity for Microsoft OAuth user
-                        this.trackUserPageVisit(msUser, 'tracking_page_load_ms_oauth');
+                        this.trackUserPageVisit(msUser, activityAction);
                         
                         return;
                     }
@@ -186,7 +191,7 @@ class TrackingDashboard {
                         localStorage.setItem('currentUser', JSON.stringify(userData));
                         
                         // Track user activity for demo account
-                        this.trackUserPageVisit(userData, 'tracking_page_load_demo');
+                        this.trackUserPageVisit(userData, activityAction);
                         
                         return;
                     }

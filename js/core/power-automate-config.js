@@ -33,6 +33,7 @@ window.POWER_AUTOMATE_CONFIG = {
         getUserData: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX',
         
         // POST user activity tracking (page visits, actions, etc.)
+        // TODO: Replace with your actual Power Automate workflow URL for user activity tracking
         userActivity: 'https://prod-XX.eastus.logic.azure.com/workflows/XXXXXX/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=XXXXXX'
     },
     
