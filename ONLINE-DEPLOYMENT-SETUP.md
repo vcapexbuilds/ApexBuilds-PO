@@ -1,5 +1,5 @@
 # 🌐 Online Deployment Setup Instructions
-
+go
 Your Apex PO System is now configured to work both locally and online! Here's what you need to do to complete the setup:
 
 ## ✅ What I've Already Done For You
@@ -16,21 +16,8 @@ Your Apex PO System is now configured to work both locally and online! Here's wh
 
 ## 🔧 What You Need To Do Next
 
-### Step 1: Update Your GitHub Pages URL
-1. Find your GitHub Pages URL (should be something like `https://vcapexbuilds.github.io/apex-po-system-test/`)
-2. Open `js/core/environment-config.js`
-3. Update line 27 to use your actual URL:
-   ```javascript
-   // Change this line:
-   redirectUri: this.isLocal 
-       ? `${this.baseUrl}/pages/tracking.html`
-       : `${this.baseUrl}/pages/tracking.html`, // You'll need to update this with your actual GitHub Pages URL
-   
-   // To this (replace with your actual URL):
-   redirectUri: this.isLocal 
-       ? `${this.baseUrl}/pages/tracking.html`
-       : 'https://vcapexbuilds.github.io/apex-po-system-test/pages/tracking.html',
-   ```
+### Step 1: ✅ COMPLETED - GitHub Pages URL Updated
+✅ I've already updated your configuration with your actual URL: `https://vcapexbuilds.github.io/ApexBuilds-PO/`
 
 ### Step 2: Update Microsoft Azure AD App Registration
 1. Go to [Azure Portal](https://portal.azure.com)
@@ -39,7 +26,7 @@ Your Apex PO System is now configured to work both locally and online! Here's wh
 4. Go to "Authentication" section
 5. Add your GitHub Pages URL as a redirect URI:
    ```
-   https://vcapexbuilds.github.io/apex-po-system-test/pages/tracking.html
+   https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html
    ```
 6. Keep the localhost URL for local testing:
    ```
@@ -47,7 +34,7 @@ Your Apex PO System is now configured to work both locally and online! Here's wh
    ```
 
 ### Step 3: Test Your Online Application
-1. Visit your GitHub Pages URL
+1. Visit your GitHub Pages URL: `https://vcapexbuilds.github.io/ApexBuilds-PO/`
 2. Try the Microsoft login
 3. Test the PO tracking functionality
 4. Verify the "View Details" button works online
@@ -63,14 +50,15 @@ The system automatically detects if it's running:
 - Microsoft Auth redirects to `http://localhost:8080/pages/tracking.html`
 
 **Online Environment:**
-- Uses absolute paths (`https://your-domain.com/apex-po-system-test/Print.html`)
+- Uses absolute paths (`https://vcapexbuilds.github.io/ApexBuilds-PO/Print.html`)
 - Microsoft Auth redirects to your GitHub Pages URL
 
 ## 🚀 Current Status
 
 ✅ **Working Locally**: Your app works on localhost as before
-✅ **Ready for Online**: Environment detection is configured
-⏳ **Needs Setup**: Azure AD redirect URI needs your GitHub Pages URL
+✅ **Ready for Online**: Environment detection is configured with your URL
+✅ **Configuration Updated**: Using `https://vcapexbuilds.github.io/ApexBuilds-PO/`
+⏳ **Needs Setup**: Azure AD redirect URI needs to be added
 
 ## 🛠️ If You Have Issues
 
@@ -92,15 +80,15 @@ The system automatically detects if it's running:
 Open browser console to see environment detection messages:
 ```
 🌍 Environment detected: PRODUCTION
-🌍 Base URL: https://vcapexbuilds.github.io/apex-po-system-test
+🌍 Base URL: https://vcapexbuilds.github.io/ApexBuilds-PO
 ```
 
 ## 📞 Next Steps
 
-1. Update the GitHub Pages URL in `environment-config.js`
-2. Add the redirect URI to Azure AD
+1. ✅ GitHub Pages URL updated in configuration
+2. Add the redirect URI to Azure AD: `https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html`
 3. Push changes to GitHub
-4. Test your online application
+4. Test your online application at `https://vcapexbuilds.github.io/ApexBuilds-PO/`
 5. Let me know if you encounter any issues!
 
 Your application should now work seamlessly both locally and online! 🎉
