@@ -1,6 +1,91 @@
 // EMERGENCY BUTTON FIX - Direct button binding without dependencies
 console.log('🚨 EMERGENCY BUTTON FIX LOADING...');
 
+// Function to prevent duplicate form submissions
+function fixFormSubmissionConflicts() {
+    console.log('🔧 Fixing form submission conflicts...');
+    
+    const form = document.getElementById('poForm');
+    if (!form) {
+        console.error('❌ Form not found');
+        return;
+    }
+    
+    // Remove all existing event listeners by cloning the form
+    const parent = form.parentNode;
+    const newForm = form.cloneNode(true);
+    parent.replaceChild(newForm, form);
+    
+    // Override onsubmit to prevent conflicts
+    const finalForm = document.getElementById('poForm');
+    finalForm.onsubmit = null;
+    
+    // Add single clean submission handler
+    finalForm.addEventListener('submit', async (e) => {
+        console.log('🎯💥 EMERGENCY FORM SUBMISSION HANDLER!');
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        try {
+            if (!window.SimplePOHandler) {
+                alert('System not ready. Please refresh the page.');
+                return;
+            }
+
+            console.log('Form submission - using Simple PO Handler with Power Automate');
+            
+            // Collect form data using Simple PO Handler
+            const formData = window.SimplePOHandler.collectFormData();
+
+            // Show confirmation
+            const projectName = formData.projectName || 'Untitled Project';
+            if (!confirm(`Submit PO for "${projectName}"?\n\nThis will submit the PO to Power Automate for processing.`)) {
+                return;
+            }
+
+            // Update button state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = '🔄 Submitting to Power Automate...';
+                submitBtn.disabled = true;
+            }
+
+            // Submit using Simple PO Handler
+            const result = await window.SimplePOHandler.submitPO(formData);
+
+            if (result && result.success) {
+                let message = `SUCCESS! Purchase Order submitted!\n\n🎯 PO Number: ${result.poNumber}`;
+                
+                if (result.storage === 'power-automate') {
+                    message += `\n🚀 Power Automate: ✅ Submitted successfully`;
+                    message += `\n📡 Endpoint: ${result.endpoint ? 'Connected' : 'N/A'}`;
+                } else if (result.storage === 'local-storage') {
+                    message += `\n💾 Local Storage: ✅ Saved`;
+                }
+                
+                alert(message);
+                
+                // Reset form
+                finalForm.reset();
+            } else {
+                throw new Error(result?.error || 'Submission failed');
+            }
+        } catch (error) {
+            console.error('❌ Error in form submission:', error);
+            alert('Error submitting form: ' + error.message);
+        } finally {
+            // Reset button
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Submit Purchase Order';
+                submitBtn.disabled = false;
+            }
+        }
+    });
+    
+    console.log('✅ Form submission handler fixed');
+}
+
 // Function to directly bind buttons with multiple fallback approaches
 function forceBindButtons() {
     console.log('🔧 forceBindButtons() called');
@@ -299,6 +384,7 @@ window.addEventListener('load', () => {
         console.log('🔥 FORCE OVERRIDING ALL BUTTON BINDINGS...');
         buttonsAlreadyBound = false; // Reset flag
         safeBindButtons();
+        fixFormSubmissionConflicts(); // Fix form submission conflicts too
     }, 2000); // Wait 2 seconds for other scripts
 });
 

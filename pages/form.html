@@ -498,7 +498,9 @@
     
     <!-- HYBRID FORM SUBMISSION - MS Auth + Google Drive Storage -->
     <script>
+        // DISABLED - CONFLICTS WITH EMERGENCY-BUTTON-FIX.JS
         // Override the form submit to use hybrid approach
+        /*
         window.addEventListener('load', () => {
             const form = document.getElementById('poForm');
             const submitBtn = document.querySelector('button[type="submit"]');
@@ -566,7 +568,12 @@
                     }
                 });
             }
-            
+            */
+           // END DISABLED CONFLICTING HANDLER
+        });
+        
+        // Keep this part active for clear form functionality
+        window.addEventListener('load', () => {
             // Add event listener for clear form button
             const clearBtn = document.getElementById('clearForm');
             if (clearBtn) {
