@@ -1,6 +1,7 @@
 /**
  * Microsoft Azure AD SPA (Single Page Application) Configuration
  * Uses Implicit Flow - Less secure but works with current Azure AD setup
+ * Now supports automatic environment detection for local vs online deployment
  */
 window.MICROSOFT_SPA_CONFIG = {
     // Azure AD App Registration Details
@@ -9,7 +10,14 @@ window.MICROSOFT_SPA_CONFIG = {
     
     // SPA OAuth Flow Configuration
     authority: 'https://login.microsoftonline.com/a543e2f6-ae4b-4d1d-b263-a38786ce6844',
-    redirectUri: 'http://localhost:8080/pages/tracking.html', // Must match Azure AD app registration
+    // Dynamic redirect URI - will be set by environment config
+    get redirectUri() {
+        if (window.ENV_CONFIG) {
+            return window.ENV_CONFIG.getAuthRedirectUri();
+        }
+        // Fallback for local development
+        return 'http://localhost:8080/pages/tracking.html';
+    },
     
     // Scopes to request
     scopes: [
