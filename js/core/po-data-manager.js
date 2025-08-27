@@ -441,6 +441,12 @@ class PODataManager {
             return;
         }
         
+        // Safety check: Ensure this.cachedData.pos is an array before spreading
+        if (!Array.isArray(this.cachedData.pos)) {
+            console.warn('⚠️ this.cachedData.pos is not an array:', typeof this.cachedData.pos, this.cachedData.pos);
+            this.cachedData.pos = [];
+        }
+        
         const filters = this.getCurrentFilters();
         const currentUser = this.getCurrentUser();
         

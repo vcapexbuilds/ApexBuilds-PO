@@ -404,6 +404,12 @@ class TrackingDashboard {
         console.log('=== RENDER POs ===');
         console.log('Rendering POs:', this.filteredPOs);
         
+        // Safety check: Ensure this.filteredPOs is an array
+        if (!Array.isArray(this.filteredPOs)) {
+            console.warn('⚠️ this.filteredPOs is not an array:', typeof this.filteredPOs, this.filteredPOs);
+            this.filteredPOs = [];
+        }
+        
         // Find the main container - look for po-list first, then fallback
         let container = document.querySelector('.po-list');
         if (!container) {
@@ -534,6 +540,13 @@ class TrackingDashboard {
      */
     convertTestDataToPOs(testData) {
         console.log('Converting test data to POs:', testData);
+        
+        // Safety check: Ensure testData is an array
+        if (!Array.isArray(testData)) {
+            console.warn('⚠️ testData is not an array:', typeof testData, testData);
+            return [];
+        }
+        
         return testData.map(po => {
             return {
                 id: po.id,
@@ -662,6 +675,12 @@ class TrackingDashboard {
         console.log('=== UPDATE STATS ===');
         console.log('Stats for POs:', pos);
         
+        // Safety check: Ensure pos is an array
+        if (!Array.isArray(pos)) {
+            console.warn('⚠️ pos is not an array in updateStats:', typeof pos, pos);
+            pos = [];
+        }
+        
         const total = pos.length;
         const submitted = pos.filter(po => po.status === 'Submitted').length;
         const approved = pos.filter(po => po.status === 'Approved').length;
@@ -782,6 +801,13 @@ class TrackingDashboard {
     filterPOs() {
         console.log('=== FILTER POs START ===');
         console.log('All POs:', this.allPOs);
+        
+        // Safety check: Ensure this.allPOs is an array before spreading
+        if (!Array.isArray(this.allPOs)) {
+            console.warn('⚠️ this.allPOs is not an array:', typeof this.allPOs, this.allPOs);
+            this.allPOs = [];
+        }
+        
         let tempPOs = [...this.allPOs];
         console.log('Initial tempPOs length:', tempPOs.length);
         
@@ -903,6 +929,12 @@ class TrackingDashboard {
         document.getElementById('statusFilter').value = '';
         document.getElementById('dateFrom').value = '';
         document.getElementById('dateTo').value = '';
+        
+        // Safety check: Ensure this.allPOs is an array before spreading
+        if (!Array.isArray(this.allPOs)) {
+            console.warn('⚠️ this.allPOs is not an array:', typeof this.allPOs, this.allPOs);
+            this.allPOs = [];
+        }
         
         this.filteredPOs = [...this.allPOs];
         this.displayPOs(this.filteredPOs);
