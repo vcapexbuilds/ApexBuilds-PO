@@ -380,7 +380,7 @@ class PODataManager {
                 } else {
                     emptyState.innerHTML = `
                         <p>No purchase orders found.</p>
-                        <a href="/pages/form.html" class="btn-primary">Create Your First PO</a>
+                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : '/pages/form.html'}" class="btn-primary">Create Your First PO</a>
                     `;
                 }
             }
@@ -451,7 +451,7 @@ class PODataManager {
             <td title="Submitted by: ${username}">${username}</td>
             <td>
                 <div class="action-buttons">
-                    <form method="get" action="../Print.html" target="_blank" style="display:inline;" onsubmit="return preparePrintData('${po.poNumber}')">
+                    <form method="get" action="${window.ENV_CONFIG ? window.ENV_CONFIG.getPrintPagePath() : '../Print.html'}" target="_blank" style="display:inline;" onsubmit="return preparePrintData('${po.poNumber}')">
                         <input type="hidden" name="po" value="${po.poNumber}">
                         <button type="submit" class="btn-action" title="View Details">👁️</button>
                     </form>
@@ -927,7 +927,7 @@ window.viewPO = function(poNumber) {
 window.editPO = function(poNumber) {
     console.log('✏️ Editing PO:', poNumber);
     // Implement edit functionality - navigate to form with PO number
-    window.location.href = `/pages/form.html?edit=${poNumber}`;
+    window.location.href = window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() + `?edit=${poNumber}` : `/pages/form.html?edit=${poNumber}`;
 };
 
 window.downloadPO = function(poNumber) {
