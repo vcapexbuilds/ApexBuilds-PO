@@ -28,6 +28,10 @@ class TrackingDashboard {
             console.log('🔗 TrackingDashboard: Initializing PO Data Manager for Power Automate integration...');
             this.poDataManager = new window.PODataManager();
             
+            // Make the PODataManager instance globally accessible
+            window.poDataManager = this.poDataManager;
+            console.log('🌍 Made PODataManager globally accessible as window.poDataManager');
+            
             // Override the PO Data Manager's display method to use our existing rendering
             this.poDataManager.displayPOs = (pos) => {
                 console.log('📊 TrackingDashboard: Received POs from Power Automate:', pos);

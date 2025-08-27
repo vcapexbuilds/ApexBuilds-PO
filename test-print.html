@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Print Data</title>
+</head>
+<body>
+    <h1>Test Print Data Population</h1>
+    
+    <div>
+        <h2>Manual Test</h2>
+        <button onclick="setTestData()">Set Test PO Data in localStorage</button>
+        <button onclick="clearTestData()">Clear localStorage</button>
+        <button onclick="checkData()">Check localStorage</button>
+        <button onclick="openPrintPage()">Open Print Page</button>
+    </div>
+    
+    <div>
+        <h3>Console Output:</h3>
+        <pre id="output"></pre>
+    </div>
+    
+    <script>
+        function log(message) {
+            const output = document.getElementById('output');
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            console.log(message);
+        }
+        
+        function setTestData() {
+            const testPO = {
+                poNumber: "TEST-PO-001",
+                status: "submitted",
+                createdAt: "2025-08-27T10:30:00.000Z",
+                meta: {
+                    projectName: "Test Project for Print Page",
+                    companyName: "Test Company Inc",
+                    contractAmount: 50000,
+                    generalContractor: "Test General Contractor",
+                    owner: "Test Owner",
+                    projectManager: "Test PM",
+                    address: "123 Test Street, Test City"
+                },
+                submittedBy: {
+                    username: "Test User",
+                    email: "test@example.com"
+                }
+            };
+            
+            localStorage.setItem('printPOData', JSON.stringify(testPO));
+            log('✅ Test PO data stored in localStorage');
+        }
+        
+        function clearTestData() {
+            localStorage.removeItem('printPOData');
+            log('🗑️ localStorage cleared');
+        }
+        
+        function checkData() {
+            const data = localStorage.getItem('printPOData');
+            if (data) {
+                log('📋 Data found: ' + data.substring(0, 100) + '...');
+            } else {
+                log('❌ No data found in localStorage');
+            }
+        }
+        
+        function openPrintPage() {
+            window.open('./Print.html', '_blank');
+            log('🚀 Opening print page...');
+        }
+    </script>
+</body>
+</html>

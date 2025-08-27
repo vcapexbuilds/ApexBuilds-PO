@@ -635,9 +635,12 @@
     <script>
         // Function to populate the page with PO data
         function populatePOData() {
+            console.log('📋 populatePOData function started...');
             try {
                 // Get PO data from localStorage
                 const poDataStr = localStorage.getItem('printPOData');
+                console.log('📋 Raw localStorage data:', poDataStr);
+                
                 if (!poDataStr) {
                     console.warn('⚠️ No PO data found in localStorage - displaying empty template');
                     displayEmptyTemplate();
@@ -645,7 +648,9 @@
                 }
                 
                 const poData = JSON.parse(poDataStr);
-                console.log('📋 Loading PO data for print page:', poData);
+                console.log('📋 Parsed PO data for print page:', poData);
+                console.log('📋 PO Number:', poData.poNumber);
+                console.log('📋 Project Name:', poData.meta?.projectName);
                 
                 // Update POR Number and Date
                 updateElementText('.por-number', poData.poNumber || 'PO-DRAFT-001');
@@ -987,6 +992,17 @@
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🖨️ Print page loaded, populating PO data...');
+            
+            // Debug: Check what's in localStorage
+            console.log('🔍 DEBUG: Checking localStorage...');
+            console.log('🔍 localStorage.printPOData:', localStorage.getItem('printPOData'));
+            console.log('🔍 All localStorage keys:', Object.keys(localStorage));
+            
+            // Also check URL parameters for debugging
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log('🔍 URL parameters:', urlParams.toString());
+            console.log('🔍 PO parameter:', urlParams.get('po'));
+            
             populatePOData();
         });
         

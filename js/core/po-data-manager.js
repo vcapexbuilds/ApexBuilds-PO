@@ -375,7 +375,7 @@ class PODataManager {
                         <p>Showing 0 of ${data.originalTotal} total POs</p>
                         <button onclick="window.poDataManager.clearFilters(); window.poDataManager.applyClientFiltersAndDisplay();" 
                                 class="btn-secondary">Clear Filters</button>
-                        <a href="/pages/form.html" class="btn-primary" style="margin-left: 10px;">Create New PO</a>
+                        <a href="${window.ENV_CONFIG ? window.ENV_CONFIG.getFormPagePath() : '/pages/form.html'}" class="btn-primary" style="margin-left: 10px;">Create New PO</a>
                     `;
                 } else {
                     emptyState.innerHTML = `
@@ -867,18 +867,53 @@ class PODataManager {
     }
 }
 
+// Make the class globally available
+window.PODataManager = PODataManager;
+
 // Global functions for table actions
 window.preparePrintData = function(poNumber) {
     console.log('🌍 Global preparePrintData called for:', poNumber);
+    console.log('🌍 window.poDataManager exists:', !!window.poDataManager);
+    console.log('🌍 window.trackingDashboard exists:', !!window.trackingDashboard);
     
-    // Try to get the PODataManager instance
+    // Try to get PO data from multiple sources
+    let poData = null;
+    
+    // Method 1: Try from PODataManager instance
     if (window.poDataManager && typeof window.poDataManager.preparePrintData === 'function') {
+        console.log('🌍 Calling poDataManager.preparePrintData...');
         return window.poDataManager.preparePrintData(poNumber);
-    } else {
-        console.warn('⚠️ PODataManager instance not found, storing empty data');
-        localStorage.removeItem('printPOData');
-        return true;
     }
+    
+    // Method 2: Try to find data directly from trackingDashboard
+    if (window.trackingDashboard) {
+        console.log('🌍 Trying to get data from trackingDashboard...');
+        
+        // Check filtered POs first
+        if (window.trackingDashboard.filteredPOs) {
+            poData = window.trackingDashboard.filteredPOs.find(po => po.poNumber === poNumber);
+            console.log('🔍 Found in filteredPOs:', !!poData);
+        }
+        
+        // Check all POs if not found in filtered
+        if (!poData && window.trackingDashboard.allPOs) {
+            poData = window.trackingDashboard.allPOs.find(po => po.poNumber === poNumber);
+            console.log('🔍 Found in allPOs:', !!poData);
+        }
+        
+        // If we found the data, store it
+        if (poData) {
+            console.log('✅ Storing PO data from trackingDashboard:', poData);
+            localStorage.setItem('printPOData', JSON.stringify(poData));
+            return true;
+        }
+    }
+    
+    // Method 3: Fallback - clear localStorage and continue
+    console.warn('⚠️ No PO data found from any source');
+    console.log('⚠️ Available window properties:', Object.keys(window).filter(k => k.includes('Data') || k.includes('tracking')));
+    localStorage.removeItem('printPOData');
+    return true;
 };
 
 window.viewPO = function(poNumber) {
