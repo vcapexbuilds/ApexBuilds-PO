@@ -68,7 +68,7 @@ class TrackingDashboard {
                 // Set empty state gracefully - no alert popups
                 this.allPOs = [];
                 this.filteredPOs = [];
-                this.renderPOs();
+                this.displayPOs([]);
                 this.updateStats([]);
             };
         } else {
@@ -76,7 +76,7 @@ class TrackingDashboard {
             console.log('🏭 Production mode: No fallback data available');
             this.allPOs = [];
             this.filteredPOs = [];
-            this.renderPOs();
+            this.displayPOs([]);
             this.updateStats([]);
         }
     }
@@ -407,7 +407,7 @@ class TrackingDashboard {
             // Set empty state
             this.allPOs = [];
             this.filteredPOs = [];
-            this.renderPOs();
+            this.displayPOs([]);
             this.updateStats([]);
             
             // Log message instead of showing alert popup
@@ -416,10 +416,9 @@ class TrackingDashboard {
     }
 
     renderPOs() {
-        console.log('=== RENDER POs START ===');
+        console.log('=== RENDER POs - Redirecting to displayPOs ===');
         console.log('this.filteredPOs:', this.filteredPOs);
         console.log('filteredPOs length:', this.filteredPOs?.length);
-        console.log('filteredPOs type:', typeof this.filteredPOs, Array.isArray(this.filteredPOs));
         
         // Safety check: Ensure this.filteredPOs is an array
         if (!Array.isArray(this.filteredPOs)) {
@@ -427,62 +426,8 @@ class TrackingDashboard {
             this.filteredPOs = [];
         }
         
-        // Find the main container - look for po-list first, then fallback
-        let container = document.querySelector('.po-list');
-        if (!container) {
-            container = document.querySelector('#po-list, .purchase-orders-list, .main-content');
-        }
-        
-        if (!container) {
-            console.error('❌ Could not find PO container element');
-            return;
-        }
-
-        // Hide loading and empty states
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const emptyState = document.getElementById('emptyState');
-        const poTable = document.getElementById('poTable');
-        
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        if (emptyState) emptyState.style.display = 'none';
-        if (poTable) poTable.style.display = 'none';
-
-        // Create or find the cards container
-        let cardsContainer = container.querySelector('.po-cards-container');
-        if (!cardsContainer) {
-            cardsContainer = document.createElement('div');
-            cardsContainer.className = 'po-cards-container';
-            
-            // Find the right place to insert - after the header if it exists
-            const header = container.querySelector('.list-header');
-            if (header) {
-                header.after(cardsContainer);
-            } else {
-                container.appendChild(cardsContainer);
-            }
-        }
-
-        if (this.filteredPOs.length === 0) {
-            cardsContainer.innerHTML = '<div class="no-pos">No purchase orders found.</div>';
-            return;
-        }
-
-        cardsContainer.innerHTML = this.filteredPOs.map(po => `
-            <div class="po-item">
-                <div class="po-header">
-                    <h3>${po.id} - ${po.project}</h3>
-                    <span class="status status-${po.status.toLowerCase()}">${po.status}</span>
-                </div>
-                <div class="po-details">
-                    <p><strong>Contractor:</strong> ${po.contractor}</p>
-                    <p><strong>Work Type:</strong> ${po.workType}</p>
-                    <p><strong>Amount:</strong> $${po.totalAmount?.toLocaleString() || '0'}</p>
-                    <p><strong>Submitted:</strong> ${new Date(po.submittedAt).toLocaleDateString()}</p>
-                </div>
-            </div>
-        `).join('');
-        
-        console.log(`✅ Rendered ${this.filteredPOs.length} POs`);
+        // Use the table display method consistently
+        this.displayPOs(this.filteredPOs);
     }
 
     /**
@@ -860,8 +805,8 @@ class TrackingDashboard {
         
         console.log('Final filtered POs:', tempPOs);
         this.filteredPOs = tempPOs;
-        console.log('=== CALLING RENDER POs ===');
-        this.renderPOs();
+        console.log('=== CALLING DISPLAY POs ===');
+        this.displayPOs(this.filteredPOs);
         this.updateStats(this.filteredPOs);
     }
 
