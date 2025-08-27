@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schema Compliance Test</title>
+</head>
+<body>
+    <h1>Power Automate Schema Compliance Test</h1>
+    <button id="testSchema">Test Schema Compliance</button>
+    <pre id="output"></pre>
+
+    <script src="../js/core/simple-po-handler.js"></script>
+    <script>
+    // Test data structure against your Power Automate schema
+    function testSchemaCompliance() {
+        const output = document.getElementById('output');
+        
+        // Create sample data that matches your schema requirements
+        const sampleData = {
+            meta: {
+                projectNumber: "12345",
+                contractAmount: 100000,    // INTEGER per schema
+                addAltAmount: 5000,        // INTEGER per schema  
+                addAltDetails: "Sample alt details",
+                retainagePct: 10,          // INTEGER per schema
+                scope: {
+                    noticeToProceed: "2024-01-15",
+                    anticipatedStart: "2024-02-01", 
+                    substantialCompletion: "2024-06-01",
+                    hundredPercent: "2024-07-01"
+                }
+            },
+            schedule: [
+                {
+                    primeLine: "001",
+                    budgetCode: "BC001", 
+                    description: "Foundation Work",
+                    qty: 50,                    // INTEGER per schema
+                    unit: "CY",                 // STRING per schema
+                    totalCost: 25000.50,        // FLOAT per schema
+                    scheduled: 1,               // INTEGER per schema  
+                    apexContractValue: 26000.00, // FLOAT per schema
+                    profit: 1000.00             // FLOAT per schema
+                }
+            ],
+            scope: [
+                {
+                    item: "S001",               // STRING per schema
+                    description: "Site preparation",
+                    included: true,             // BOOLEAN per schema
+                    excluded: false             // BOOLEAN per schema
+                }
+            ],
+            createdAt: new Date().toISOString(),
+            sent: true,
+            status: "submitted",
+            importance: "normal", 
+            timestamp: Math.floor(Date.now() / 1000),  // INTEGER per schema
+            id: Math.floor(Date.now() / 1000),         // INTEGER per schema
+            sentAt: new Date().toISOString(),
+            submittedBy: {
+                name: "Test User",
+                email: "test@example.com",
+                id: "test123"
+            }
+        };
+
+        // Validate data types match schema
+        const validation = {
+            meta: {
+                contractAmount: typeof sampleData.meta.contractAmount === 'number' && Number.isInteger(sampleData.meta.contractAmount),
+                addAltAmount: typeof sampleData.meta.addAltAmount === 'number' && Number.isInteger(sampleData.meta.addAltAmount),
+                retainagePct: typeof sampleData.meta.retainagePct === 'number' && Number.isInteger(sampleData.meta.retainagePct)
+            },
+            schedule: sampleData.schedule.map(item => ({
+                qty: typeof item.qty === 'number' && Number.isInteger(item.qty),
+                unit: typeof item.unit === 'string',
+                totalCost: typeof item.totalCost === 'number',
+                scheduled: typeof item.scheduled === 'number' && Number.isInteger(item.scheduled),
+                apexContractValue: typeof item.apexContractValue === 'number',
+                profit: typeof item.profit === 'number'
+            })),
+            scope: sampleData.scope.map(item => ({
+                item: typeof item.item === 'string',
+                description: typeof item.description === 'string',
+                included: typeof item.included === 'boolean',
+                excluded: typeof item.excluded === 'boolean'
+            })),
+            timestamp: typeof sampleData.timestamp === 'number' && Number.isInteger(sampleData.timestamp),
+            id: typeof sampleData.id === 'number' && Number.isInteger(sampleData.id)
+        };
+
+        output.textContent = JSON.stringify({
+            sampleData,
+            validation,
+            allValid: Object.values(validation.meta).every(v => v) &&
+                     validation.schedule.every(item => Object.values(item).every(v => v)) &&
+                     validation.scope.every(item => Object.values(item).every(v => v)) &&
+                     validation.timestamp && validation.id
+        }, null, 2);
+    }
+
+    document.getElementById('testSchema').addEventListener('click', testSchemaCompliance);
+    </script>
+</body>
+</html>

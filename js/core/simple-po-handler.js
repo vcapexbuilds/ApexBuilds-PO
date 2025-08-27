@@ -84,10 +84,10 @@ window.SimplePOHandler = {
                     apexOwner: formData.apexOwner || '',
                     typeStatus: formData.typeStatus || '',
                     projectManager: formData.projectManager || '',
-                    contractAmount: this.safeParseFloat(formData.contractAmount),
-                    addAltAmount: this.safeParseFloat(formData.addAltAmount),
+                    contractAmount: this.safeParseInt(formData.contractAmount),
+                    addAltAmount: this.safeParseInt(formData.addAltAmount),
                     addAltDetails: formData.addAltDetails || '',
-                    retainagePct: this.safeParseFloat(formData.retainagePct),
+                    retainagePct: this.safeParseInt(formData.retainagePct),
                     requestedBy: formData.requestedBy || '',
                     companyName: formData.companyName || '',
                     contactName: formData.contactName || '',
@@ -470,8 +470,8 @@ window.SimplePOHandler = {
                     primeLine: primeLine || '',
                     budgetCode: budgetCode || '',
                     description: description || '',
-                    qty: this.safeParseFloat(quantity),
-                    unit: unit || '',
+                    qty: this.safeParseInt(quantity),  // Schema expects integer
+                    unit: unit || '',  // Keep as string (correct per schema)
                     totalCost: this.safeParseFloat(totalCost),
                     scheduled: this.safeParseInt(scheduled),
                     apexContractValue: this.safeParseFloat(apexContractValue),
@@ -517,7 +517,7 @@ window.SimplePOHandler = {
             // Only add if there's some meaningful data
             if (itemNumber || description) {
                 const item = {
-                    item: this.safeParseInt(itemNumber), // Convert to integer
+                    item: itemNumber || '',  // Keep as string per schema
                     description: description || '',
                     included: Boolean(included),
                     excluded: Boolean(excluded)
