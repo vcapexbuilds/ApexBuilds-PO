@@ -342,7 +342,7 @@
                     function() {
                         // Always navigate to tracking page (main dashboard)
                         console.log('Navigating to tracking page...');
-                        window.location.href = '/pages/tracking.html';
+                        window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                     },
                     null
                 );
@@ -351,7 +351,7 @@
                 if (confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
                     // Always navigate to tracking page (main dashboard)
                     console.log('Navigating to tracking page...');
-                    window.location.href = '/pages/tracking.html';
+                    window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                 }
             }
         }
@@ -547,9 +547,9 @@
                             form.reset();
                             const currentUser = window.auth?.getCurrentUser() || JSON.parse(localStorage.getItem('currentUser') || '{}');
                             if (currentUser?.role === 'admin') {
-                                window.location.href = '/pages/admin.html';
+                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
                             } else {
-                                window.location.href = '/pages/tracking.html';
+                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                             }
                         } else {
                             alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
@@ -594,9 +594,9 @@
                             form.reset();
                             const currentUser = window.auth?.getCurrentUser();
                             if (currentUser?.role === 'admin') {
-                                window.location.href = '/pages/admin.html';
+                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/admin.html';
                             } else {
-                                window.location.href = '/pages/tracking.html';
+                                window.location.href = 'https://vcapexbuilds.github.io/ApexBuilds-PO/pages/tracking.html';
                             }
                         } else {
                             alert(`Submission failed: ${result ? result.error || 'Unknown error' : 'System error'}`);
