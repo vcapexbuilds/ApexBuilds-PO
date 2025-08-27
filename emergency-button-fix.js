@@ -14,13 +14,25 @@ function forceBindButtons() {
     });
     
     if (scheduleBtn) {
-        console.log('📝 Binding schedule button...');
+        console.log('📝 FORCEFULLY binding schedule button...');
         
-        // Clear existing handler and bind new one
-        scheduleBtn.onclick = function(e) {
-            console.log('🎯 SCHEDULE BUTTON CLICKED!');
+        // Remove ALL possible event handlers
+        scheduleBtn.onclick = null;
+        scheduleBtn.onmousedown = null;
+        scheduleBtn.onmouseup = null;
+        scheduleBtn.removeAttribute('data-bound');
+        
+        // Clone to remove all event listeners completely
+        const parent = scheduleBtn.parentNode;
+        const newBtn = scheduleBtn.cloneNode(true);
+        parent.replaceChild(newBtn, scheduleBtn);
+        
+        // Add single handler only with MAXIMUM priority
+        const finalBtn = document.getElementById('addScheduleItem');
+        finalBtn.onclick = function(e) {
+            console.log('🎯💥 EMERGENCY SCHEDULE BUTTON CLICKED!');
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation();
             
             try {
                 addScheduleItemDirect();
@@ -30,19 +42,38 @@ function forceBindButtons() {
             }
         };
         
-        console.log('✅ Schedule button emergency binding complete');
+        // Also override addEventListener
+        const originalAddEventListener = finalBtn.addEventListener;
+        finalBtn.addEventListener = function() {
+            console.log('🚫 Blocking addEventListener on schedule button');
+            // Do nothing - block all future event listeners
+        };
+        
+        console.log('✅ Schedule button FORCEFULLY bound');
     } else {
         console.error('❌ Schedule button not found');
     }
     
     if (scopeBtn) {
-        console.log('📝 Binding scope button...');
+        console.log('📝 FORCEFULLY binding scope button...');
         
-        // Clear existing handler and bind new one
-        scopeBtn.onclick = function(e) {
-            console.log('🎯 SCOPE BUTTON CLICKED!');
+        // Remove ALL possible event handlers
+        scopeBtn.onclick = null;
+        scopeBtn.onmousedown = null;
+        scopeBtn.onmouseup = null;
+        scopeBtn.removeAttribute('data-bound');
+        
+        // Clone to remove all event listeners completely
+        const parent = scopeBtn.parentNode;
+        const newBtn = scopeBtn.cloneNode(true);
+        parent.replaceChild(newBtn, scopeBtn);
+        
+        // Add single handler only with MAXIMUM priority
+        const finalBtn = document.getElementById('addScopeItem');
+        finalBtn.onclick = function(e) {
+            console.log('🎯💥 EMERGENCY SCOPE BUTTON CLICKED!');
             e.preventDefault();
-            e.stopPropagation();
+            e.stopImmediatePropagation();
             
             try {
                 addScopeItemDirect();
@@ -52,7 +83,14 @@ function forceBindButtons() {
             }
         };
         
-        console.log('✅ Scope button emergency binding complete');
+        // Also override addEventListener
+        const originalAddEventListener = finalBtn.addEventListener;
+        finalBtn.addEventListener = function() {
+            console.log('🚫 Blocking addEventListener on scope button');
+            // Do nothing - block all future event listeners
+        };
+        
+        console.log('✅ Scope button FORCEFULLY bound');
     } else {
         console.error('❌ Scope button not found');
     }
@@ -254,17 +292,29 @@ function safeBindButtons() {
     buttonsAlreadyBound = true;
 }
 
+// Wait for all other scripts to load first, then forcefully override
+window.addEventListener('load', () => {
+    console.log('🚀 Window loaded, waiting for other scripts...');
+    setTimeout(() => {
+        console.log('🔥 FORCE OVERRIDING ALL BUTTON BINDINGS...');
+        buttonsAlreadyBound = false; // Reset flag
+        safeBindButtons();
+    }, 2000); // Wait 2 seconds for other scripts
+});
+
+// Backup binding attempts
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', safeBindButtons);
 } else {
     safeBindButtons();
 }
 
-// Only try once more as backup
+// Additional backup
 setTimeout(() => {
     if (!buttonsAlreadyBound) {
+        console.log('🔄 Final backup binding attempt...');
         safeBindButtons();
     }
-}, 500);
+}, 3000);
 
 console.log('🚨 EMERGENCY BUTTON FIX LOADED');
