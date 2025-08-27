@@ -291,30 +291,77 @@ window.MicrosoftAuth = {
             // Store the authorization code for potential backend processing
             sessionStorage.setItem('auth_code', code);
             
-            // Create user info from what Microsoft provides in the redirect
-            // In a real production app, you'd exchange this code on your backend
-            const userInfo = {
-                id: 'ms-user-' + Date.now(),
-                userPrincipalName: 'authenticated.user@microsoft.com',
-                displayName: 'Microsoft User',
-                givenName: 'Microsoft',
-                surname: 'User',
-                mail: 'authenticated.user@microsoft.com'
-            };
-            
-            console.log('✅ Microsoft OAuth authentication successful');
-            
-            return {
-                success: true,
-                account: {
-                    homeAccountId: userInfo.id,
-                    username: userInfo.userPrincipalName,
-                    name: userInfo.displayName,
-                    email: userInfo.mail
-                },
-                accessToken: 'microsoft_oauth_' + Date.now(),
-                userInfo: userInfo
-            };
+            // Get real user info from Microsoft Graph API
+            try {
+                // First, try to exchange the code for an access token
+                const tokenData = await this.exchangeCodeForToken(code);
+                
+                if (tokenData && tokenData.access_token) {
+                    console.log('🔍 Fetching real user data from Microsoft Graph...');
+                    
+                    // Make call to Microsoft Graph API to get real user data
+                    const graphResponse = await fetch('https://graph.microsoft.com/v1.0/me', {
+                        headers: {
+                            'Authorization': `Bearer ${tokenData.access_token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (graphResponse.ok) {
+                        const realUserInfo = await graphResponse.json();
+                        console.log('✅ Retrieved real user data from Microsoft Graph:', {
+                            id: realUserInfo.id,
+                            userPrincipalName: realUserInfo.userPrincipalName,
+                            displayName: realUserInfo.displayName,
+                            givenName: realUserInfo.givenName,
+                            surname: realUserInfo.surname,
+                            mail: realUserInfo.mail
+                        });
+                        
+                        return {
+                            success: true,
+                            account: {
+                                homeAccountId: realUserInfo.id,
+                                username: realUserInfo.userPrincipalName,
+                                name: realUserInfo.displayName,
+                                email: realUserInfo.mail || realUserInfo.userPrincipalName
+                            },
+                            accessToken: tokenData.access_token,
+                            userInfo: realUserInfo
+                        };
+                    } else {
+                        console.error('❌ Failed to fetch user data from Microsoft Graph:', graphResponse.status);
+                        throw new Error('Failed to fetch user data from Microsoft Graph');
+                    }
+                } else {
+                    throw new Error('Failed to exchange code for access token');
+                }
+            } catch (graphError) {
+                console.error('❌ Error getting real user data:', graphError);
+                
+                // Fallback: Use basic info from authorization code (but this is still limited)
+                console.warn('⚠️ Using fallback user data due to Graph API error');
+                const userInfo = {
+                    id: 'ms-user-' + Date.now(),
+                    userPrincipalName: 'unknown@microsoft.com',
+                    displayName: 'Microsoft User',
+                    givenName: 'Microsoft',
+                    surname: 'User',
+                    mail: 'unknown@microsoft.com'
+                };
+                
+                return {
+                    success: true,
+                    account: {
+                        homeAccountId: userInfo.id,
+                        username: userInfo.userPrincipalName,
+                        name: userInfo.displayName,
+                        email: userInfo.mail
+                    },
+                    accessToken: 'microsoft_oauth_' + Date.now(),
+                    userInfo: userInfo
+                };
+            }
         } catch (error) {
             console.error('❌ OAuth callback processing failed:', error);
             throw new Error(`Authentication failed: ${error.message}`);
