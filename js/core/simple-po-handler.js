@@ -407,31 +407,49 @@ window.SimplePOHandler = {
      * Simple schedule collection fallback
      */
     collectScheduleItems() {
-        const scheduleInputs = document.querySelectorAll('[name*="schedule"], [name*="primeLine"], [name*="budgetCode"], [name*="qty"], [name*="unit"], [name*="totalCost"], [name*="apexContractValue"], [name*="profit"]');
         const items = [];
         
-        // Look for schedule table or dynamic inputs
-        const scheduleRows = document.querySelectorAll('.schedule-row, .dynamic-row, tr[data-schedule]');
+        // Look for schedule table tbody
+        const scheduleTable = document.getElementById('scheduleItems');
+        if (!scheduleTable) {
+            console.warn('No schedule table found');
+            return items;
+        }
+        
+        const scheduleRows = scheduleTable.querySelectorAll('tr');
         
         scheduleRows.forEach((row, index) => {
-            const item = {
-                primeLine: this.getInputValue(row, '[name*="primeLine"], [data-field="primeLine"]') || '',
-                budgetCode: this.getInputValue(row, '[name*="budgetCode"], [data-field="budgetCode"]') || '',
-                description: this.getInputValue(row, '[name*="description"], [data-field="description"]') || '',
-                qty: parseInt(this.getInputValue(row, '[name*="qty"], [data-field="qty"]')) || 0,
-                unit: parseInt(this.getInputValue(row, '[name*="unit"], [data-field="unit"]')) || 0,
-                totalCost: parseInt(this.getInputValue(row, '[name*="totalCost"], [data-field="totalCost"]')) || 0,
-                scheduled: parseInt(this.getInputValue(row, '[name*="scheduled"], [data-field="scheduled"]')) || 0,
-                apexContractValue: parseInt(this.getInputValue(row, '[name*="apexContractValue"], [data-field="apexContractValue"]')) || 0,
-                profit: parseInt(this.getInputValue(row, '[name*="profit"], [data-field="profit"]')) || 0
-            };
+            // Get values using the actual field names from emergency-button-fix.js
+            const primeLine = this.getInputValue(row, '[name="primeLine[]"]');
+            const budgetCode = this.getInputValue(row, '[name="budgetCode[]"]');
+            const description = this.getInputValue(row, '[name="description[]"]');
+            const quantity = this.getInputValue(row, '[name="quantity[]"]');
+            const unit = this.getInputValue(row, '[name="unit[]"]');
+            const totalCost = this.getInputValue(row, '[name="totalCost[]"]');
+            const scheduled = this.getInputValue(row, '[name="scheduled[]"]');
+            const apexContractValue = this.getInputValue(row, '[name="apexContractValue[]"]');
+            const profit = this.getInputValue(row, '[name="profit[]"]');
             
             // Only add if there's some meaningful data
-            if (item.description || item.budgetCode || item.primeLine) {
+            if (primeLine || budgetCode || description) {
+                const item = {
+                    primeLine: primeLine || '',
+                    budgetCode: budgetCode || '',
+                    description: description || '',
+                    qty: parseInt(quantity) || 0,
+                    unit: unit || '', // Changed to string to match schema
+                    totalCost: parseInt(totalCost) || 0,
+                    scheduled: parseInt(scheduled) || 0,
+                    apexContractValue: parseInt(apexContractValue) || 0,
+                    profit: parseInt(profit) || 0
+                };
+                
+                console.log(`Schedule item ${index + 1}:`, item);
                 items.push(item);
             }
         });
         
+        console.log('Collected schedule items:', items);
         return items;
     },
     
@@ -439,26 +457,44 @@ window.SimplePOHandler = {
      * Simple scope collection fallback
      */
     collectScopeItems() {
-        const scopeInputs = document.querySelectorAll('[name*="scope"], [name*="included"], [name*="excluded"]');
         const items = [];
         
-        // Look for scope table or dynamic inputs
-        const scopeRows = document.querySelectorAll('.scope-row, .scope-item, tr[data-scope]');
+        // Look for scope table tbody
+        const scopeTable = document.getElementById('scopeItems');
+        if (!scopeTable) {
+            console.warn('No scope table found');
+            return items;
+        }
+        
+        const scopeRows = scopeTable.querySelectorAll('tr');
         
         scopeRows.forEach((row, index) => {
-            const item = {
-                item: this.getInputValue(row, '[name*="item"], [data-field="item"]') || '',
-                description: this.getInputValue(row, '[name*="description"], [data-field="description"]') || '',
-                included: this.getCheckboxValue(row, '[name*="included"], [data-field="included"]'),
-                excluded: this.getCheckboxValue(row, '[name*="excluded"], [data-field="excluded"]')
-            };
+            // Get values using the actual field names from emergency-button-fix.js
+            const itemNumber = this.getInputValue(row, '[name="scopeItemNumber[]"]');
+            const description = this.getInputValue(row, '[name="scopeDescription[]"]');
+            
+            // Handle radio buttons for status (included/excluded)
+            const includedRadio = row.querySelector('[name*="scopeStatus_"][value="included"]');
+            const excludedRadio = row.querySelector('[name*="scopeStatus_"][value="excluded"]');
+            
+            const included = includedRadio && includedRadio.checked;
+            const excluded = excludedRadio && excludedRadio.checked;
             
             // Only add if there's some meaningful data
-            if (item.item || item.description) {
+            if (itemNumber || description) {
+                const item = {
+                    item: itemNumber || '',
+                    description: description || '',
+                    included: Boolean(included),
+                    excluded: Boolean(excluded)
+                };
+                
+                console.log(`Scope item ${index + 1}:`, item);
                 items.push(item);
             }
         });
         
+        console.log('Collected scope items:', items);
         return items;
     },
     
