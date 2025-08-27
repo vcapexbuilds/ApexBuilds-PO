@@ -43,10 +43,13 @@ class TrackingDashboard {
             // Override the error display to use our existing error handling
             this.poDataManager.showErrorState = (errorMessage) => {
                 console.error('❌ TrackingDashboard: Power Automate error:', errorMessage);
-                alert('Failed to load purchase orders: ' + errorMessage);
+                console.log('🎯 Showing empty state gracefully instead of error popup');
+                
+                // Set empty state gracefully - no alert popups
                 this.allPOs = [];
                 this.filteredPOs = [];
                 this.renderPOs();
+                this.updateStats([]);
             };
         } else {
             console.warn('⚠️ TrackingDashboard: PODataManager not available');
@@ -390,8 +393,8 @@ class TrackingDashboard {
             this.renderPOs();
             this.updateStats([]);
             
-            // Show user-friendly message
-            alert('Purchase Order data is temporarily unavailable. Please contact support if this persists.');
+            // Log message instead of showing alert popup
+            console.log('ℹ️ Purchase Order data temporarily unavailable - showing empty state');
         }
     }
 

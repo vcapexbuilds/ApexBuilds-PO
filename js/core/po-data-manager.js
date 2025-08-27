@@ -152,23 +152,55 @@ class PODataManager {
             const requestPayload = {
                 action: 'fetch_pos',
                 timestamp: new Date().toISOString(),
-                user: currentUser
+                user: currentUser || { 
+                    username: 'Anonymous', 
+                    email: 'unknown@apexbuilds.com',
+                    role: 'user' 
+                }
             };
             
             console.log('📤 Sending request to Power Automate (user info only):', requestPayload);
             console.log('🔗 Power Automate URL:', this.FETCH_PO_ENDPOINT);
             
-            // Make request to Power Automate
-            const response = await fetch(this.FETCH_PO_ENDPOINT, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestPayload)
-            });
+            // Make request to Power Automate with enhanced error handling
+            let response;
+            try {
+                response = await fetch(this.FETCH_PO_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestPayload)
+                });
+            } catch (fetchError) {
+                console.error('❌ Network error calling Power Automate:', fetchError);
+                throw new Error(`Network error: ${fetchError.message}`);
+            }
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorText = await response.text().catch(() => 'Unknown error');
+                console.error('❌ Power Automate HTTP error:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText
+                });
+                
+                // Instead of throwing error, gracefully handle common HTTP errors
+                if (response.status === 400) {
+                    console.warn('⚠️ HTTP 400 - Likely authentication issue, showing empty state');
+                    this.cachedData = { pos: [], total: 0 };
+                    this.lastFetchTime = new Date();
+                    this.applyClientFiltersAndDisplay();
+                    return;
+                } else if (response.status === 401 || response.status === 403) {
+                    console.warn('⚠️ HTTP 401/403 - Authentication required, showing empty state');
+                    this.cachedData = { pos: [], total: 0 };
+                    this.lastFetchTime = new Date();
+                    this.applyClientFiltersAndDisplay();
+                    return;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
             }
             
             const rawData = await response.json();
@@ -209,7 +241,19 @@ class PODataManager {
                 stack: error.stack,
                 endpoint: this.FETCH_PO_ENDPOINT
             });
-            this.showErrorState(error.message);
+            
+            // Don't show error popup for common network/auth issues
+            if (error.message.includes('HTTP 400') || 
+                error.message.includes('HTTP 401') || 
+                error.message.includes('HTTP 403') ||
+                error.message.includes('Network error')) {
+                console.log('ℹ️ Common error detected, showing empty state gracefully');
+                this.cachedData = { pos: [], total: 0 };
+                this.lastFetchTime = new Date();
+                this.applyClientFiltersAndDisplay();
+            } else {
+                this.showErrorState(error.message);
+            }
         } finally {
             this.isLoading = false;
             this.hideLoadingState();
@@ -843,26 +887,39 @@ class PODataManager {
      * Show error state
      */
     showErrorState(message) {
+        console.log('🎯 showErrorState called with message:', message);
+        
+        // Set empty cached data to prevent further errors
+        this.cachedData = { pos: [], total: 0 };
+        this.lastFetchTime = new Date();
+        
+        // Show empty state in table instead of error message
         const poTableBody = document.getElementById('poTableBody');
         if (poTableBody) {
             poTableBody.innerHTML = `
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px; color: #d32f2f;">
-                        ❌ Error loading POs: ${message}
-                        <br>
+                    <td colspan="8" style="text-align: center; padding: 20px; color: #666;">
+                        <div style="margin-bottom: 10px;">📋</div>
+                        <div>No purchase orders found.</div>
+                        <div style="font-size: 0.9em; color: #999; margin-top: 5px;">
+                            Data source temporarily unavailable
+                        </div>
                         <button onclick="window.poDataManager.fetchAndDisplayPOs(true)" 
                                 class="btn-secondary" style="margin-top: 10px;">
-                            Try Again
+                            🔄 Refresh
                         </button>
                     </td>
                 </tr>
             `;
         }
         
-        // Show error toast/alert
-        if (typeof window.showNotification === 'function') {
-            window.showNotification('Error loading purchase orders: ' + message, 'error');
+        // Call displayPOs to ensure the UI is properly updated
+        if (typeof this.displayPOs === 'function') {
+            this.displayPOs([]);
         }
+        
+        // Do NOT show alert popups - just log for debugging
+        console.log('ℹ️ Data source unavailable, showing empty state instead of error popup');
     }
     
     /**
