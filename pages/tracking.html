@@ -187,6 +187,13 @@
                     <h3 onclick="toggleSection('filters')">Filters</h3>
                     <div class="filter-content" id="filters-content">
                         <div class="filter-group">
+                            <label for="myPOsOnly" style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" id="myPOsOnly" checked>
+                                <span>My POs only</span>
+                            </label>
+                        </div>
+                        
+                        <div class="filter-group">
                             <label for="statusFilter">Status:</label>
                             <select id="statusFilter">
                                 <option value="">All</option>
@@ -250,7 +257,7 @@
                 <!-- PO List -->
                 <div class="po-list">
             <div class="list-header">
-                <h2>My Purchase Orders</h2>
+                <h2>Purchase Orders</h2>
                 <div class="list-actions">
                     <button onclick="window.location.href='https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html'" class="btn btn-primary">➕ New PO</button>
                     <button id="refreshList" class="btn btn-secondary">🔄 Refresh</button>
@@ -259,7 +266,7 @@
             </div>
 
             <div id="emptyState" class="empty-state" style="display: none;">
-                <p>You haven't created any purchase orders yet.</p>
+                <p>No purchase orders found.</p>
                 <a href="/pages/form.html" class="btn-primary">Create Your First PO</a>
             </div>
 

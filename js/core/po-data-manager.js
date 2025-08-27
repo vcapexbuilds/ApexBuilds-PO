@@ -209,24 +209,7 @@ class PODataManager {
                 stack: error.stack,
                 endpoint: this.FETCH_PO_ENDPOINT
             });
-            
-            console.log('🎭 Power Automate failed, trying fallback options...');
-            
-            // Try fallback options in order: demo data, then test data
-            try {
-                // First try demo data (built-in)
-                const demoData = this.getDemoData();
-                this.cachedData = demoData;
-                this.lastFetchTime = new Date();
-                this.applyClientFiltersAndDisplay();
-                console.log('✅ Demo data loaded successfully as fallback');
-                console.log('💡 Note: Using demo data because Power Automate endpoint failed');
-            } catch (demoError) {
-                console.error('❌ Demo data also failed:', demoError);
-                
-                // Last resort: try to load test data from file
-                this.loadTestDataFallback();
-            }
+            this.showErrorState(error.message);
         } finally {
             this.isLoading = false;
             this.hideLoadingState();
@@ -1000,36 +983,6 @@ class PODataManager {
             total: 3,
             timestamp: new Date().toISOString()
         };
-    }
-
-    /**
-     * Load test data as final fallback when everything else fails
-     */
-    async loadTestDataFallback() {
-        try {
-            console.log('🔄 Attempting to load test data as final fallback...');
-            const response = await fetch('./asset/data/test-data.json');
-            
-            if (!response.ok) {
-                throw new Error(`Test data not available: ${response.status}`);
-            }
-            
-            const testData = await response.json();
-            
-            // Wrap test data in expected format
-            const wrappedData = {
-                success: true,
-                pos: testData
-            };
-            
-            this.cachedData = wrappedData;
-            this.lastFetchTime = new Date();
-            this.applyClientFiltersAndDisplay();
-            console.log('✅ Test data loaded successfully as final fallback');
-        } catch (testError) {
-            console.error('❌ All fallback options exhausted:', testError);
-            this.showErrorState('Unable to load any data - all sources failed');
-        }
     }
 
     /**
