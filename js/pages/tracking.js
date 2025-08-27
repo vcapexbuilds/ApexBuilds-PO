@@ -159,31 +159,7 @@ class TrackingDashboard {
         
         // Wait a bit to ensure all DOM elements are fully rendered
         setTimeout(() => {
-            console.log('🔍 Looking for newPOBtn element...');
-            
-            // New PO button
-            const newPOBtn = document.getElementById('newPOBtn');
-            console.log('newPOBtn element:', newPOBtn);
-            
-            if (newPOBtn) {
-                console.log('✅ Found newPOBtn, adding event listener...');
-                newPOBtn.addEventListener('click', (event) => {
-                    event.preventDefault(); // Prevent any default behavior
-                    console.log('🎯 New PO button clicked via event listener!');
-                    console.log('Current URL:', window.location.href);
-                    console.log('Redirecting to:', window.location.origin + '/pages/form.html');
-                    // Use absolute path to ensure proper navigation with local server
-                    window.location.href = '/pages/form.html';
-                });
-                
-                // Add a visual confirmation that event is bound
-                newPOBtn.title = 'Event listener bound - Ready to navigate';
-                console.log('✅ New PO button event bound successfully with title update');
-            } else {
-                console.error('❌ New PO button not found! Available elements:');
-                console.log('All buttons:', document.querySelectorAll('button'));
-                console.log('Elements with newPOBtn id:', document.querySelectorAll('#newPOBtn'));
-            }
+            console.log('🔍 Checking DOM elements...');
 
             // Filter and action buttons - wrap in try-catch for safety
             try {
