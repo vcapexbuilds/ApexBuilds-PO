@@ -20,10 +20,13 @@ function forceBindButtons() {
         scheduleBtn.onclick = null;
         scheduleBtn.removeAttribute('data-bound');
         
-        // Add single handler with detailed logging
-        scheduleBtn.onclick = function(e) {
-            console.log('🎯🎯🎯 EMERGENCY SCHEDULE ONCLICK TRIGGERED!');
-            console.log('Event:', e);
+        // Remove any existing event listeners
+        const newBtn = scheduleBtn.cloneNode(true);
+        scheduleBtn.parentNode.replaceChild(newBtn, scheduleBtn);
+        
+        // Add single handler only
+        newBtn.onclick = function(e) {
+            console.log('🎯 SCHEDULE BUTTON CLICKED!');
             e.preventDefault();
             e.stopPropagation();
             
@@ -34,14 +37,6 @@ function forceBindButtons() {
                 alert('Error adding schedule item: ' + error.message);
             }
         };
-        
-        // Also add addEventListener as backup
-        scheduleBtn.addEventListener('click', function(e) {
-            console.log('🎯 BACKUP SCHEDULE LISTENER TRIGGERED!');
-            e.preventDefault();
-            e.stopPropagation();
-            addScheduleItemDirect();
-        });
         
         console.log('✅ Schedule button emergency binding complete');
     } else {
@@ -55,10 +50,13 @@ function forceBindButtons() {
         scopeBtn.onclick = null;
         scopeBtn.removeAttribute('data-bound');
         
-        // Add single handler with detailed logging
-        scopeBtn.onclick = function(e) {
-            console.log('🎯🎯🎯 EMERGENCY SCOPE ONCLICK TRIGGERED!');
-            console.log('Event:', e);
+        // Remove any existing event listeners
+        const newBtn = scopeBtn.cloneNode(true);
+        scopeBtn.parentNode.replaceChild(newBtn, scopeBtn);
+        
+        // Add single handler only
+        newBtn.onclick = function(e) {
+            console.log('🎯 SCOPE BUTTON CLICKED!');
             e.preventDefault();
             e.stopPropagation();
             
@@ -69,14 +67,6 @@ function forceBindButtons() {
                 alert('Error adding scope item: ' + error.message);
             }
         };
-        
-        // Also add addEventListener as backup
-        scopeBtn.addEventListener('click', function(e) {
-            console.log('🎯 BACKUP SCOPE LISTENER TRIGGERED!');
-            e.preventDefault();
-            e.stopPropagation();
-            addScopeItemDirect();
-        });
         
         console.log('✅ Scope button emergency binding complete');
     } else {
@@ -106,15 +96,15 @@ function addScheduleItemDirect() {
     console.log('📝 Creating row with ID:', itemId);
     
     const rowHTML = `
-        <td><input type="text" name="primeLine[]" required style="border: 2px solid green;"></td>
-        <td><input type="text" name="budgetCode[]" required style="border: 2px solid green;"></td>
-        <td><textarea name="description[]" required style="border: 2px solid green;"></textarea></td>
-        <td><input type="number" name="quantity[]" required step="0.01" min="0" style="border: 2px solid green;"></td>
-        <td><input type="text" name="unit[]" required style="border: 2px solid green;"></td>
-        <td><input type="number" name="totalCost[]" required step="0.01" min="0" placeholder="0.00" style="border: 2px solid green;"></td>
-        <td><input type="number" name="scheduled[]" required step="1" min="0" style="border: 2px solid green;"></td>
-        <td><input type="number" name="apexContractValue[]" required step="0.01" min="0" style="border: 2px solid green;"></td>
-        <td><input type="number" name="profit[]" required step="0.01" min="0" style="border: 2px solid green;"></td>
+        <td><input type="text" name="primeLine[]"></td>
+        <td><input type="text" name="budgetCode[]"></td>
+        <td><textarea name="description[]" placeholder="Description"></textarea></td>
+        <td><input type="number" name="quantity[]" step="0.01" min="0"></td>
+        <td><input type="text" name="unit[]"></td>
+        <td><input type="number" name="totalCost[]" step="0.01" min="0" placeholder="0.00"></td>
+        <td><input type="number" name="scheduled[]" step="1" min="0"></td>
+        <td><input type="number" name="apexContractValue[]" step="0.01" min="0"></td>
+        <td><input type="number" name="profit[]" step="0.01" min="0"></td>
         <td>
             <button type="button" onclick="removeScheduleItem('${itemId}')" class="btn btn-danger btn-small">Remove</button>
         </td>
@@ -174,11 +164,11 @@ function addScopeItemDirect() {
     console.log('📝 Creating scope row with ID:', itemId);
     
     const rowHTML = `
-        <td><input type="text" name="scopeItemNumber[]" required value="${nextItemNumber}" readonly style="border: 2px solid blue;"></td>
-        <td><textarea name="scopeDescription[]" required placeholder="Describe the scope of work" style="border: 2px solid blue;"></textarea></td>
-        <td>
-            <label><input type="radio" name="scopeStatus_${radioGroupId}" value="included" required> Included</label>
-            <label><input type="radio" name="scopeStatus_${radioGroupId}" value="excluded" required> Excluded</label>
+        <td><input type="text" name="scopeItemNumber[]" value="${nextItemNumber}" readonly></td>
+        <td><textarea name="scopeDescription[]" placeholder="Describe the scope of work"></textarea></td>
+        <td style="white-space: nowrap;">
+            <label style="display: inline-block; margin-right: 10px;"><input type="radio" name="scopeStatus_${radioGroupId}" value="included"> Included</label>
+            <label style="display: inline-block;"><input type="radio" name="scopeStatus_${radioGroupId}" value="excluded"> Excluded</label>
         </td>
         <td><button type="button" onclick="removeScopeItem('${itemId}')" class="btn btn-danger btn-small">Remove</button></td>
     `;
@@ -258,18 +248,29 @@ window.removeScheduleItem = removeScheduleItem;
 window.removeScopeItem = removeScopeItem;
 
 // Bind buttons immediately and on different events
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', forceBindButtons);
-} else {
+let buttonsAlreadyBound = false;
+
+function safeBindButtons() {
+    if (buttonsAlreadyBound) {
+        console.log('⚠️ Buttons already bound, skipping...');
+        return;
+    }
+    
     forceBindButtons();
+    buttonsAlreadyBound = true;
 }
 
-// Also bind on window load as backup
-window.addEventListener('load', forceBindButtons);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeBindButtons);
+} else {
+    safeBindButtons();
+}
 
-// And try again after a short delay
-setTimeout(forceBindButtons, 100);
-setTimeout(forceBindButtons, 500);
-setTimeout(forceBindButtons, 1000);
+// Only try once more as backup
+setTimeout(() => {
+    if (!buttonsAlreadyBound) {
+        safeBindButtons();
+    }
+}, 500);
 
 console.log('🚨 EMERGENCY BUTTON FIX LOADED');
