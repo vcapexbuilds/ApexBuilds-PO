@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Empty Tables</title>
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/form.css">
+    <style>
+        .debug-log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        tr {
+            border: 2px solid red !important;
+            background: yellow !important;
+        }
+        
+        td {
+            border: 1px solid blue !important;
+            padding: 5px !important;
+            min-height: 30px !important;
+        }
+        
+        input, textarea, select {
+            border: 2px solid green !important;
+            background: lightyellow !important;
+        }
+    </style>
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h1>🔍 DEBUG: Empty Tables Issue</h1>
+        
+        <div id="debugLog" class="debug-log">Debug log will appear here...</div>
+        
+        <div class="form-section">
+            <h2>Schedule</h2>
+            <div class="table-controls">
+                <button type="button" id="addScheduleItem" class="btn-secondary">Add Schedule Item</button>
+                <button type="button" onclick="manualScheduleTest()" class="btn-secondary">Manual Test</button>
+            </div>
+            <table id="scheduleTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Prime Line *</th>
+                        <th>Budget Code *</th>
+                        <th>Description *</th>
+                        <th>Quantity *</th>
+                        <th>Unit *</th>
+                        <th>Total Cost *</th>
+                        <th>Scheduled *</th>
+                        <th>Apex Contract Value *</th>
+                        <th>Profit *</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleItems">
+                    <!-- Dynamic schedule items will be added here -->
+                </tbody>
+            </table>
+            <div id="noScheduleItems" class="empty-state">
+                <p>No schedule items added yet. Click "Add Schedule Item" to begin.</p>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h2>Scope of Work</h2>
+            <div class="table-controls">
+                <button type="button" id="addScopeItem" class="btn-secondary">Add Scope Item</button>
+                <button type="button" onclick="manualScopeTest()" class="btn-secondary">Manual Test</button>
+            </div>
+            <table id="scopeTable" class="form-table">
+                <thead>
+                    <tr>
+                        <th>Item Number *</th>
+                        <th>Description *</th>
+                        <th>Status *</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="scopeItems">
+                    <!-- Dynamic scope items will be added here -->
+                </tbody>
+            </table>
+            <div id="noScopeItems" class="empty-state">
+                <p>No scope items added yet. Click "Add Scope Item" to begin.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message) {
+            console.log(message);
+            const debugLog = document.getElementById('debugLog');
+            debugLog.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        function manualScheduleTest() {
+            log('🧪 Manual Schedule Test Started');
+            
+            const tbody = document.getElementById('scheduleItems');
+            log(`Schedule tbody found: ${!!tbody}`);
+            
+            if (tbody) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="TEST" style="border: 3px solid red;"></td>
+                    <td><input type="text" value="TEST" style="border: 3px solid red;"></td>
+                    <td><textarea style="border: 3px solid red;">TEST</textarea></td>
+                    <td><input type="number" value="1" style="border: 3px solid red;"></td>
+                    <td><input type="text" value="EA" style="border: 3px solid red;"></td>
+                    <td><input type="number" value="100" style="border: 3px solid red;"></td>
+                    <td><input type="number" value="1" style="border: 3px solid red;"></td>
+                    <td><input type="number" value="100" style="border: 3px solid red;"></td>
+                    <td><input type="number" value="10" style="border: 3px solid red;"></td>
+                    <td><button type="button">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+                log(`✅ Manual row added to schedule tbody`);
+                log(`Schedule table rows count: ${tbody.children.length}`);
+            }
+        }
+        
+        function manualScopeTest() {
+            log('🧪 Manual Scope Test Started');
+            
+            const tbody = document.getElementById('scopeItems');
+            log(`Scope tbody found: ${!!tbody}`);
+            
+            if (tbody) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="1" readonly style="border: 3px solid blue;"></td>
+                    <td><textarea style="border: 3px solid blue;">TEST SCOPE</textarea></td>
+                    <td>
+                        <label><input type="radio" name="test_status" value="included"> Included</label>
+                        <label><input type="radio" name="test_status" value="excluded"> Excluded</label>
+                    </td>
+                    <td><button type="button">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+                log(`✅ Manual row added to scope tbody`);
+                log(`Scope table rows count: ${tbody.children.length}`);
+            }
+        }
+        
+        log('🚀 Debug page loaded');
+        log(`Schedule button exists: ${!!document.getElementById('addScheduleItem')}`);
+        log(`Scope button exists: ${!!document.getElementById('addScopeItem')}`);
+        log(`Schedule tbody exists: ${!!document.getElementById('scheduleItems')}`);
+        log(`Scope tbody exists: ${!!document.getElementById('scopeItems')}`);
+    </script>
+    
+    <script src="../emergency-button-fix.js"></script>
+</body>
+</html>
