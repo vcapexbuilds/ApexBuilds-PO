@@ -69,18 +69,23 @@ function addScheduleItemDirect() {
     }
     
     const itemId = `schedule-${Date.now()}`;
+    const radioGroupId = Date.now();
     const row = document.createElement('tr');
     row.id = itemId;
     
     row.innerHTML = `
-        <td><input type="date" name="scheduleStartDate[]" required></td>
-        <td><input type="date" name="scheduleEndDate[]" required></td>
-        <td><input type="date" name="scheduleCompletion[]" required></td>
+        <td><input type="text" name="primeLine[]" placeholder="Prime Line" required></td>
+        <td><input type="text" name="budgetCode[]" placeholder="Budget Code" required></td>
+        <td><textarea name="description[]" placeholder="Description" required></textarea></td>
+        <td><input type="number" name="quantity[]" placeholder="Qty" min="0" step="0.01" required></td>
+        <td><input type="text" name="unit[]" placeholder="Unit" required></td>
+        <td><input type="number" name="totalCost[]" placeholder="Total Cost" min="0" step="0.01" required></td>
         <td>
-            <label><input type="radio" name="scheduled_${Date.now()}" value="yes" required> Yes</label>
-            <label><input type="radio" name="scheduled_${Date.now()}" value="no" required> No</label>
+            <label><input type="radio" name="scheduled_${radioGroupId}" value="yes" required> Yes</label>
+            <label><input type="radio" name="scheduled_${radioGroupId}" value="no" required> No</label>
         </td>
-        <td><textarea name="scheduleNotes[]" placeholder="Additional notes..."></textarea></td>
+        <td><input type="number" name="apexContractValue[]" placeholder="Contract Value" min="0" step="0.01" required></td>
+        <td><input type="number" name="profit[]" placeholder="Profit" min="0" step="0.01" required></td>
         <td>
             <button type="button" onclick="removeScheduleItem('${itemId}')" class="btn btn-danger btn-small">Remove</button>
         </td>
@@ -117,10 +122,8 @@ function addScopeItemDirect() {
         <td>
             <select name="scopeStatus[]" required>
                 <option value="">Select Status</option>
-                <option value="pending">Pending</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On Hold</option>
+                <option value="included">Included</option>
+                <option value="excluded">Excluded</option>
             </select>
         </td>
         <td>
