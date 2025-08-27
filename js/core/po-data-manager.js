@@ -61,7 +61,6 @@ class PODataManager {
      */
     setupFilterListeners() {
         const filterElements = [
-            'myPOsOnly',
             'statusFilter', 
             'dateFrom',
             'dateTo',
@@ -470,6 +469,40 @@ class PODataManager {
             po.status = po.status || 'pending';
             po.priority = po.priority || 'medium';
             
+            // MAP POWER AUTOMATE STRUCTURE TO TRACKING DISPLAY FORMAT
+            // The tracking page expects specific field names, so map them here
+            if (!po.id && po.poNumber) {
+                po.id = po.poNumber; // Use poNumber as id
+            }
+            if (!po.project && po.meta?.projectName) {
+                po.project = po.meta.projectName; // Use meta.projectName as project
+            }
+            if (!po.contractor && po.meta?.companyName) {
+                po.contractor = po.meta.companyName; // Use meta.companyName as contractor
+            } else if (!po.contractor && po.meta?.generalContractor) {
+                po.contractor = po.meta.generalContractor; // Fallback to generalContractor
+            }
+            if (!po.workType && po.meta?.workType) {
+                po.workType = po.meta.workType; // Use meta.workType as workType
+            }
+            if (!po.totalAmount && po.meta?.contractAmount) {
+                po.totalAmount = parseFloat(po.meta.contractAmount) || 0; // Use meta.contractAmount as totalAmount
+            }
+            if (!po.submittedAt && po.createdAt) {
+                po.submittedAt = po.createdAt; // Use createdAt as submittedAt
+            } else if (!po.submittedAt && po.sentAt) {
+                po.submittedAt = po.sentAt; // Fallback to sentAt
+            }
+            
+            console.log('✅ Mapped PO data for display:', {
+                id: po.id,
+                project: po.project,
+                contractor: po.contractor,
+                status: po.status,
+                totalAmount: po.totalAmount,
+                submittedAt: po.submittedAt
+            });
+            
             console.log('✅ Successfully processed PO:', po.poNumber || po.id);
             return po;
             
@@ -498,12 +531,8 @@ class PODataManager {
         
         let filteredPOs = [...this.cachedData.pos];
         
-        // Filter: My POs only
-        if (filters.myPOsOnly && currentUser && currentUser.email) {
-            filteredPOs = filteredPOs.filter(po => 
-                po.submittedBy && po.submittedBy.email === currentUser.email
-            );
-        }
+        // Note: Removed "My POs only" filter - tracking page is user-specific
+        console.log('ℹ️ Tracking page is user-specific - showing all user data without additional filtering');
         
         // Filter: Status
         if (filters.status) {
@@ -559,7 +588,6 @@ class PODataManager {
      */
     clearFilters() {
         const filterElements = {
-            'myPOsOnly': false,
             'statusFilter': '',
             'dateFrom': '',
             'dateTo': '',
@@ -745,7 +773,6 @@ class PODataManager {
      */
     getCurrentFilters() {
         return {
-            myPOsOnly: document.getElementById('myPOsOnly')?.checked || false,
             status: document.getElementById('statusFilter')?.value || '',
             dateFrom: document.getElementById('dateFrom')?.value || '',
             dateTo: document.getElementById('dateTo')?.value || '',

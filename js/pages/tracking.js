@@ -35,9 +35,11 @@ class TrackingDashboard {
             // Override the PO Data Manager's display method to use our existing rendering
             this.poDataManager.displayPOs = (pos) => {
                 console.log('📊 TrackingDashboard: Received POs from Power Automate:', pos);
+                console.log('📊 Raw PO data structure:', JSON.stringify(pos?.[0], null, 2));
                 this.allPOs = pos || [];
                 this.filterPOs();
                 this.updateStats(this.filteredPOs);
+                this.renderPOs(); // Add this to actually display the POs
             };
             
             // Override the error display to use our existing error handling
@@ -363,11 +365,8 @@ class TrackingDashboard {
                     }
                 });
                 
-                const myOnlyEl = document.getElementById('myPOsOnly');
-                if (myOnlyEl) {
-                    myOnlyEl.addEventListener('change', () => this.filterPOs());
-                    console.log('✅ myPOsOnly checkbox event bound');
-                }
+                // Note: Removed "My POs only" filter - tracking page is user-specific
+                console.log('ℹ️ My POs only filter removed - page is user-specific');
                 
                 console.log('🎉 All event binding completed successfully');
             } catch (error) {
@@ -809,84 +808,8 @@ class TrackingDashboard {
         let tempPOs = [...this.allPOs];
         console.log('Initial tempPOs length:', tempPOs.length);
         
-        // Filter by "My POs only"
-        const myPOsOnly = document.getElementById('myPOsOnly').checked;
-        console.log('myPOsOnly checkbox:', myPOsOnly);
-        
-        if (myPOsOnly) {
-            let currentUser = null;
-            let userEmail = null;
-            let userName = null;
-            
-            // Try to get current user from auth system
-            if (window.auth && window.auth.getCurrentUser) {
-                currentUser = window.auth.getCurrentUser();
-                console.log('Current user from auth:', currentUser);
-            }
-            
-            // Get user email and name for filtering
-            if (currentUser && currentUser.email) {
-                userEmail = currentUser.email;
-                userName = currentUser.name || currentUser.displayName || currentUser.username;
-            } else {
-                // Fallback: check localStorage for user info
-                const storedUser = localStorage.getItem('currentUser');
-                if (storedUser) {
-                    try {
-                        const parsed = JSON.parse(storedUser);
-                        userEmail = parsed.email;
-                        userName = parsed.name || parsed.displayName || parsed.username;
-                        console.log('Using stored user:', parsed);
-                    } catch (e) {
-                        console.warn('Could not parse stored user:', e);
-                    }
-                }
-            }
-            
-            // If still no user info, use your email as default for testing
-            if (!userEmail) {
-                console.log('No user info found, using default for testing');
-                userEmail = 'vcabrillos@apexbuilds.com';
-                userName = 'Virgilio Cabrillos Jr.';
-            }
-            
-            userEmail = userEmail.toLowerCase();
-            console.log('Filtering for user:', { userEmail, userName });
-            
-            tempPOs = tempPOs.filter(po => {
-                // Check multiple possible email and name locations
-                const submittedByEmail = po.submittedBy?.email?.toLowerCase();
-                const requestedByEmail = po.meta?.requestedByEmail?.toLowerCase();
-                const requestedBy = po.meta?.requestedBy?.toLowerCase();
-                
-                // Also check for name matches
-                const submittedByName = po.submittedBy?.name?.toLowerCase();
-                const requestedByName = po.meta?.requestedBy?.toLowerCase();
-                
-                const userNameLower = userName?.toLowerCase() || '';
-                
-                const emailMatch = submittedByEmail === userEmail || requestedByEmail === userEmail;
-                const nameMatch = (userNameLower && (
-                    submittedByName?.includes(userNameLower) ||
-                    requestedByName?.includes(userNameLower) ||
-                    requestedBy === userEmail
-                ));
-                
-                console.log('Checking PO:', po.id, {
-                    submittedByEmail,
-                    requestedByEmail,
-                    requestedBy,
-                    userEmail,
-                    userName: userNameLower,
-                    emailMatch,
-                    nameMatch,
-                    finalMatch: emailMatch || nameMatch
-                });
-                
-                return emailMatch || nameMatch;
-            });
-            console.log(`Filtered for "My POs only": ${tempPOs.length} remaining`);
-        }
+        // Since tracking page is user-specific, no need to filter by "My POs only"
+        console.log('ℹ️ Tracking page is user-specific - showing all user POs without filtering');
         
         // Filter by status
         const status = document.getElementById('statusFilter').value;
