@@ -698,9 +698,13 @@ class TrackingDashboard {
             
             // Try different URL patterns for GitHub Pages compatibility
             const baseUrl = window.location.origin + window.location.pathname.replace('/pages/tracking.html', '');
-            const printUrl = baseUrl + '/Print.html';
+            const printUrl = baseUrl + '/Print.html?po=' + encodeURIComponent(po.id);
             console.log('🌐 Base URL:', baseUrl);
             console.log('🌐 Print URL:', printUrl);
+            
+            // Also store the PO ID in sessionStorage as backup
+            sessionStorage.setItem('currentPOId', po.id);
+            sessionStorage.setItem('currentPOData', JSON.stringify(po));
             
             const newWindow = window.open(printUrl, '_blank');
             if (!newWindow) {

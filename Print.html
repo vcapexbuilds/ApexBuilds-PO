@@ -641,17 +641,43 @@
         function populatePOData() {
             console.log('📋 populatePOData function started...');
             try {
-                // Get PO data from localStorage
-                const poDataStr = localStorage.getItem('printPOData');
-                console.log('📋 Raw localStorage data:', poDataStr);
+                // Try multiple sources for PO data
+                let poData = null;
+                let dataSource = '';
                 
-                if (!poDataStr) {
-                    console.warn('⚠️ No PO data found in localStorage - displaying empty template');
+                // 1. Try localStorage first
+                const poDataStr = localStorage.getItem('printPOData');
+                if (poDataStr) {
+                    console.log('📋 Found data in localStorage:', poDataStr);
+                    poData = JSON.parse(poDataStr);
+                    dataSource = 'localStorage';
+                }
+                
+                // 2. Try sessionStorage as fallback
+                if (!poData) {
+                    const sessionDataStr = sessionStorage.getItem('currentPOData');
+                    if (sessionDataStr) {
+                        console.log('📋 Found data in sessionStorage:', sessionDataStr);
+                        poData = JSON.parse(sessionDataStr);
+                        dataSource = 'sessionStorage';
+                    }
+                }
+                
+                // 3. Check URL parameters for PO ID (future enhancement)
+                if (!poData) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const poId = urlParams.get('po');
+                    console.log('📋 URL PO ID:', poId);
+                    // Could fetch PO data by ID from server here if needed
+                }
+                
+                if (!poData) {
+                    console.warn('⚠️ No PO data found in any source - displaying empty template');
                     displayEmptyTemplate();
                     return;
                 }
                 
-                const poData = JSON.parse(poDataStr);
+                console.log('📋 Using PO data from:', dataSource);
                 console.log('📋 Parsed PO data for print page:', poData);
                 console.log('📋 PO Number:', poData.poNumber);
                 console.log('📋 Project Name:', poData.meta?.projectName);
@@ -1011,13 +1037,13 @@
             const maxRetries = 3;
             
             function tryPopulateData() {
-                const poDataStr = localStorage.getItem('printPOData');
+                const poDataStr = localStorage.getItem('printPOData') || sessionStorage.getItem('currentPOData');
                 if (poDataStr) {
                     console.log('✅ Found PO data, populating...');
                     populatePOData();
                 } else {
                     retryCount++;
-                    console.log(`⚠️ No PO data found, retry ${retryCount}/${maxRetries}`);
+                    console.log(`⚠️ No PO data found in localStorage or sessionStorage, retry ${retryCount}/${maxRetries}`);
                     if (retryCount < maxRetries) {
                         setTimeout(tryPopulateData, 500); // Wait 500ms and retry
                     } else {
