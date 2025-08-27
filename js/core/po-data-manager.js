@@ -828,7 +828,7 @@ class PODataManager {
                             sentAt: new Date().toISOString(),
                             importance: "normal",
                             submittedBy: {
-                                username: "john.doe",
+                                username: "John Doe", // Use full name instead of username format
                                 email: "john.doe@apex.com",
                                 firstName: "John",
                                 role: "Project Manager",

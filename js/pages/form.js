@@ -633,9 +633,12 @@ class POForm {
         // Enhanced user information for UserPOManager
         const currentUser = window.auth ? window.auth.getCurrentUser() : null;
         if (currentUser) {
+            // Prioritize displayName and name over username to avoid using email addresses
+            const fullName = currentUser.displayName || currentUser.name || currentUser.givenName || currentUser.username;
+            
             formData.submittedBy = {
                 userId: currentUser.id,
-                username: currentUser.username || currentUser.name,
+                username: fullName, // Use full name instead of email
                 email: currentUser.email,
                 upn: currentUser.upn || currentUser.email,
                 company: currentUser.company || 'Apex Building Corporation',
