@@ -13,6 +13,7 @@ class EnvironmentConfig {
         console.log('🌍 Current pathname:', window.location.pathname);
         console.log('🌍 Base URL:', this.baseUrl);
         console.log('🌍 Form page path:', this.getFormPagePath());
+        console.log('🌍 Expected form URL should be: https://vcapexbuilds.github.io/ApexBuilds-PO/pages/form.html');
     }
     
     detectLocalEnvironment() {
@@ -37,13 +38,13 @@ class EnvironmentConfig {
             // For local development
             return window.location.origin;
         } else {
-            // For GitHub Pages - your actual site
-            // Detect if we're on vcapexbuilds.github.io and add the correct repo path
+            // For GitHub Pages - your actual site structure
             if (window.location.hostname === 'vcapexbuilds.github.io') {
+                // Your GitHub Pages is published under /ApexBuilds-PO/
                 return 'https://vcapexbuilds.github.io/ApexBuilds-PO';
             }
             // Fallback for other domains
-            return window.location.origin;
+            return window.location.origin + '/ApexBuilds-PO';
         }
     }
     
