@@ -74,18 +74,18 @@ function addScheduleItemDirect() {
     row.id = itemId;
     
     row.innerHTML = `
-        <td><input type="text" name="primeLine[]" placeholder="Prime Line" required></td>
-        <td><input type="text" name="budgetCode[]" placeholder="Budget Code" required></td>
-        <td><textarea name="description[]" placeholder="Description" required></textarea></td>
-        <td><input type="number" name="quantity[]" placeholder="Qty" min="0" step="0.01" required></td>
-        <td><input type="text" name="unit[]" placeholder="Unit" required></td>
-        <td><input type="number" name="totalCost[]" placeholder="Total Cost" min="0" step="0.01" required></td>
+        <td><input type="text" name="primeLine[]" required placeholder="16000"></td>
+        <td><input type="text" name="budgetCode[]" required placeholder="EC-001"></td>
+        <td><textarea name="description[]" required placeholder="Work description"></textarea></td>
+        <td><input type="number" name="quantity[]" required step="0.01" min="0" placeholder="1"></td>
+        <td><input type="text" name="unit[]" required placeholder="EA"></td>
+        <td><input type="number" name="totalCost[]" required step="0.01" min="0" placeholder="0.00"></td>
         <td>
             <label><input type="radio" name="scheduled_${radioGroupId}" value="yes" required> Yes</label>
             <label><input type="radio" name="scheduled_${radioGroupId}" value="no" required> No</label>
         </td>
-        <td><input type="number" name="apexContractValue[]" placeholder="Contract Value" min="0" step="0.01" required></td>
-        <td><input type="number" name="profit[]" placeholder="Profit" min="0" step="0.01" required></td>
+        <td><input type="number" name="apexContractValue[]" required step="0.01" min="0" placeholder="0.00"></td>
+        <td><input type="number" name="profit[]" required step="0.01" min="0" placeholder="0.00"></td>
         <td>
             <button type="button" onclick="removeScheduleItem('${itemId}')" class="btn btn-danger btn-small">Remove</button>
         </td>
@@ -117,8 +117,8 @@ function addScopeItemDirect() {
     row.id = itemId;
     
     row.innerHTML = `
-        <td><input type="text" name="scopeItemNumber[]" placeholder="Item #" required></td>
-        <td><textarea name="scopeDescription[]" placeholder="Description" required></textarea></td>
+        <td><input type="text" name="scopeItemNumber[]" required placeholder="Item #1"></td>
+        <td><textarea name="scopeDescription[]" required placeholder="Describe the scope of work"></textarea></td>
         <td>
             <select name="scopeStatus[]" required>
                 <option value="">Select Status</option>
@@ -126,9 +126,7 @@ function addScopeItemDirect() {
                 <option value="excluded">Excluded</option>
             </select>
         </td>
-        <td>
-            <button type="button" onclick="removeScopeItem('${itemId}')" class="btn btn-danger btn-small">Remove</button>
-        </td>
+        <td><button type="button" onclick="removeScopeItem('${itemId}')" class="btn btn-danger btn-small">Remove</button></td>
     `;
     
     tbody.appendChild(row);
