@@ -174,32 +174,32 @@ class PODataManager {
             const rawData = await response.json();
             console.log('📥 Received raw data from Power Automate:', rawData);
             
-            // Handle different response formats
-            let data = rawData;
+            // Handle different Power Automate response formats dynamically
+            let processedData = this.processPowerAutomateResponse(rawData);
             
-            // If response has statusCode wrapper, extract the body
-            if (rawData.statusCode && rawData.body) {
-                console.log('🔧 Detected statusCode wrapper, extracting body...');
-                data = rawData.body;
-                console.log('📦 Extracted body data:', data);
+            // Validate that we have PO data
+            if (!processedData || !Array.isArray(processedData.pos) || processedData.pos.length === 0) {
+                console.warn('⚠️ No PO data found in Power Automate response');
+                processedData = { pos: [], total: 0 };
             }
             
-            // Validate response structure
-            if (!data || !Array.isArray(data.pos)) {
-                throw new Error('Invalid response format from Power Automate');
-            }
+            console.log('� Processed PA response:', {
+                totalPOs: processedData.pos.length,
+                success: processedData.success,
+                timestamp: processedData.timestamp
+            });
             
-            // Process and clean the PO data
-            data.pos = data.pos.map(po => this.processPoData(po));
+            // Process and enhance individual PO data for display
+            processedData.pos = processedData.pos.map(po => this.processPoData(po));
             
             // Cache the processed data
-            this.cachedData = data;
+            this.cachedData = processedData;
             this.lastFetchTime = new Date();
             
             // Apply client-side filters and display
             this.applyClientFiltersAndDisplay();
             
-            console.log('✅ PO data fetched, cached, and displayed successfully');
+            console.log('✅ PO data fetched, processed, cached, and displayed successfully');
             
         } catch (error) {
             console.error('❌ Error fetching PO data:', error);
@@ -217,20 +217,114 @@ class PODataManager {
     }
     
     /**
+     * Process Power Automate response dynamically and efficiently
+     */
+    processPowerAutomateResponse(rawData) {
+        console.log('🔄 Processing Power Automate response format...');
+        
+        try {
+            // Type 1: Direct array response [po1, po2, ...]
+            if (Array.isArray(rawData)) {
+                console.log('📦 Format: Direct array response');
+                return {
+                    success: true,
+                    pos: rawData,
+                    total: rawData.length,
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            // Type 2: StatusCode wrapper response { statusCode: "200", body: {...} }
+            if (rawData.statusCode && rawData.body) {
+                console.log('📦 Format: StatusCode wrapper detected');
+                return this.processPowerAutomateResponse(rawData.body); // Recursive call with unwrapped body
+            }
+            
+            // Type 3: Success/pos structure { success: true, pos: [...], total: 8 }
+            if (rawData.success !== undefined && Array.isArray(rawData.pos)) {
+                console.log('📦 Format: Success/pos structure');
+                return {
+                    success: rawData.success,
+                    pos: rawData.pos,
+                    total: rawData.total || rawData.pos.length,
+                    timestamp: rawData.timestamp || new Date().toISOString()
+                };
+            }
+            
+            // Type 4: Data wrapper { data: [...] }
+            if (rawData.data && Array.isArray(rawData.data)) {
+                console.log('📦 Format: Data wrapper');
+                return {
+                    success: true,
+                    pos: rawData.data,
+                    total: rawData.data.length,
+                    timestamp: rawData.timestamp || new Date().toISOString()
+                };
+            }
+            
+            // Type 5: POs wrapper { pos: [...] } (legacy)
+            if (Array.isArray(rawData.pos)) {
+                console.log('📦 Format: Legacy pos wrapper');
+                return {
+                    success: true,
+                    pos: rawData.pos,
+                    total: rawData.total || rawData.pos.length,
+                    timestamp: rawData.timestamp || new Date().toISOString()
+                };
+            }
+            
+            // Type 6: Single PO object - convert to array
+            if (rawData.poNumber && typeof rawData === 'object') {
+                console.log('📦 Format: Single PO object');
+                return {
+                    success: true,
+                    pos: [rawData],
+                    total: 1,
+                    timestamp: new Date().toISOString()
+                };
+            }
+            
+            // Unknown format - try to extract any array we can find
+            console.warn('⚠️ Unknown Power Automate response format, scanning for arrays...');
+            for (const [key, value] of Object.entries(rawData)) {
+                if (Array.isArray(value) && value.length > 0 && value[0].poNumber) {
+                    console.log(`📦 Found PO array in property: ${key}`);
+                    return {
+                        success: true,
+                        pos: value,
+                        total: value.length,
+                        timestamp: rawData.timestamp || new Date().toISOString()
+                    };
+                }
+            }
+            
+            throw new Error('No recognizable PO data found in Power Automate response');
+            
+        } catch (error) {
+            console.error('❌ Error processing Power Automate response:', error);
+            throw new Error(`Failed to process Power Automate response: ${error.message}`);
+        }
+    }
+
+    /**
      * Apply client-side filters and display filtered results
      */
     /**
      * Process individual PO data from Power Automate format
-     * Handles JSON string parsing for meta and submittedBy fields
+     * Handles JSON string parsing and rich data structure normalization
      */
     processPoData(po) {
         try {
+            console.log('🔄 Processing PO data:', po.poNumber || po.id || 'Unknown');
+            
             // Parse meta field if it's a JSON string
             if (typeof po.meta === 'string') {
                 try {
                     const parsedMeta = JSON.parse(po.meta);
                     po.meta = parsedMeta;
+                    console.log('✅ Parsed meta field for PO:', po.poNumber || po.id);
                 } catch (e) {
+                    console.warn('⚠️ Failed to parse meta field, using empty object');
                     po.meta = {}; // Default to empty object
                 }
             } else if (!po.meta || typeof po.meta !== 'object') {
@@ -242,21 +336,97 @@ class PODataManager {
                 try {
                     const parsedSubmittedBy = JSON.parse(po.submittedBy);
                     po.submittedBy = parsedSubmittedBy;
+                    console.log('✅ Parsed submittedBy field for PO:', po.poNumber || po.id);
                 } catch (e) {
+                    console.warn('⚠️ Failed to parse submittedBy field, using empty object');
                     po.submittedBy = {}; // Default to empty object
                 }
             } else if (!po.submittedBy || typeof po.submittedBy !== 'object') {
                 po.submittedBy = {};
             }
             
-            // Ensure schedule and scope are arrays
-            if (!Array.isArray(po.schedule)) {
-                po.schedule = [];
-            }
-            if (!Array.isArray(po.scope)) {
-                po.scope = [];
+            // Parse company field if it's a JSON string (for rich company data)
+            if (typeof po.company === 'string') {
+                try {
+                    const parsedCompany = JSON.parse(po.company);
+                    po.company = parsedCompany;
+                    console.log('✅ Parsed company field for PO:', po.poNumber || po.id);
+                } catch (e) {
+                    console.warn('⚠️ Company field appears to be string, keeping as-is');
+                    // Keep as string if it's just a company name
+                }
             }
             
+            // Parse contacts field if it's a JSON string
+            if (typeof po.contacts === 'string') {
+                try {
+                    const parsedContacts = JSON.parse(po.contacts);
+                    po.contacts = Array.isArray(parsedContacts) ? parsedContacts : [parsedContacts];
+                    console.log('✅ Parsed contacts field for PO:', po.poNumber || po.id);
+                } catch (e) {
+                    console.warn('⚠️ Failed to parse contacts field, using empty array');
+                    po.contacts = [];
+                }
+            } else if (!Array.isArray(po.contacts)) {
+                po.contacts = po.contacts ? [po.contacts] : [];
+            }
+            
+            // Parse project field if it's a JSON string (for rich project data)
+            if (typeof po.project === 'string') {
+                try {
+                    const parsedProject = JSON.parse(po.project);
+                    po.project = parsedProject;
+                    console.log('✅ Parsed project field for PO:', po.poNumber || po.id);
+                } catch (e) {
+                    console.warn('⚠️ Project field appears to be string, keeping as-is');
+                    // Keep as string if it's just a project name
+                }
+            }
+            
+            // Ensure schedule and scope are arrays
+            if (!Array.isArray(po.schedule)) {
+                if (typeof po.schedule === 'string') {
+                    try {
+                        const parsedSchedule = JSON.parse(po.schedule);
+                        po.schedule = Array.isArray(parsedSchedule) ? parsedSchedule : [parsedSchedule];
+                    } catch (e) {
+                        po.schedule = po.schedule ? [po.schedule] : [];
+                    }
+                } else {
+                    po.schedule = po.schedule ? [po.schedule] : [];
+                }
+            }
+            
+            if (!Array.isArray(po.scope)) {
+                if (typeof po.scope === 'string') {
+                    try {
+                        const parsedScope = JSON.parse(po.scope);
+                        po.scope = Array.isArray(parsedScope) ? parsedScope : [parsedScope];
+                    } catch (e) {
+                        po.scope = po.scope ? [po.scope] : [];
+                    }
+                } else {
+                    po.scope = po.scope ? [po.scope] : [];
+                }
+            }
+            
+            // Normalize date fields
+            const dateFields = ['createdAt', 'updatedAt', 'submissionDate', 'lastModified'];
+            dateFields.forEach(field => {
+                if (po[field] && typeof po[field] === 'string') {
+                    // Ensure date is in proper format
+                    const date = new Date(po[field]);
+                    if (!isNaN(date.getTime())) {
+                        po[field] = date.toISOString();
+                    }
+                }
+            });
+            
+            // Ensure required fields have defaults
+            po.status = po.status || 'pending';
+            po.priority = po.priority || 'medium';
+            
+            console.log('✅ Successfully processed PO:', po.poNumber || po.id);
             return po;
             
         } catch (error) {
