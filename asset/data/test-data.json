@@ -1,0 +1,209 @@
+[
+  {
+    "id": "PO-2024-001",
+    "status": "Submitted",
+    "priority": "High",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T14:20:00.000Z",
+    "submissionDate": "2024-01-15T14:20:00.000Z",
+    "meta": {
+      "requestedBy": "John Smith",
+      "userId": "user_001",
+      "userEmail": "john.smith@apexbuilding.com",
+      "projectName": "Downtown Office Complex",
+      "companyName": "Apex Building Group",
+      "generalContractor": "Prime Construction LLC",
+      "projectManager": "Sarah Johnson",
+      "contractAmount": "125000.00",
+      "projectAddress": "123 Main St, Downtown",
+      "expectedStartDate": "2024-02-01",
+      "expectedEndDate": "2024-06-30"
+    },
+    "schedule": [
+      {
+        "primeLine": "001",
+        "budgetCode": "ELEC-001",
+        "description": "Electrical rough-in work",
+        "qty": 1,
+        "unit": "lot",
+        "totalCost": 25000,
+        "scheduled": true,
+        "apexContractValue": 30000,
+        "profit": 5000
+      }
+    ],
+    "scope": [
+      {
+        "item": "Electrical panels installation",
+        "included": true,
+        "cost": 15000
+      }
+    ]
+  },
+  {
+    "id": "PO-2024-002",
+    "status": "Approved",
+    "priority": "Medium",
+    "createdAt": "2024-01-12T09:15:00.000Z",
+    "updatedAt": "2024-01-14T16:45:00.000Z",
+    "submissionDate": "2024-01-12T09:15:00.000Z",
+    "approvedDate": "2024-01-14T16:45:00.000Z",
+    "meta": {
+      "requestedBy": "Mike Wilson",
+      "userId": "user_002",
+      "userEmail": "mike.wilson@apexbuilding.com",
+      "projectName": "Residential Complex Phase 2",
+      "companyName": "Apex Building Group",
+      "generalContractor": "Metro Builders Inc",
+      "projectManager": "Lisa Chen",
+      "contractAmount": "85000.00",
+      "projectAddress": "456 Oak Avenue, Suburb",
+      "expectedStartDate": "2024-01-20",
+      "expectedEndDate": "2024-04-15"
+    },
+    "schedule": [
+      {
+        "primeLine": "002",
+        "budgetCode": "PLMB-001",
+        "description": "Plumbing installation",
+        "qty": 24,
+        "unit": "units",
+        "totalCost": 45000,
+        "scheduled": true,
+        "apexContractValue": 50000,
+        "profit": 5000
+      }
+    ],
+    "scope": [
+      {
+        "item": "Water supply lines",
+        "included": true,
+        "cost": 25000
+      }
+    ]
+  },
+  {
+    "id": "PO-2024-003",
+    "status": "Draft",
+    "priority": "Low",
+    "createdAt": "2024-01-18T11:00:00.000Z",
+    "updatedAt": "2024-01-18T11:00:00.000Z",
+    "meta": {
+      "requestedBy": "Emma Davis",
+      "userId": "user_003",
+      "userEmail": "emma.davis@apexbuilding.com",
+      "projectName": "Warehouse Renovation",
+      "companyName": "Apex Building Group",
+      "generalContractor": "Industrial Solutions Co",
+      "projectManager": "Robert Taylor",
+      "contractAmount": "75000.00",
+      "projectAddress": "789 Industrial Blvd, North District",
+      "expectedStartDate": "2024-03-01",
+      "expectedEndDate": "2024-05-30"
+    },
+    "schedule": [
+      {
+        "primeLine": "003",
+        "budgetCode": "HVAC-001",
+        "description": "HVAC system upgrade",
+        "qty": 1,
+        "unit": "system",
+        "totalCost": 35000,
+        "scheduled": false,
+        "apexContractValue": 40000,
+        "profit": 5000
+      }
+    ],
+    "scope": [
+      {
+        "item": "Air conditioning units",
+        "included": true,
+        "cost": 20000
+      }
+    ]
+  },
+  {
+    "id": "PO-2024-004",
+    "status": "Rejected",
+    "priority": "Medium",
+    "createdAt": "2024-01-10T08:30:00.000Z",
+    "updatedAt": "2024-01-13T10:15:00.000Z",
+    "submissionDate": "2024-01-10T08:30:00.000Z",
+    "rejectedDate": "2024-01-13T10:15:00.000Z",
+    "rejectionReason": "Budget exceeded approved limits",
+    "meta": {
+      "requestedBy": "David Martinez",
+      "userId": "user_004",
+      "userEmail": "david.martinez@apexbuilding.com",
+      "projectName": "Shopping Center Expansion",
+      "companyName": "Apex Building Group",
+      "generalContractor": "Retail Construction Partners",
+      "projectManager": "Amanda White",
+      "contractAmount": "200000.00",
+      "projectAddress": "321 Commerce Way, Shopping District",
+      "expectedStartDate": "2024-02-15",
+      "expectedEndDate": "2024-08-31"
+    },
+    "schedule": [
+      {
+        "primeLine": "004",
+        "budgetCode": "STRUC-001",
+        "description": "Structural steel work",
+        "qty": 1,
+        "unit": "lot",
+        "totalCost": 120000,
+        "scheduled": true,
+        "apexContractValue": 150000,
+        "profit": 30000
+      }
+    ],
+    "scope": [
+      {
+        "item": "Steel framework",
+        "included": true,
+        "cost": 80000
+      }
+    ]
+  },
+  {
+    "id": "PO-2024-005",
+    "status": "Submitted",
+    "priority": "High",
+    "createdAt": "2024-01-20T13:45:00.000Z",
+    "updatedAt": "2024-01-20T13:45:00.000Z",
+    "submissionDate": "2024-01-20T13:45:00.000Z",
+    "meta": {
+      "requestedBy": "Jennifer Brown",
+      "userId": "user_005",
+      "userEmail": "jennifer.brown@apexbuilding.com",
+      "projectName": "Hospital Wing Addition",
+      "companyName": "Apex Building Group",
+      "generalContractor": "Healthcare Construction Corp",
+      "projectManager": "Michael Green",
+      "contractAmount": "350000.00",
+      "projectAddress": "555 Medical Center Dr, Health District",
+      "expectedStartDate": "2024-03-15",
+      "expectedEndDate": "2024-12-31"
+    },
+    "schedule": [
+      {
+        "primeLine": "005",
+        "budgetCode": "SPEC-001",
+        "description": "Medical equipment installation",
+        "qty": 1,
+        "unit": "lot",
+        "totalCost": 180000,
+        "scheduled": true,
+        "apexContractValue": 220000,
+        "profit": 40000
+      }
+    ],
+    "scope": [
+      {
+        "item": "Specialized medical systems",
+        "included": true,
+        "cost": 150000
+      }
+    ]
+  }
+]
