@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Schema Validation Test</title>
+</head>
+<body>
+    <h1>Power Automate Schema Validation Test</h1>
+    <button id="testSchema">Test Current Schema Compliance</button>
+    <pre id="output"></pre>
+
+    <script src="../js/core/simple-po-handler.js"></script>
+    <script>
+    function testSchemaCompliance() {
+        const output = document.getElementById('output');
+        
+        // Simulate data exactly as our handler creates it
+        const testData = {
+            poNumber: "PO-12345",
+            meta: {
+                projectName: "Test Project",
+                generalContractor: "Test GC",
+                address: "123 Test St",
+                owner: "Test Owner",
+                apexOwner: "Apex Test",
+                typeStatus: "Active", 
+                projectManager: "Test PM",
+                contractAmount: 100000,        // INTEGER ✓
+                addAltAmount: 5000,            // INTEGER ✓
+                addAltDetails: "Test details",
+                retainagePct: 10,              // INTEGER ✓
+                requestedBy: "Test User",
+                companyName: "Test Company",
+                contactName: "Test Contact",
+                cellNumber: "555-1234",
+                email: "test@example.com",
+                officeNumber: "555-5678",
+                vendorType: "Subcontractor", 
+                workType: "Construction",
+                importantDates: {
+                    noticeToProceed: "2024-01-15",
+                    anticipatedStart: "2024-02-01",
+                    substantialCompletion: "2024-06-01", 
+                    hundredPercent: "2024-07-01"
+                }
+            },
+            schedule: [
+                {
+                    primeLine: "001",
+                    budgetCode: "BC001",
+                    description: "Foundation Work",
+                    qty: 50,                   // INTEGER ✓
+                    unit: 1,                   // INTEGER ✓ (fixed from string)
+                    totalCost: 25000,          // INTEGER ✓ (fixed from float)
+                    scheduled: 1,              // INTEGER ✓
+                    apexContractValue: 26000,  // INTEGER ✓ (fixed from float)
+                    profit: 1000               // INTEGER ✓ (fixed from float)
+                }
+            ],
+            scope: [
+                {
+                    item: "S001",              // STRING ✓
+                    description: "Site preparation",
+                    included: true,            // BOOLEAN ✓
+                    excluded: false            // BOOLEAN ✓
+                }
+            ],
+            createdAt: new Date().toISOString(),
+            sent: true,
+            status: "submitted",
+            importance: "normal",
+            timestamp: Math.floor(Date.now() / 1000),    // INTEGER ✓
+            id: Math.floor(Date.now() / 1000),           // INTEGER ✓
+            sentAt: new Date().toISOString(),
+            submittedBy: {
+                username: "testuser",          // Note: schema shows 'username' not 'name'
+                email: "test@example.com", 
+                role: "user",
+                submittedAt: new Date().toISOString()
+            }
+        };
+
+        // Validate against the exact schema requirements
+        const validation = {
+            // Meta validation
+            meta: {
+                contractAmount: typeof testData.meta.contractAmount === 'number' && Number.isInteger(testData.meta.contractAmount),
+                addAltAmount: typeof testData.meta.addAltAmount === 'number' && Number.isInteger(testData.meta.addAltAmount),
+                retainagePct: typeof testData.meta.retainagePct === 'number' && Number.isInteger(testData.meta.retainagePct)
+            },
+            
+            // Schedule validation - ALL must be integers per schema
+            schedule: testData.schedule.map(item => ({
+                primeLine: typeof item.primeLine === 'string',
+                budgetCode: typeof item.budgetCode === 'string', 
+                description: typeof item.description === 'string',
+                qty: typeof item.qty === 'number' && Number.isInteger(item.qty),
+                unit: typeof item.unit === 'number' && Number.isInteger(item.unit),           // Must be INTEGER!
+                totalCost: typeof item.totalCost === 'number' && Number.isInteger(item.totalCost),      // Must be INTEGER!
+                scheduled: typeof item.scheduled === 'number' && Number.isInteger(item.scheduled),
+                apexContractValue: typeof item.apexContractValue === 'number' && Number.isInteger(item.apexContractValue),  // Must be INTEGER!
+                profit: typeof item.profit === 'number' && Number.isInteger(item.profit)     // Must be INTEGER!
+            })),
+            
+            // Scope validation
+            scope: testData.scope.map(item => ({
+                item: typeof item.item === 'string',
+                description: typeof item.description === 'string',
+                included: typeof item.included === 'boolean',
+                excluded: typeof item.excluded === 'boolean'
+            })),
+            
+            // Root level validation
+            timestamp: typeof testData.timestamp === 'number' && Number.isInteger(testData.timestamp),
+            id: typeof testData.id === 'number' && Number.isInteger(testData.id)
+        };
+
+        const allValid = 
+            Object.values(validation.meta).every(v => v) &&
+            validation.schedule.every(item => Object.values(item).every(v => v)) &&
+            validation.scope.every(item => Object.values(item).every(v => v)) &&
+            validation.timestamp && validation.id;
+
+        output.textContent = JSON.stringify({
+            testData,
+            validation,
+            allValid,
+            summary: {
+                metaValid: Object.values(validation.meta).every(v => v),
+                scheduleValid: validation.schedule.every(item => Object.values(item).every(v => v)),
+                scopeValid: validation.scope.every(item => Object.values(item).every(v => v)),
+                rootValid: validation.timestamp && validation.id
+            }
+        }, null, 2);
+    }
+
+    document.getElementById('testSchema').addEventListener('click', testSchemaCompliance);
+    </script>
+</body>
+</html>

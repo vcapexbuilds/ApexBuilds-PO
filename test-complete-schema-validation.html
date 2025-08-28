@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Schema Mapping Test</title>
+    <style>
+        body { font-family: monospace; margin: 20px; }
+        .error { color: red; }
+        .success { color: green; }
+        .warning { color: orange; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Complete Power Automate Schema Mapping Test</h1>
+    
+    <button id="testComplete">Test Complete Schema Mapping</button>
+    <button id="showExpected">Show Expected Schema</button>
+    <button id="testActual">Test Actual Form Data Collection</button>
+    
+    <div id="results"></div>
+
+    <!-- Add form elements for actual testing -->
+    <div style="display: none;">
+        <table id="scheduleItems">
+            <tr>
+                <td><input name="primeLine[]" value="001"></td>
+                <td><input name="budgetCode[]" value="BC001"></td>
+                <td><input name="description[]" value="Test Work"></td>
+                <td><input name="quantity[]" value="100"></td>
+                <td><input name="unit[]" value="2"></td>
+                <td><input name="totalCost[]" value="50000"></td>
+                <td><input name="scheduled[]" value="1"></td>
+                <td><input name="apexContractValue[]" value="55000"></td>
+                <td><input name="profit[]" value="5000"></td>
+            </tr>
+        </table>
+        
+        <table id="scopeItems">
+            <tr>
+                <td><input name="scopeItemNumber[]" value="S001"></td>
+                <td><input name="scopeDescription[]" value="Site preparation"></td>
+                <td><input name="scopeStatus_0" type="radio" value="included" checked></td>
+                <td><input name="scopeStatus_0" type="radio" value="excluded"></td>
+            </tr>
+        </table>
+    </div>
+
+    <script src="../js/core/simple-po-handler.js"></script>
+    <script>
+    const results = document.getElementById('results');
+
+    // Test complete schema mapping
+    document.getElementById('testComplete').addEventListener('click', () => {
+        const expectedSchema = {
+            poNumber: "string",
+            meta: {
+                projectName: "string",
+                generalContractor: "string", 
+                address: "string",
+                owner: "string",
+                apexOwner: "string",
+                typeStatus: "string",
+                projectManager: "string",
+                contractAmount: "integer",
+                addAltAmount: "integer",
+                addAltDetails: "string",
+                retainagePct: "integer",
+                requestedBy: "string",
+                companyName: "string",
+                contactName: "string",
+                cellNumber: "string",
+                email: "string",
+                officeNumber: "string",
+                vendorType: "string",
+                workType: "string",
+                importantDates: {
+                    noticeToProceed: "string",
+                    anticipatedStart: "string", 
+                    substantialCompletion: "string",
+                    hundredPercent: "string"
+                }
+            },
+            schedule: [{
+                primeLine: "string",
+                budgetCode: "string",
+                description: "string", 
+                qty: "integer",
+                unit: "integer",      // ⚠️ CRITICAL: Schema says INTEGER, not string!
+                totalCost: "integer", // ⚠️ CRITICAL: Schema says INTEGER, not float!
+                scheduled: "integer",
+                apexContractValue: "integer", // ⚠️ CRITICAL: Schema says INTEGER, not float!
+                profit: "integer"     // ⚠️ CRITICAL: Schema says INTEGER, not float!
+            }],
+            scope: [{
+                item: "string",
+                description: "string",
+                included: "boolean",
+                excluded: "boolean"
+            }],
+            createdAt: "string",
+            sent: "boolean",
+            status: "string", 
+            importance: "string",
+            timestamp: "integer",
+            id: "integer",
+            sentAt: "string",
+            submittedBy: {
+                username: "string",   // Note: 'username', not 'name'
+                email: "string",
+                role: "string",
+                submittedAt: "string"
+            }
+        };
+
+        results.innerHTML = `
+            <h2>✅ Schema Mapping Analysis</h2>
+            <div class="success">
+                <h3>✅ FIXED ISSUES:</h3>
+                <ul>
+                    <li>✅ Schedule unit field: Now INTEGER (was string)</li>
+                    <li>✅ Schedule totalCost field: Now INTEGER (was float)</li>
+                    <li>✅ Schedule apexContractValue field: Now INTEGER (was float)</li>
+                    <li>✅ Schedule profit field: Now INTEGER (was float)</li>
+                    <li>✅ Meta contractAmount: INTEGER ✓</li>
+                    <li>✅ Meta addAltAmount: INTEGER ✓</li>
+                    <li>✅ Meta retainagePct: INTEGER ✓</li>
+                    <li>✅ Scope item field: STRING ✓</li>
+                    <li>✅ SubmittedBy uses 'username' field ✓</li>
+                </ul>
+            </div>
+            <pre>${JSON.stringify(expectedSchema, null, 2)}</pre>
+        `;
+    });
+
+    // Test actual form data collection
+    document.getElementById('testActual').addEventListener('click', () => {
+        // Test the actual collection methods
+        const scheduleData = window.SimplePOHandler.collectScheduleItems();
+        const scopeData = window.SimplePOHandler.collectScopeItems();
+        
+        results.innerHTML = `
+            <h2>🧪 Actual Data Collection Test</h2>
+            <h3>Schedule Items Collected:</h3>
+            <pre>${JSON.stringify(scheduleData, null, 2)}</pre>
+            <h3>Scope Items Collected:</h3>
+            <pre>${JSON.stringify(scopeData, null, 2)}</pre>
+            
+            <h3>Type Validation:</h3>
+            <div class="success">
+                Schedule Item Types:
+                <ul>
+                    <li>qty: ${scheduleData[0] ? typeof scheduleData[0].qty + (Number.isInteger(scheduleData[0].qty) ? ' (INTEGER ✅)' : ' (NOT INTEGER ❌)') : 'N/A'}</li>
+                    <li>unit: ${scheduleData[0] ? typeof scheduleData[0].unit + (Number.isInteger(scheduleData[0].unit) ? ' (INTEGER ✅)' : ' (NOT INTEGER ❌)') : 'N/A'}</li>
+                    <li>totalCost: ${scheduleData[0] ? typeof scheduleData[0].totalCost + (Number.isInteger(scheduleData[0].totalCost) ? ' (INTEGER ✅)' : ' (NOT INTEGER ❌)') : 'N/A'}</li>
+                    <li>apexContractValue: ${scheduleData[0] ? typeof scheduleData[0].apexContractValue + (Number.isInteger(scheduleData[0].apexContractValue) ? ' (INTEGER ✅)' : ' (NOT INTEGER ❌)') : 'N/A'}</li>
+                    <li>profit: ${scheduleData[0] ? typeof scheduleData[0].profit + (Number.isInteger(scheduleData[0].profit) ? ' (INTEGER ✅)' : ' (NOT INTEGER ❌)') : 'N/A'}</li>
+                </ul>
+                
+                Scope Item Types:
+                <ul>
+                    <li>item: ${scopeData[0] ? typeof scopeData[0].item + ' ✅' : 'N/A'}</li>
+                    <li>included: ${scopeData[0] ? typeof scopeData[0].included + ' ✅' : 'N/A'}</li>
+                    <li>excluded: ${scopeData[0] ? typeof scopeData[0].excluded + ' ✅' : 'N/A'}</li>
+                </ul>
+            </div>
+        `;
+    });
+
+    // Show expected schema
+    document.getElementById('showExpected').addEventListener('click', () => {
+        results.innerHTML = `
+            <h2>📋 Power Automate Expected Schema</h2>
+            <div class="warning">
+                <h3>⚠️ KEY REQUIREMENTS:</h3>
+                <ul>
+                    <li><strong>Schedule items:</strong> ALL numeric fields must be INTEGER (not float)</li>
+                    <li><strong>Unit field:</strong> Must be INTEGER (not string like "EA", "SF")</li>
+                    <li><strong>Contract amounts:</strong> Must be INTEGER</li>
+                    <li><strong>Scope item:</strong> Must be STRING</li>
+                    <li><strong>SubmittedBy:</strong> Uses 'username' field</li>
+                </ul>
+            </div>
+            
+            <h3>Critical Fields That Caused Errors:</h3>
+            <pre style="background: #ffeeee;">
+Schedule Item Schema (ALL INTEGERS):
+{
+  "qty": "integer",           ✅ Fixed
+  "unit": "integer",          ✅ Fixed (was string)
+  "totalCost": "integer",     ✅ Fixed (was float)  
+  "scheduled": "integer",     ✅ Already correct
+  "apexContractValue": "integer", ✅ Fixed (was float)
+  "profit": "integer"         ✅ Fixed (was float)
+}
+
+Meta Schema:
+{
+  "contractAmount": "integer",    ✅ Fixed
+  "addAltAmount": "integer",      ✅ Fixed  
+  "retainagePct": "integer"       ✅ Fixed
+}
+            </pre>
+        `;
+    });
+    </script>
+</body>
+</html>

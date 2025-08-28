@@ -470,12 +470,12 @@ window.SimplePOHandler = {
                     primeLine: primeLine || '',
                     budgetCode: budgetCode || '',
                     description: description || '',
-                    qty: this.safeParseInt(quantity),  // Schema expects integer
-                    unit: unit || '',  // Keep as string (correct per schema)
-                    totalCost: this.safeParseFloat(totalCost),
+                    qty: this.safeParseInt(quantity),
+                    unit: this.safeParseInt(unit),  // Schema expects INTEGER, not string!
+                    totalCost: this.safeParseInt(totalCost),  // Schema expects INTEGER, not float!
                     scheduled: this.safeParseInt(scheduled),
-                    apexContractValue: this.safeParseFloat(apexContractValue),
-                    profit: this.safeParseFloat(profit)
+                    apexContractValue: this.safeParseInt(apexContractValue),  // Schema expects INTEGER!
+                    profit: this.safeParseInt(profit)  // Schema expects INTEGER!
                 };
                 
                 console.log(`Schedule item ${index + 1}:`, item);
